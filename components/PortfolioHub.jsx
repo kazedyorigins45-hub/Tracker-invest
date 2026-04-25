@@ -72,7 +72,9 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
         <div className="sidebar-bottom">
           <p className="app-plan">{subscriptionLabel}</p>
           <span style={{ wordBreak: 'break-all' }}>{userEmail}</span>
-          <a href="/login?logout=1" className="sidebar-logout">{t('site.logout')}</a>
+          <form action="/api/auth/logout" method="post">
+            <button type="submit" className="sidebar-logout">{t('site.logout')}</button>
+          </form>
         </div>
       </aside>
 

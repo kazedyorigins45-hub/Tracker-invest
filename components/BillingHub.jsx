@@ -104,7 +104,9 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
         <div className="sidebar-bottom">
           <p className="app-plan">{userEmail}</p>
           <span>{t('app.subscription')}: {currentPlan?.name || planCode}</span>
-          <a href="/login?logout=1" className="sidebar-logout">{t('site.logout')}</a>
+          <form action="/api/auth/logout" method="post">
+            <button type="submit" className="sidebar-logout">{t('site.logout')}</button>
+          </form>
         </div>
       </aside>
 

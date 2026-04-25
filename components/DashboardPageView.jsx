@@ -42,7 +42,9 @@ export default function DashboardPageView({ planCode = 'starter', subscription =
         <div className="sidebar-bottom">
           <p className="app-plan">{t('app.subscription')} : {subscriptionLabel}</p>
           <span id="auth-user-email" style={{ wordBreak: 'break-all' }}>{userEmail}</span>
-          <a href="/login?logout=1">{t('site.logout')}</a>
+          <form action="/api/auth/logout" method="post">
+            <button type="submit" className="sidebar-logout">{t('site.logout')}</button>
+          </form>
         </div>
       </aside>
 

@@ -22,6 +22,7 @@ function defaultState() {
     journal: [],
     routineLabels: ['', '', '', ''],
     routineByDay: {},
+    morningRoutineByDay: {},
     rules: [],
   };
 }
@@ -35,10 +36,31 @@ export default function MindsetHub({ userEmail = '', planCode = 'starter', subsc
   const subscriptionLabel = getSubscriptionLabel(subscription, planCode);
   const { t, locale } = useLocale();
   const dateLocale = locale === 'en' ? 'fr-FR' : 'en-US';
+  const isTraderPlan = planCode === 'trader';
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  useEffect(() => {
+    const resetDailyRoutines = () => {
+      const key = todayKey();
+      setState((prev) => ({
+        ...prev,
+        routineByDay: { [key]: prev.routineByDay?.[key] || [false, false, false, false] },
+        morningRoutineByDay: { [key]: prev.morningRoutineByDay?.[key] || [false, false, false, false] },
+      }));
+    };
+
+    resetDailyRoutines();
+
+    const now = new Date();
+    const midnight = new Date(now);
+    midnight.setHours(24, 0, 0, 0);
+    const timeout = window.setTimeout(resetDailyRoutines, midnight.getTime() - now.getTime() + 1000);
+
+    return () => window.clearTimeout(timeout);
+  }, [setState]);
 
   const stats = useMemo(() => {
     const journalCount = state.journal.length;
@@ -59,6 +81,9 @@ export default function MindsetHub({ userEmail = '', planCode = 'starter', subsc
   }, [state]);
 
   const activeRoutine = state.routineByDay[todayKey()] || [false, false, false, false];
+  const activeRoutineCount = (activeRoutine || []).filter(Boolean).length;
+  const morningRoutine = state.morningRoutineByDay?.[todayKey()] || [false, false, false, false];
+  const morningRoutineCount = (morningRoutine || []).filter(Boolean).length;
 
   function setVisionField(key, value) {
     setState((prev) => ({ ...prev, vision: { ...prev.vision, [key]: value } }));
@@ -78,6 +103,15 @@ export default function MindsetHub({ userEmail = '', planCode = 'starter', subsc
       const day = Array.isArray(prev.routineByDay[key]) ? [...prev.routineByDay[key]] : [false, false, false, false];
       day[index] = checked;
       return { ...prev, routineByDay: { ...prev.routineByDay, [key]: day } };
+    });
+  }
+
+  function toggleMorningRoutine(index, checked) {
+    setState((prev) => {
+      const key = todayKey();
+      const day = Array.isArray(prev.morningRoutineByDay?.[key]) ? [...prev.morningRoutineByDay[key]] : [false, false, false, false];
+      day[index] = checked;
+      return { ...prev, morningRoutineByDay: { ...(prev.morningRoutineByDay || {}), [key]: day } };
     });
   }
 
@@ -131,24 +165,46 @@ export default function MindsetHub({ userEmail = '', planCode = 'starter', subsc
   return (
     <div className="mindset-shell">
       <aside className="sidebar">
-        <div className="brand-block">
-          <div className="brand-top">
-            <div className="tag">Mindset</div>
-            <Link href="/" className="brand-link"><h1>Mindset Invest</h1></Link>
-            <p>{t('home.mindsetSpaceDesc')}</p>
-          </div>
+        {isTraderPlan ? (
+          <div className="brand-block">
+            <div className="brand-top">
+              <div className="tag">{t('app.trading')}</div>
+              <Link href="/dashboard" className="brand-link"><h1>Elite Tracker</h1></Link>
+              <p className="tracker-quote">{t('tracker.subtitle')}</p>
+              <p className="app-plan">{t('app.subscription')} : {subscriptionLabel}</p>
+            </div>
 
-          <nav className="sidebar-apps" aria-label="Navigation site">
-            <div className="sidebar-apps-label">{t('mindset.spaces')}</div>
-            <button type="button" className={`app-link ${activePage === 'home' ? 'is-current' : ''}`} onClick={() => renderPage('home')}>
-              {t('app.dashboardLink')}
-            </button>
-            <Link href="/mindset" className="app-link is-current">{t('app.mindset')}</Link>
-            {canAccess(planCode, 'tracker') ? <Link href="/tracker" className="app-link">{t('app.trading')}</Link> : null}
-            {canAccess(planCode, 'invest') ? <Link href="/invest" className="app-link">{t('app.invest')}</Link> : null}
-            {canAccess(planCode, 'portfolio') ? <Link href="/portfolio" className="app-link">{t('app.portfolio')}</Link> : null}
-          </nav>
-        </div>
+            <nav className="sidebar-apps" aria-label="Navigation site">
+              <div className="sidebar-apps-label">{t('mindset.spaces')}</div>
+              <button type="button" className={`app-link ${activePage === 'home' ? 'is-current' : ''}`} onClick={() => renderPage('home')}>
+                {t('app.dashboardLink')}
+              </button>
+              {canAccess(planCode, 'tracker') ? <Link href="/tracker" className="app-link">{t('app.trading')}</Link> : null}
+              <Link href="/mindset" className="app-link is-current">{t('app.mindset')}</Link>
+              {canAccess(planCode, 'invest') ? <Link href="/invest" className="app-link">{t('app.invest')}</Link> : null}
+              {canAccess(planCode, 'portfolio') ? <Link href="/portfolio" className="app-link">{t('app.portfolio')}</Link> : null}
+            </nav>
+          </div>
+        ) : (
+          <div className="brand-block">
+            <div className="brand-top">
+              <div className="tag">Mindset</div>
+              <Link href="/" className="brand-link"><h1>Mindset Invest</h1></Link>
+              <p>{t('home.mindsetSpaceDesc')}</p>
+            </div>
+
+            <nav className="sidebar-apps" aria-label="Navigation site">
+              <div className="sidebar-apps-label">{t('mindset.spaces')}</div>
+              <button type="button" className={`app-link ${activePage === 'home' ? 'is-current' : ''}`} onClick={() => renderPage('home')}>
+                {t('app.dashboardLink')}
+              </button>
+              {canAccess(planCode, 'tracker') ? <Link href="/tracker" className="app-link">{t('app.trading')}</Link> : null}
+              <Link href="/mindset" className="app-link is-current">{t('app.mindset')}</Link>
+              {canAccess(planCode, 'invest') ? <Link href="/invest" className="app-link">{t('app.invest')}</Link> : null}
+              {canAccess(planCode, 'portfolio') ? <Link href="/portfolio" className="app-link">{t('app.portfolio')}</Link> : null}
+            </nav>
+          </div>
+        )}
 
         <div className="sidebar-inner">
           <button type="button" className={`nav-item ${activePage === 'vision' ? 'active' : ''}`} onClick={() => renderPage('vision')}>{t('mindset.vision')}</button>
@@ -160,7 +216,9 @@ export default function MindsetHub({ userEmail = '', planCode = 'starter', subsc
         <div className="sidebar-bottom">
           <p className="app-plan">{subscriptionLabel}</p>
           <span id="auth-user-email" style={{ wordBreak: 'break-all' }}>{userEmail}</span>
-          <a href="/login?logout=1" className="sidebar-logout">{t('site.logout')}</a>
+          <form action="/api/auth/logout" method="post">
+            <button type="submit" className="sidebar-logout">{t('site.logout')}</button>
+          </form>
         </div>
       </aside>
 
@@ -177,7 +235,8 @@ export default function MindsetHub({ userEmail = '', planCode = 'starter', subsc
               <div className="stats-row">
                 <div className="stat"><div className="v">{stats.journalCount}</div><div className="l">{t('mindset.journal')}</div></div>
                 <div className="stat"><div className="v">{stats.rulesCount}</div><div className="l">{t('mindset.lifeRules')}</div></div>
-                <div className="stat"><div className="v">{stats.streak}</div><div className="l">{t('mindset.routine')}</div></div>
+                <div className="stat"><div className="v">{activeRoutineCount}/4</div><div className="l">{t('mindset.routine')}</div></div>
+                <div className="stat"><div className="v">{morningRoutineCount}/3</div><div className="l">{t('mindset.morningRoutine')}</div></div>
               </div>
               <div className="card">
                 <h2>{t('mindset.quickAccess')}</h2>
@@ -293,6 +352,7 @@ export default function MindsetHub({ userEmail = '', planCode = 'starter', subsc
           <div className="routine-stack">
             <div className="card">
               <h2>{t('mindset.routinesTitle')}</h2>
+              <p className="hint">4 routines modifiables, à cocher chaque jour.</p>
               <div className="routine-fields">
                 {state.routineLabels.map((label, index) => (
                   <div key={index} className="routine-field">
@@ -325,6 +385,23 @@ export default function MindsetHub({ userEmail = '', planCode = 'starter', subsc
                 ))}
               </div>
               <p className="hint">{t('mindset.routinesHint')}</p>
+            </div>
+            <div className="card">
+              <h2>{t('mindset.morningRoutineTitle')}</h2>
+              <div className="routine-checklist">
+                {[t('mindset.morningItem1'), t('mindset.morningItem2'), t('mindset.morningItem3'), t('mindset.morningItem4')].map((label, index) => (
+                  <div className="routine-row" key={`mi-morning-${index}`}>
+                    <input
+                      type="checkbox"
+                      id={`mi-morning-${index}`}
+                      checked={!!morningRoutine[index]}
+                      onChange={(e) => toggleMorningRoutine(index, e.target.checked)}
+                    />
+                    <label htmlFor={`mi-morning-${index}`}>{label}</label>
+                  </div>
+                ))}
+              </div>
+              <p className="hint">{t('mindset.morningRoutineHint')}</p>
             </div>
           </div>
         </section>
