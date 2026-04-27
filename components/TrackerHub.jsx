@@ -35,8 +35,34 @@ function monthKey() {
 }
 
 function parseAmount(value) {
-  const n = Number(String(value).replace(',', '.'));
+  const n = Number(String(value ?? '').replace(/\s+/g, '').replace(',', '.'));
   return Number.isFinite(n) ? n : null;
+}
+
+function computeTradeResult(row) {
+  const entry = parseAmount(row.entry);
+  const exit = parseAmount(row.exit);
+  const lots = parseAmount(row.lots) ?? 1;
+  if (entry == null || exit == null || !Number.isFinite(lots)) return null;
+  const raw = row.direction === 'short' ? (entry - exit) * lots : (exit - entry) * lots;
+  return Number.isFinite(raw) ? Number(raw.toFixed(2)) : null;
+}
+
+function withAutoTradeResult(row) {
+  const auto = computeTradeResult(row);
+  return auto == null ? row : { ...row, result: String(auto) };
+}
+
+function isoWeekKey(dateString) {
+  if (!dateString) return '';
+  const date = new Date(`${dateString}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return '';
+  const utc = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const day = utc.getUTCDay() || 7;
+  utc.setUTCDate(utc.getUTCDate() + 4 - day);
+  const yearStart = new Date(Date.UTC(utc.getUTCFullYear(), 0, 1));
+  const week = Math.ceil((((utc - yearStart) / 86400000) + 1) / 7);
+  return `${utc.getUTCFullYear()}-W${String(week).padStart(2, '0')}`;
 }
 
 function toStoredAmount(value, isEnglish) {
@@ -218,16 +244,31 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
     monthlyCapital: '', monthlyBest: '', monthlyEmotion: '', monthlyRatio: '', monthlyLesson: '', monthlyResult: '', monthlyGoal: '', monthlyFeel: '', monthlyGood: '', monthlyBad: '', monthlyNext: '',
   };
   const quarterKey = `${data.quarterYear || new Date().getFullYear()}-Q${data.quarterNumber || '1'}`;
-  const quarterSnapshot = data.quarterByKey?.[quarterKey] || {
-    quarterSuccesses: '', quarterEmotionReason: '', quarterImprove: '', quarterGoalsReeval: '', quarterShortTerm: 'oui', quarterShortPrecision: '', quarterCommitment: '', quarterSummary: '', quarterLessons: '', quarterStrategy: '', quarterForward: '',
+  const quarterDefaults = {
+    quarterSuccesses: '', quarterEmotionScore: 0, quarterEmotionReason: '', quarterImprove: '', quarterGoalsReeval: '', quarterShortTerm: 'oui', quarterShortPrecision: '', quarterCommitment: '', quarterSummary: '', quarterLessons: '', quarterStrategy: '', quarterForward: '',
   };
+  const quarterSnapshot = { ...quarterDefaults, ...(data.quarterByKey?.[quarterKey] || {}) };
 
   const update = (patch) => setData((prev) => ({ ...prev, ...patch }));
   const weeklyTrades = Array.isArray(data.weeklyTrades) ? data.weeklyTrades : [];
+  const selectedWeeklyMonth = data.weeklyMonth || '';
+  const selectedWeeklyWeek = data.weeklyWeek || '';
+  const visibleWeeklyTrades = weeklyTrades
+    .map((row, originalIndex) => ({ row, originalIndex }))
+    .filter(({ row }) => {
+      if (selectedWeeklyWeek) return isoWeekKey(row.date) === selectedWeeklyWeek;
+      if (selectedWeeklyMonth) return String(row.date || '').slice(0, 7) === selectedWeeklyMonth;
+      return true;
+    });
   const monthlyAutoMap = buildMonthlyAutoMap(weeklyTrades);
   const monthlyAutoSnapshot = monthlyAutoMap[selectedMonth] || { count: 0, net: 0, wins: 0, losses: 0 };
   const updateWeeklyTrade = (index, patch) => {
-    const next = weeklyTrades.map((row, rowIndex) => (rowIndex === index ? { ...row, ...patch } : row));
+    const shouldAutoResult = ['entry', 'exit', 'lots', 'direction'].some((key) => Object.prototype.hasOwnProperty.call(patch, key));
+    const next = weeklyTrades.map((row, rowIndex) => {
+      if (rowIndex !== index) return row;
+      const merged = { ...row, ...patch };
+      return shouldAutoResult ? withAutoTradeResult(merged) : merged;
+    });
     update({ weeklyTrades: next });
   };
   const addWeeklyTrade = () => {
@@ -336,7 +377,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
     const autoRows = buildAnnualAutoRows(data.annualYear, data.monthlyByMonth, isEnglish);
     setData((prev) => {
       const current = Array.isArray(prev.annualRows) ? prev.annualRows : [];
-      const synced = autoRows.map((row, index) => ({ ...row, ...(current[index] || {}) }));
+      const synced = autoRows.map((row, index) => ({ ...(current[index] || {}), ...row }));
       return JSON.stringify(current) === JSON.stringify(synced) ? prev : { ...prev, annualRows: synced };
     });
   }, [data.annualYear, data.monthlyByMonth, isEnglish, setData]);
@@ -373,19 +414,22 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
     updateProfile({ labels: { ...(profileState.labels || {}), [profile]: trimmed } });
   };
 
-  const weeklyStats = weeklyTrades.reduce((acc, row) => {
+  const weeklyStats = visibleWeeklyTrades.reduce((acc, { row }) => {
     const result = Number(String(row.result || '').replace(',', '.'));
     if (Number.isFinite(result) && result !== 0) {
       acc.count += 1;
       acc.net += result;
       if (result > 0) acc.wins += 1;
       if (result < 0) acc.losses += 1;
+      if (result > 0) acc.grossWins += result;
+      if (result < 0) acc.grossLosses += Math.abs(result);
     }
     return acc;
-  }, { count: 0, net: 0, wins: 0, losses: 0 });
+  }, { count: 0, net: 0, wins: 0, losses: 0, grossWins: 0, grossLosses: 0 });
   const weeklyWinrate = weeklyStats.count ? Math.round((weeklyStats.wins / weeklyStats.count) * 100) : 0;
+  const weeklyProfitFactor = weeklyStats.grossLosses > 0 ? weeklyStats.grossWins / weeklyStats.grossLosses : null;
   const annualBaseRows = buildAnnualAutoRows(data.annualYear, data.monthlyByMonth, isEnglish);
-  const annualRows = annualBaseRows.map((autoRow, index) => ({ ...autoRow, ...(data.annualRows?.[index] || {}) }));
+  const annualRows = annualBaseRows.map((autoRow, index) => ({ ...(data.annualRows?.[index] || {}), ...autoRow }));
   const seriesP1 = Array.isArray(data.seriesP1) ? data.seriesP1 : [];
   const seriesP2 = Array.isArray(data.seriesP2) ? data.seriesP2 : [];
   const series20Part1 = ensureS20Rows(seriesP1);
@@ -398,10 +442,13 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
       if (value > 0) acc.wins += 1;
       if (value < 0) acc.losses += 1;
       acc.net += value;
+      if (value > 0) acc.grossWins += value;
+      if (value < 0) acc.grossLosses += Math.abs(value);
     }
     return acc;
-  }, { wins: 0, losses: 0, net: 0 });
+  }, { wins: 0, losses: 0, net: 0, grossWins: 0, grossLosses: 0 });
   const seriesWinrate = seriesStats.wins + seriesStats.losses ? Math.round((seriesStats.wins / (seriesStats.wins + seriesStats.losses)) * 100) : 0;
+  const seriesProfitFactor = seriesStats.grossLosses > 0 ? seriesStats.grossWins / seriesStats.grossLosses : 0;
   const analysisAverage = Math.round((analysisScores.reduce((a, b) => a + Number(b || 0), 0) / analysisScores.length) * 10) / 10;
 
   useEffect(() => {
@@ -449,7 +496,6 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
 
         <div className="sidebar-bottom">
           <p className="app-plan">{profileLabel}</p>
-          <p className="app-plan">{userEmail}</p>
           <span style={{ wordBreak: 'break-all' }}>{userEmail}</span>
           <form action="/api/auth/logout" method="post">
             <button type="submit" className="sidebar-logout">Déconnexion</button>
@@ -710,8 +756,8 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
             <div className="stat-box"><div className={`v ${weeklyStats.net >= 0 ? 'pos' : 'neg'}`}>{formatMoney(weeklyStats.net, isEnglish)} {currencySymbol}</div><div className="l">{t('tracker.weeklyNet')}</div></div>
             <div className="stat-box"><div className="v">{weeklyWinrate.toFixed(1)} %</div><div className="l">{t('tracker.weeklyWinrate')}</div></div>
             <div className="stat-box"><div className="v">{weeklyStats.wins} / {weeklyStats.losses}</div><div className="l">{t('tracker.weeklyWinLose')}</div></div>
-            <div className="stat-box"><div className="v">{weeklyStats.count ? (weeklyStats.net / weeklyStats.count).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0,00'} €</div><div className="l">Moyenne / trade</div></div>
-            <div className="stat-box"><div className="v">—</div><div className="l">Facteur profit</div></div>
+            <div className="stat-box"><div className="v">{weeklyStats.count ? (weeklyStats.net / weeklyStats.count).toLocaleString(isEnglish ? 'en-US' : 'fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : (isEnglish ? '0.00' : '0,00')} {currencySymbol}</div><div className="l">Moyenne / trade</div></div>
+            <div className="stat-box"><div className="v">{weeklyProfitFactor == null ? '—' : weeklyProfitFactor.toFixed(2)}</div><div className="l">Facteur profit</div></div>
           </div>
 
           <div className="card">
@@ -736,33 +782,33 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
                   </tr>
                 </thead>
                 <tbody>
-                  {weeklyTrades.map((row, index) => (
-                    <tr key={`${index}-${row.date || 'trade'}`}>
-                      <td><input className="input-dark invest-holding-input tracker-date-input" type="date" value={row.date || ''} onChange={(e) => updateWeeklyTrade(index, { date: e.target.value })} /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={row.asset || ''} onChange={(e) => updateWeeklyTrade(index, { asset: e.target.value })} /></td>
+                  {visibleWeeklyTrades.map(({ row, originalIndex }) => (
+                    <tr key={`${originalIndex}-${row.date || 'trade'}`}>
+                      <td><input className="input-dark invest-holding-input tracker-date-input" type="date" value={row.date || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { date: e.target.value })} /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={row.asset || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { asset: e.target.value })} /></td>
                       <td>
-                        <select className="input-dark invest-holding-input" value={row.direction || 'long'} onChange={(e) => updateWeeklyTrade(index, { direction: e.target.value })}>
+                        <select className="input-dark invest-holding-input" value={row.direction || 'long'} onChange={(e) => updateWeeklyTrade(originalIndex, { direction: e.target.value })}>
                           <option value="long">Long</option>
                           <option value="short">Short</option>
                         </select>
                       </td>
                       <td>
                         {row.direction === 'short' ? (
-                          <input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.assetPrice, isEnglish)} onChange={(e) => updateWeeklyTrade(index, { assetPrice: toStoredAmount(e.target.value, isEnglish) })} placeholder={isEnglish ? 'Current price' : 'Prix actuel'} />
+                          <input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.assetPrice, isEnglish)} onChange={(e) => updateWeeklyTrade(originalIndex, { assetPrice: toStoredAmount(e.target.value, isEnglish) })} placeholder={isEnglish ? 'Current price' : 'Prix actuel'} />
                           ) : (
                             <span className="hint" style={{ margin: 0 }}>{isEnglish ? 'Visible when selling' : 'Visible pour vendre'}</span>
                           )}
                       </td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={row.lots || ''} onChange={(e) => updateWeeklyTrade(index, { lots: e.target.value })} /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.entry, isEnglish)} onChange={(e) => updateWeeklyTrade(index, { entry: toStoredAmount(e.target.value, isEnglish) })} /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.exit, isEnglish)} onChange={(e) => updateWeeklyTrade(index, { exit: toStoredAmount(e.target.value, isEnglish) })} /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={row.rr || ''} onChange={(e) => updateWeeklyTrade(index, { rr: e.target.value })} /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.result, isEnglish)} onChange={(e) => updateWeeklyTrade(index, { result: toStoredAmount(e.target.value, isEnglish) })} /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={row.emotion || ''} onChange={(e) => updateWeeklyTrade(index, { emotion: e.target.value })} /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={row.comment || ''} onChange={(e) => updateWeeklyTrade(index, { comment: e.target.value })} /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={row.lots || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { lots: e.target.value })} /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.entry, isEnglish)} onChange={(e) => updateWeeklyTrade(originalIndex, { entry: toStoredAmount(e.target.value, isEnglish) })} /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.exit, isEnglish)} onChange={(e) => updateWeeklyTrade(originalIndex, { exit: toStoredAmount(e.target.value, isEnglish) })} /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={row.rr || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { rr: e.target.value })} /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.result, isEnglish)} onChange={(e) => updateWeeklyTrade(originalIndex, { result: toStoredAmount(e.target.value, isEnglish) })} /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={row.emotion || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { emotion: e.target.value })} /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={row.comment || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { comment: e.target.value })} /></td>
                       <td>
                         <div className="s20-tv-stack">
-                          <input className="input-dark invest-holding-input" type="url" value={row.tvUrl || ''} onChange={(e) => updateWeeklyTrade(index, { tvUrl: e.target.value })} placeholder="tradingview.com/x/…" />
+                          <input className="input-dark invest-holding-input" type="url" value={row.tvUrl || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { tvUrl: e.target.value })} placeholder="tradingview.com/x/…" />
                           <button type="button" className="btn-ghost btn-compact s20-tv-open" onClick={() => {
                             const u = String(row.tvUrl || '').trim();
                             if (!u) return alert('Colle d’abord le lien TradingView.');
@@ -770,7 +816,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
                           }}>Ouvrir</button>
                         </div>
                       </td>
-                      <td><button type="button" className="btn btn-ghost" onClick={() => removeWeeklyTrade(index)}>✕</button></td>
+                      <td><button type="button" className="btn btn-ghost" aria-label="Supprimer ce trade" onClick={() => removeWeeklyTrade(originalIndex)}>✕</button></td>
                     </tr>
                   ))}
                 </tbody>
@@ -820,8 +866,8 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
                   <button
                     key={star}
                     type="button"
-                    className={`star-btn ${Number(data.quarterEmotionScore || 0) >= star ? 'is-active' : ''}`}
-                    onClick={() => update({ quarterEmotionScore: star })}
+                    className={`star-btn ${Number(quarterSnapshot.quarterEmotionScore || 0) >= star ? 'is-active' : ''}`}
+                    onClick={() => setQuarterField('quarterEmotionScore', star)}
                     aria-label={`${star} étoile${star > 1 ? 's' : ''}`}
                   >
                     ★
@@ -935,7 +981,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
                       <td>{typeof item.stats?.ratio === 'number' ? item.stats.ratio.toFixed(2) : '—'}</td>
                       <td>
                         <button type="button" className="btn btn-ghost btn-compact" onClick={() => update({ seriesP1: item.part1 || [], seriesP2: item.part2 || [], seriesPlan: item.bilan?.plan || '', seriesEmotion: item.bilan?.emotion || '', seriesLesson: item.bilan?.lesson || '', seriesNext: item.bilan?.next || '' })}>Restaurer</button>
-                        <button type="button" className="btn btn-ghost btn-compact" style={{ marginLeft: '0.35rem', color: 'var(--danger)', borderColor: 'rgba(196,92,92,0.4)' }} onClick={() => update({ seriesHistory: seriesHistory.filter((_, i) => i !== index) })}>Suppr</button>
+                        <button type="button" className="btn btn-ghost btn-compact" aria-label={`Supprimer l’archive ${item.label || index + 1}`} style={{ marginLeft: '0.35rem', color: 'var(--danger)', borderColor: 'rgba(196,92,92,0.4)' }} onClick={() => update({ seriesHistory: seriesHistory.filter((_, i) => i !== index) })}>Suppr</button>
                       </td>
                     </tr>
                   )) : <tr><td colSpan="6" className="hint">Aucune archive pour l’instant.</td></tr>}
@@ -1048,7 +1094,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
                   part1: series20Part1,
                   part2: series20Part2,
                   bilan: { plan: data.seriesPlan || '', emotion: data.seriesEmotion || '', lesson: data.seriesLesson || '', next: data.seriesNext || '' },
-                  stats: { winrate: seriesWinrate, wins: seriesStats.wins, losses: seriesStats.losses, ratio: seriesStats.losses ? Math.abs(seriesStats.net) / seriesStats.losses : 0 },
+                  stats: { winrate: seriesWinrate, wins: seriesStats.wins, losses: seriesStats.losses, ratio: seriesProfitFactor },
                 };
                 update({ seriesHistory: [entry, ...seriesHistory], seriesHistoryLabel: entry.label });
               }}>Archiver cette série dans l’historique</button>
