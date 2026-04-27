@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from 'react';
+import { useLocale } from '@/lib/locale';
 
 const THEME_KEY = 'mindset-theme';
 
 export default function ThemeToggle({ className = '' }) {
   const [theme, setTheme] = useState('dark');
+  const { t } = useLocale();
 
   useEffect(() => {
     try {
@@ -30,8 +32,8 @@ export default function ThemeToggle({ className = '' }) {
   }
 
   return (
-    <button type="button" className={`theme-toggle ${className}`.trim()} onClick={toggleTheme} aria-label="Basculer le thème">
-      {theme === 'dark' ? 'Mode clair' : 'Mode sombre'}
+    <button type="button" className={`theme-toggle ${className}`.trim()} onClick={toggleTheme} aria-label={theme === 'dark' ? t('theme.light') : t('theme.dark')}>
+      {theme === 'dark' ? t('theme.light') : t('theme.dark')}
     </button>
   );
 }

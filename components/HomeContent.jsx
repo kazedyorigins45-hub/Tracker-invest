@@ -5,7 +5,7 @@ import { PLANS } from '@/lib/plans';
 import { useLocale } from '@/lib/locale';
 import DashboardContent from '@/components/DashboardContent';
 
-export default function HomeContent({ planCode, subscription, userEmail }) {
+export default function HomeContent() {
   const { t } = useLocale();
 
   return (
@@ -29,7 +29,7 @@ export default function HomeContent({ planCode, subscription, userEmail }) {
         </div>
 
         <div className="home-hero-side">
-          <DashboardContent planCode={planCode} subscription={subscription} userEmail={userEmail} />
+          <DashboardContent />
         </div>
       </section>
 

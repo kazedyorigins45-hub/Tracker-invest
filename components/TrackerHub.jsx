@@ -1,32 +1,99 @@
 "use client";
 
 import Link from 'next/link';
+import { useEffect } from 'react';
 import { canAccess, getSubscriptionLabel } from '@/lib/plans';
 import { useAccountPayload } from '@/lib/use-account-payload';
 import { useLocale } from '@/lib/locale';
+import LogoMark from '@/components/LogoMark';
 import ThemeToggle from '@/components/ThemeToggle';
 import LanguageToggle from '@/components/LanguageToggle';
 
 const NAV = [
-  ['cover', 'cover'],
-  ['mindset', 'mindset'],
-  ['plan', 'plan'],
-  ['weekly', 'weeklyReview'],
-  ['monthly', 'monthlyReview'],
-  ['quarter', 'quarterlyReview'],
-  ['year', 'yearlyReview'],
-  ['series', 'seriesReview'],
+  ['cover', 'tracker.coverTitle'],
+  ['mindset', 'tracker.mindsetTitle'],
+  ['plan', 'tracker.planTitle'],
+  ['weekly', 'tracker.weeklyTitle'],
+  ['monthly', 'tracker.monthlyReview'],
+  ['quarter', 'tracker.quarter'],
+  ['year', 'tracker.yearTitle'],
+  ['series20', 'tracker.series'],
 ];
 
-const AUTO_SCORE_KEYS = ['projectOpportunities', 'projectTechnology', 'projectEcosystem', 'projectRoadmap', 'projectMarketing', 'projectMomentum'];
+const SERIES20_CELLS = ['date', 'symbol', 'side', 'entry', 'sl', 'tp', 'result', 'emotion', 'tvUrl'];
+const ANALYSIS_LABELS = ['Opportunités marché', 'Technologie', 'Écosystème', 'Roadmap', 'Présence sociale & marketing', 'Performance & momentum'];
+
 const MORNING_ITEMS_FR = ['Revue rapide du plan', 'Respiration / recentrage', 'Lecture des niveaux clés', 'Aucun trade impulsif'];
 const MORNING_ITEMS_EN = ['Quick review of the plan', 'Breathing / reset', 'Read key levels', 'No impulsive trade'];
 const COMMITMENT_ITEMS_FR = ['Je respecte ma discipline', 'Je coupe vite les pertes', 'Je n’ajoute pas sous émotion', 'Je stoppe si je ne suis pas concentré'];
 const COMMITMENT_ITEMS_EN = ['I keep my discipline', 'I cut losses quickly', 'I do not add under emotion', 'I stop if I am not focused'];
+const FX_EUR_USD = 1.1;
 
 function monthKey() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+}
+
+function parseAmount(value) {
+  const n = Number(String(value).replace(',', '.'));
+  return Number.isFinite(n) ? n : null;
+}
+
+function toStoredAmount(value, isEnglish) {
+  if (!isEnglish) return value;
+  const n = parseAmount(value);
+  if (n == null) return value;
+  return String(n / FX_EUR_USD);
+}
+
+function toDisplayAmount(value, isEnglish) {
+  if (!isEnglish) return value || '';
+  const n = parseAmount(value);
+  if (n == null) return value || '';
+  return String(Number((n * FX_EUR_USD).toFixed(2)));
+}
+
+function formatMoney(value, isEnglish) {
+  const n = parseAmount(value);
+  if (n == null) return value || '0.00';
+  return Number((n * (isEnglish ? FX_EUR_USD : 1)).toFixed(2)).toLocaleString(isEnglish ? 'en-US' : 'fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function buildMonthlyAutoMap(trades = []) {
+  return trades.reduce((acc, row) => {
+    const month = String(row.date || '').slice(0, 7);
+    if (!month || month.length < 7) return acc;
+    const result = parseAmount(row.result);
+    const bucket = acc[month] || { trades: [], count: 0, net: 0, wins: 0, losses: 0 };
+    bucket.trades.push({ ...row, result: result ?? row.result });
+    if (result != null) {
+      bucket.count += 1;
+      bucket.net += result;
+      if (result > 0) bucket.wins += 1;
+      if (result < 0) bucket.losses += 1;
+    }
+    acc[month] = bucket;
+    return acc;
+  }, {});
+}
+
+function buildAnnualAutoRows(year, monthlyByMonth = {}, isEnglish) {
+  const monthsFr = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+  const monthsEn = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const monthLabels = isEnglish ? monthsEn : monthsFr;
+  return monthLabels.map((label, index) => {
+    const monthKeyValue = `${year || new Date().getFullYear()}-${String(index + 1).padStart(2, '0')}`;
+    const monthly = monthlyByMonth?.[monthKeyValue] || {};
+    return {
+      month: label,
+      trades: monthly.monthlyTradesTotal ?? '',
+      winners: monthly.monthlyWinnersLosers ? String(monthly.monthlyWinnersLosers).split('/')[0]?.trim() || '' : '',
+      losers: monthly.monthlyWinnersLosers ? String(monthly.monthlyWinnersLosers).split('/')[1]?.trim() || '' : '',
+      performance: monthly.monthlyGlobalResult != null ? String(monthly.monthlyGlobalResult) : '',
+      emotions: monthly.monthlyEmotion || '',
+      lesson: monthly.monthlyLesson || '',
+    };
+  });
 }
 
 function defaultTrackerState() {
@@ -110,23 +177,15 @@ function defaultTrackerState() {
     seriesEmotion: '',
     seriesLesson: '',
     seriesNext: '',
-    analysisName: '',
-    analysisScores: [0, 0, 0, 0, 0, 0],
-    analysisVerdict: '',
     yearResult: '',
     yearDiscipline: '',
     yearFocus: '',
     seriesName: '',
     seriesObservation: '',
     seriesDecision: '',
-    projectName: '',
-    projectVerdict: '',
-    projectOpportunities: 7,
-    projectTechnology: 7,
-    projectEcosystem: 7,
-    projectRoadmap: 7,
-    projectMarketing: 7,
-    projectMomentum: 7,
+    analysisName: '',
+    analysisScores: [0, 0, 0, 0, 0, 0],
+    analysisVerdict: '',
   };
 }
 
@@ -148,6 +207,9 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
   const page = data.page === 'tradingPlan' ? 'plan' : (data.page || 'cover');
   const subscriptionLabel = getSubscriptionLabel(subscription, planCode);
   const { t, locale } = useLocale();
+  const isEnglish = locale === 'en';
+  const currencySymbol = isEnglish ? '$' : '€';
+  const currencyUnit = `${currencySymbol}/u`;
   const morningItems = locale === 'en' ? MORNING_ITEMS_EN : MORNING_ITEMS_FR;
   const commitmentItems = locale === 'en' ? COMMITMENT_ITEMS_EN : COMMITMENT_ITEMS_FR;
   const profileLabel = profileState.labels?.[profile] || (profile === 'alt' ? t('tracker.profileSecondary') : t('tracker.profilePrimary'));
@@ -162,12 +224,14 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
 
   const update = (patch) => setData((prev) => ({ ...prev, ...patch }));
   const weeklyTrades = Array.isArray(data.weeklyTrades) ? data.weeklyTrades : [];
+  const monthlyAutoMap = buildMonthlyAutoMap(weeklyTrades);
+  const monthlyAutoSnapshot = monthlyAutoMap[selectedMonth] || { count: 0, net: 0, wins: 0, losses: 0 };
   const updateWeeklyTrade = (index, patch) => {
     const next = weeklyTrades.map((row, rowIndex) => (rowIndex === index ? { ...row, ...patch } : row));
     update({ weeklyTrades: next });
   };
   const addWeeklyTrade = () => {
-    update({ weeklyTrades: [...weeklyTrades, { date: '', asset: '', direction: 'long', lots: '', entry: '', exit: '', rr: '', result: '', emotion: '', comment: '' }] });
+    update({ weeklyTrades: [...weeklyTrades, { date: '', asset: '', direction: 'long', assetPrice: '', lots: '', entry: '', exit: '', rr: '', result: '', emotion: '', comment: '', tvUrl: '' }] });
   };
   const removeWeeklyTrade = (index) => {
     update({ weeklyTrades: weeklyTrades.filter((_, rowIndex) => rowIndex !== index) });
@@ -193,6 +257,108 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
     });
   };
 
+  const setAnnualField = (index, key, value) => {
+    setData((prev) => {
+      const next = Array.isArray(prev.annualRows) && prev.annualRows.length ? prev.annualRows.slice() : buildAnnualAutoRows(prev.annualYear, prev.monthlyByMonth, isEnglish);
+      next[index] = { ...(next[index] || {}), [key]: value };
+      return { ...prev, annualRows: next };
+    });
+  };
+
+  const updateSeriesRow = (partKey, index, key, value) => {
+    setData((prev) => {
+      const next = (prev[partKey] || []).slice();
+      while (next.length < 10) next.push(normalizeS20Row());
+      next[index] = { ...(next[index] || normalizeS20Row()), [key]: value };
+      return { ...prev, [partKey]: next };
+    });
+  };
+
+  const updateAnalysisScore = (index, value) => {
+    setData((prev) => {
+      const next = Array.isArray(prev.analysisScores) ? prev.analysisScores.slice() : [0, 0, 0, 0, 0, 0];
+      if (value === '') {
+        next[index] = '';
+      } else {
+        next[index] = Math.max(0, Math.min(10, Number(value) || 0));
+      }
+      return { ...prev, analysisScores: next };
+    });
+  };
+
+  useEffect(() => {
+    const autoByMonth = buildMonthlyAutoMap(Array.isArray(data.weeklyTrades) ? data.weeklyTrades : []);
+    setData((prev) => {
+      const nextMonthly = { ...(prev.monthlyByMonth || {}) };
+      let changed = false;
+
+      Object.entries(autoByMonth).forEach(([month, bucket]) => {
+        const winrate = bucket.count ? Math.round((bucket.wins / bucket.count) * 100) : 0;
+        const bestTrade = bucket.trades.reduce((best, row) => {
+          const r = parseAmount(row.result);
+          const currentBest = parseAmount(best?.result);
+          if (r == null) return best;
+          if (currentBest == null) return row;
+          return r > currentBest ? row : best;
+        }, null);
+        const dominantEmotion = bucket.trades.reduce((map, row) => {
+          const key = String(row.emotion || '').trim();
+          if (!key) return map;
+          map[key] = (map[key] || 0) + 1;
+          return map;
+        }, {});
+        const emotion = Object.entries(dominantEmotion).sort((a, b) => b[1] - a[1])[0]?.[0] || '';
+        const wins = bucket.wins;
+        const losses = bucket.losses;
+        const ratio = losses ? `${wins} / ${losses}` : `${wins} / 0`;
+        const existing = nextMonthly[month] || {};
+        const autoFields = {
+          monthlyTradesTotal: bucket.count,
+          monthlyGlobalResult: bucket.net,
+          monthlyWinrate: winrate,
+          monthlyWinnersLosers: `${wins} / ${losses}`,
+          monthlyBest: bestTrade?.asset ? `${bestTrade.asset}${bestTrade.result != null ? ` (${bestTrade.result})` : ''}` : '',
+          monthlyEmotion: emotion,
+          monthlyRatio: ratio,
+        };
+        const merged = { ...existing, ...autoFields };
+        if (JSON.stringify(existing) !== JSON.stringify(merged)) {
+          nextMonthly[month] = merged;
+          changed = true;
+        }
+      });
+
+      return changed ? { ...prev, monthlyByMonth: nextMonthly } : prev;
+    });
+  }, [data.weeklyTrades, setData]);
+
+  useEffect(() => {
+    const autoRows = buildAnnualAutoRows(data.annualYear, data.monthlyByMonth, isEnglish);
+    setData((prev) => {
+      const current = Array.isArray(prev.annualRows) ? prev.annualRows : [];
+      const synced = autoRows.map((row, index) => ({ ...row, ...(current[index] || {}) }));
+      return JSON.stringify(current) === JSON.stringify(synced) ? prev : { ...prev, annualRows: synced };
+    });
+  }, [data.annualYear, data.monthlyByMonth, isEnglish, setData]);
+
+  const normalizeS20Row = (row = {}) => ({
+    date: row.date || '',
+    symbol: row.symbol || '',
+    side: row.side || 'long',
+    entry: row.entry || '',
+    sl: row.sl || '',
+    tp: row.tp || '',
+    result: row.result || '',
+    emotion: row.emotion || '',
+    tvUrl: row.tvUrl || '',
+  });
+
+  const ensureS20Rows = (rows = []) => {
+    const next = rows.slice(0, 10).map(normalizeS20Row);
+    while (next.length < 10) next.push(normalizeS20Row());
+    return next;
+  };
+
   const switchProfile = (nextProfile) => {
     updateProfile({ current: nextProfile });
   };
@@ -207,7 +373,6 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
     updateProfile({ labels: { ...(profileState.labels || {}), [profile]: trimmed } });
   };
 
-  const score = Math.round(AUTO_SCORE_KEYS.reduce((sum, key) => sum + Number(data[key] || 0), 0) / AUTO_SCORE_KEYS.length);
   const weeklyStats = weeklyTrades.reduce((acc, row) => {
     const result = Number(String(row.result || '').replace(',', '.'));
     if (Number.isFinite(result) && result !== 0) {
@@ -219,87 +384,106 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
     return acc;
   }, { count: 0, net: 0, wins: 0, losses: 0 });
   const weeklyWinrate = weeklyStats.count ? Math.round((weeklyStats.wins / weeklyStats.count) * 100) : 0;
-  const annualRows = Array.isArray(data.annualRows) && data.annualRows.length ? data.annualRows : [];
+  const annualBaseRows = buildAnnualAutoRows(data.annualYear, data.monthlyByMonth, isEnglish);
+  const annualRows = annualBaseRows.map((autoRow, index) => ({ ...autoRow, ...(data.annualRows?.[index] || {}) }));
   const seriesP1 = Array.isArray(data.seriesP1) ? data.seriesP1 : [];
   const seriesP2 = Array.isArray(data.seriesP2) ? data.seriesP2 : [];
-  const analysisScores = Array.isArray(data.analysisScores) ? data.analysisScores : [0, 0, 0, 0, 0, 0];
+  const series20Part1 = ensureS20Rows(seriesP1);
+  const series20Part2 = ensureS20Rows(seriesP2);
+  const analysisScores = Array.isArray(data.analysisScores) && data.analysisScores.length === 6 ? data.analysisScores : [0, 0, 0, 0, 0, 0];
+  const seriesHistory = Array.isArray(data.seriesHistory) ? data.seriesHistory : [];
+  const seriesStats = [...series20Part1, ...series20Part2].reduce((acc, row) => {
+    const value = Number(String(row.result || '').replace(',', '.'));
+    if (Number.isFinite(value) && value !== 0) {
+      if (value > 0) acc.wins += 1;
+      if (value < 0) acc.losses += 1;
+      acc.net += value;
+    }
+    return acc;
+  }, { wins: 0, losses: 0, net: 0 });
+  const seriesWinrate = seriesStats.wins + seriesStats.losses ? Math.round((seriesStats.wins / (seriesStats.wins + seriesStats.losses)) * 100) : 0;
+  const analysisAverage = Math.round((analysisScores.reduce((a, b) => a + Number(b || 0), 0) / analysisScores.length) * 10) / 10;
+
+  useEffect(() => {
+    if (page === 'analysis') update({ page: 'cover' });
+  }, [page]);
 
   return (
     <div className="mindset-shell">
       <aside className="sidebar">
         <div className="brand">
-          <div className="tag">{t('app.trading')}</div>
+          <div className="tag">ELITE TRACKER</div>
           <Link href="/dashboard" className="brand-link"><h1>Elite Tracker</h1></Link>
-          <p className="tracker-quote">{t('tracker.subtitle')}</p>
-          <p className="app-plan">{t('app.subscription')} : {subscriptionLabel}</p>
+          <p className="tracker-quote">Carnet &amp; discipline</p>
+          <p className="app-plan">Abonnement : {subscriptionLabel}</p>
         </div>
 
         <nav className="sidebar-apps" aria-label="Navigation site">
-          <div className="sidebar-apps-label">{t('mindset.spaces')}</div>
-          <Link href="/mindset" className="app-link">{t('app.dashboardLink')}</Link>
-          <Link href="/tracker" className="app-link is-current">{t('app.trading')}</Link>
-          {canAccess(planCode, 'invest') ? <Link href="/invest" className="app-link">{t('app.invest')}</Link> : null}
-          <Link href="/mindset" className="app-link">{t('app.mindset')}</Link>
-          {canAccess(planCode, 'portfolio') ? <Link href="/portfolio" className="app-link">{t('app.portfolio')}</Link> : null}
+          <div className="sidebar-apps-label">Espaces</div>
+          <Link href="/" className="app-link">Accueil &amp; abonnements</Link>
+          <Link href="/tracker" className="app-link is-current">Trading — Elite Tracker</Link>
+          <Link href="/mindset" className="app-link">Mindset Invest</Link>
+          {canAccess(planCode, 'invest') ? <Link href="/invest" className="app-link">Investissement — Elite Invest</Link> : null}
+          {canAccess(planCode, 'portfolio') ? <Link href="/portfolio" className="app-link">Mes investissements</Link> : null}
         </nav>
 
         <div className="profile-bar">
-          <label htmlFor="trk-profile">{t('tracker.profileLabel')}</label>
+          <label htmlFor="trk-profile">Profil</label>
           <select id="trk-profile" value={profile} onChange={(e) => switchProfile(e.target.value)}>
-            <option value="default">{profileState.labels?.default || t('tracker.profilePrimary')}</option>
-            <option value="alt">{profileState.labels?.alt || t('tracker.profileSecondary')}</option>
+            <option value="default">{profileState.labels?.default || 'Compte principal'}</option>
+            <option value="alt">{profileState.labels?.alt || 'Compte secondaire'}</option>
           </select>
-          <p className="profile-hint">{t('tracker.profileHint')}</p>
           <div className="btn-row">
-            <button type="button" className="btn btn-ghost" onClick={() => switchProfile(profile === 'default' ? 'alt' : 'default')}>{t('tracker.profileAdd')}</button>
-            <button type="button" className="btn btn-ghost" onClick={renameCurrentProfile}>{t('tracker.profileRename')}</button>
+            <button type="button" className="btn btn-ghost" onClick={() => switchProfile(profile === 'default' ? 'alt' : 'default')}>+ Profil</button>
+            <button type="button" className="btn btn-ghost" onClick={renameCurrentProfile}>Renommer</button>
           </div>
         </div>
 
         <div className="sidebar-inner">
           {NAV.map(([key, label]) => (
             <button key={key} type="button" className={`nav-item ${page === key ? 'active' : ''}`} onClick={() => update({ page: key })}>
-              {t(`tracker.nav.${label}`)}
+              {key === 'analysis' ? (locale === 'en' ? 'Project analysis' : 'Analyse de projet') : t(label)}
             </button>
           ))}
         </div>
 
         <div className="sidebar-bottom">
-          <p className="app-plan">{subscriptionLabel}</p>
+          <p className="app-plan">{profileLabel}</p>
+          <p className="app-plan">{userEmail}</p>
           <span style={{ wordBreak: 'break-all' }}>{userEmail}</span>
           <form action="/api/auth/logout" method="post">
-            <button type="submit" className="sidebar-logout">{t('site.logout')}</button>
+            <button type="submit" className="sidebar-logout">Déconnexion</button>
           </form>
         </div>
       </aside>
 
       <main className="main">
-        <div className="mindset-topbar">
+        <div className="mindset-topbar" style={{ justifyContent: 'flex-end' }}>
+          <LogoMark />
           <ThemeToggle className="theme-toggle--app" />
           <LanguageToggle className="theme-toggle--app" />
         </div>
         <section className={`page ${page === 'cover' ? 'active' : ''}`}>
-          <h1 className="page-title">{t('tracker.title')}</h1>
-          <p className="page-hero tracker-quote">{t('tracker.subtitle')}</p>
-          <div className="class-pills"><span>Session</span><span>Risque</span><span>R/R</span><span>Journal</span><span>Bilan</span></div>
+          <span className="dec-arrow" aria-hidden="true">↗</span>
+          <h1 className="page-title">Du mental au profit</h1>
+          <p className="page-hero">Tout commence par ton mindset. Ce carnet t’accompagne vers la rigueur, la clarté et la croissance — pour ce profil d’investissement.</p>
           <div className="card">
-            <h2>{t('tracker.coverTitle')}</h2>
-            <p className="hint">{t('tracker.coverSub')}</p>
+            <h2>Journal de trading &amp; développement personnel</h2>
             <div className="grid-3 tracker-cover-grid" style={{ marginTop: '1rem' }}>
               <div className="field-block">
-                <label>{t('tracker.coverName')}</label>
-                <input className="input-dark tracker-cover-input" type="text" value={data.journalName} onChange={(e) => update({ journalName: e.target.value })} placeholder={t('tracker.coverNamePlaceholder')} />
+                <label>Nom</label>
+                <input className="input-dark tracker-cover-input" type="text" value={data.journalName || ''} onChange={(e) => update({ journalName: e.target.value })} placeholder="Ton nom" />
               </div>
               <div className="field-block">
-                <label>{t('tracker.coverPeriod')}</label>
-                <input className="input-dark tracker-cover-input" type="text" value={data.journalPeriod} onChange={(e) => update({ journalPeriod: e.target.value })} placeholder={t('tracker.coverPeriodPlaceholder')} />
+                <label>Période</label>
+                <input className="input-dark tracker-cover-input" type="text" value={data.journalPeriod || ''} onChange={(e) => update({ journalPeriod: e.target.value })} placeholder="ex. 2026 — T1" />
               </div>
               <div className="field-block">
-                <label>{t('tracker.coverObjective')}</label>
-                <input className="input-dark tracker-cover-input" type="text" value={data.journalObjective} onChange={(e) => update({ journalObjective: e.target.value })} placeholder={t('tracker.coverObjectivePlaceholder')} />
+                <label>Objectif principal</label>
+                <input className="input-dark tracker-cover-input" type="text" value={data.journalObjective || ''} onChange={(e) => update({ journalObjective: e.target.value })} placeholder="Objectif clé" />
               </div>
             </div>
-            <blockquote className="tracker-quote tracker-quote--block">{t('tracker.einsteinQuote')}</blockquote>
+            <p className="quote-footer">« Au milieu de chaque difficulté se trouve une opportunité. » — Albert Einstein</p>
           </div>
         </section>
 
@@ -309,33 +493,33 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
           <div className="toolbar">
             <div>
               <label htmlFor="mo-month">{t('tracker.monthlyMonth')}</label>
-              <input type="month" id="mo-month" className="input-dark tracker-date-input" value={selectedMonth} onChange={(e) => update({ monthlyMonth: e.target.value })} />
+              <input type="month" id="mo-month" className="input-dark tracker-date-input tracker-date-mini" value={selectedMonth} onChange={(e) => update({ monthlyMonth: e.target.value })} />
             </div>
           </div>
 
           <div className="stats-row" id="mo-stats">
-            <div className="stat-box"><div className="v">0</div><div className="l">{t('tracker.monthlyTradesTotal')}</div></div>
-            <div className="stat-box"><div className="v">0€</div><div className="l">{t('tracker.monthlyGlobalResult')}</div></div>
-            <div className="stat-box"><div className="v">0%</div><div className="l">{t('tracker.monthlyWinrate')}</div></div>
-            <div className="stat-box"><div className="v">0 / 0</div><div className="l">{t('tracker.monthlyWinnersLosers')}</div></div>
+            <div className="stat-box"><div className="v">{monthlyAutoSnapshot.count || 0}</div><div className="l">{t('tracker.monthlyTradesTotal')}</div></div>
+            <div className="stat-box"><div className={`v ${(monthlyAutoSnapshot.net || 0) >= 0 ? 'pos' : 'neg'}`}>{formatMoney(monthlyAutoSnapshot.net || 0, isEnglish)} {currencySymbol}</div><div className="l">{t('tracker.monthlyGlobalResult')}</div></div>
+            <div className="stat-box"><div className="v">{monthlyAutoSnapshot.count ? Math.round((monthlyAutoSnapshot.wins / monthlyAutoSnapshot.count) * 100) : 0}%</div><div className="l">{t('tracker.monthlyWinrate')}</div></div>
+            <div className="stat-box"><div className="v">{monthlyAutoSnapshot.wins || 0} / {monthlyAutoSnapshot.losses || 0}</div><div className="l">{t('tracker.monthlyWinnersLosers')}</div></div>
           </div>
 
           <div className="grid-2">
             <div className="card">
               <label htmlFor="mo-capital">{t('tracker.monthlyCapitalStart')}</label>
-              <input type="text" id="mo-capital" className="input-dark" value={monthlySnapshot.monthlyCapital || ''} onChange={(e) => setMonthlyField('monthlyCapital', e.target.value)} />
+              <input type="text" id="mo-capital" className="input-dark tracker-monthly-single" value={monthlySnapshot.monthlyCapital || ''} onChange={(e) => setMonthlyField('monthlyCapital', e.target.value)} />
               <label htmlFor="mo-best">{t('tracker.monthlyBestTrade')}</label>
-              <textarea id="mo-best" rows="2" className="input-dark portfolio-note" value={monthlySnapshot.monthlyBest || ''} onChange={(e) => setMonthlyField('monthlyBest', e.target.value)} />
+              <textarea id="mo-best" rows="2" className="input-dark portfolio-note" value={monthlySnapshot.monthlyBest || monthlyAutoSnapshot.monthlyBest || ''} onChange={(e) => setMonthlyField('monthlyBest', e.target.value)} />
               <label htmlFor="mo-emotion">{t('tracker.monthlyEmotion')}</label>
-              <input type="text" id="mo-emotion" className="input-dark" value={monthlySnapshot.monthlyEmotion || ''} onChange={(e) => setMonthlyField('monthlyEmotion', e.target.value)} />
+              <input type="text" id="mo-emotion" className="input-dark tracker-monthly-single" value={monthlySnapshot.monthlyEmotion || monthlyAutoSnapshot.monthlyEmotion || ''} onChange={(e) => setMonthlyField('monthlyEmotion', e.target.value)} />
             </div>
             <div className="card">
               <label htmlFor="mo-ratio-manual">{t('tracker.monthlyRatio')}</label>
-              <input type="text" id="mo-ratio-manual" className="input-dark" value={monthlySnapshot.monthlyRatio || ''} onChange={(e) => setMonthlyField('monthlyRatio', e.target.value)} placeholder={t('tracker.monthlyRatioPlaceholder')} />
+              <input type="text" id="mo-ratio-manual" className="input-dark tracker-monthly-single" value={monthlySnapshot.monthlyRatio || monthlyAutoSnapshot.monthlyRatio || ''} onChange={(e) => setMonthlyField('monthlyRatio', e.target.value)} placeholder="Auto affiché dans les stats ci-dessus" />
               <label htmlFor="mo-lesson">{t('tracker.monthlyLesson')}</label>
               <textarea id="mo-lesson" rows="3" className="input-dark portfolio-note" value={monthlySnapshot.monthlyLesson || ''} onChange={(e) => setMonthlyField('monthlyLesson', e.target.value)} />
               <label htmlFor="mo-result-manual">{t('tracker.monthlyResult')}</label>
-              <input type="text" id="mo-result-manual" className="input-dark" value={monthlySnapshot.monthlyResult || ''} onChange={(e) => setMonthlyField('monthlyResult', e.target.value)} placeholder={t('tracker.monthlyResultPlaceholder')} />
+              <input type="text" id="mo-result-manual" className="input-dark tracker-monthly-single" value={monthlySnapshot.monthlyResult || formatMoney(monthlyAutoSnapshot.net || 0, isEnglish) || ''} onChange={(e) => setMonthlyField('monthlyResult', e.target.value)} placeholder="Synthèse manuelle" />
             </div>
           </div>
 
@@ -360,6 +544,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
             <h2>{t('tracker.monthlyNextTitle')}</h2>
             <textarea id="mo-next" rows="3" className="input-dark portfolio-note" value={monthlySnapshot.monthlyNext || ''} onChange={(e) => setMonthlyField('monthlyNext', e.target.value)} />
           </div>
+          <p className="quote-footer">« Ce que tu fais chaque jour t’amène là où tu seras demain. »</p>
         </section>
 
         <section className={`page ${page === 'mindset' ? 'active' : ''}`}>
@@ -368,40 +553,39 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
           <div className="grid-2 tracker-mindset-grid">
             <article className="card tracker-mindset-card">
               <h2>{t('tracker.mindsetDreamLife')}</h2>
-              <textarea className="input-dark portfolio-note tracker-mindset-textarea" rows="4" value={data.mindsetDreamLife} onChange={(e) => update({ mindsetDreamLife: e.target.value })} placeholder={t('tracker.mindsetDreamLifePlaceholder')} />
+              <textarea className="input-dark portfolio-note tracker-mindset-textarea" rows="4" value={data.mindsetDreamLife || ''} onChange={(e) => update({ mindsetDreamLife: e.target.value })} placeholder={t('tracker.mindsetDreamLifePlaceholder')} />
             </article>
             <article className="card tracker-mindset-card">
               <h2>{t('tracker.mindsetMeans')}</h2>
-              <textarea className="input-dark portfolio-note tracker-mindset-textarea" rows="4" value={data.mindsetMeans} onChange={(e) => update({ mindsetMeans: e.target.value })} placeholder={t('tracker.mindsetMeansPlaceholder')} />
+              <textarea className="input-dark portfolio-note tracker-mindset-textarea" rows="4" value={data.mindsetMeans || ''} onChange={(e) => update({ mindsetMeans: e.target.value })} placeholder={t('tracker.mindsetMeansPlaceholder')} />
             </article>
           </div>
 
           <div className="card tracker-mindset-card" style={{ marginTop: '1rem' }}>
             <h2>{t('tracker.mindsetGoals')}</h2>
             <div className="grid-3 tracker-mindset-grid-3">
-              <div className="field-block"><label>{t('tracker.mindsetGoalShort')}</label><textarea className="input-dark tracker-mindset-textarea" rows="3" value={data.mindsetGoalShort} onChange={(e) => update({ mindsetGoalShort: e.target.value })} placeholder={t('tracker.mindsetGoalShortPlaceholder')} /></div>
-              <div className="field-block"><label>{t('tracker.mindsetGoalMedium')}</label><textarea className="input-dark tracker-mindset-textarea" rows="3" value={data.mindsetGoalMedium} onChange={(e) => update({ mindsetGoalMedium: e.target.value })} placeholder={t('tracker.mindsetGoalMediumPlaceholder')} /></div>
-              <div className="field-block"><label>{t('tracker.mindsetGoalLong')}</label><textarea className="input-dark tracker-mindset-textarea" rows="3" value={data.mindsetGoalLong} onChange={(e) => update({ mindsetGoalLong: e.target.value })} placeholder={t('tracker.mindsetGoalLongPlaceholder')} /></div>
+               <div className="field-block"><label>{t('tracker.mindsetGoalShort')}</label><textarea className="input-dark tracker-mindset-textarea" rows="3" value={data.mindsetGoalShort || ''} onChange={(e) => update({ mindsetGoalShort: e.target.value })} placeholder={t('tracker.mindsetGoalShortPlaceholder')} /></div>
+               <div className="field-block"><label>{t('tracker.mindsetGoalMedium')}</label><textarea className="input-dark tracker-mindset-textarea" rows="3" value={data.mindsetGoalMedium || ''} onChange={(e) => update({ mindsetGoalMedium: e.target.value })} placeholder={t('tracker.mindsetGoalMediumPlaceholder')} /></div>
+               <div className="field-block"><label>{t('tracker.mindsetGoalLong')}</label><textarea className="input-dark tracker-mindset-textarea" rows="3" value={data.mindsetGoalLong || ''} onChange={(e) => update({ mindsetGoalLong: e.target.value })} placeholder={t('tracker.mindsetGoalLongPlaceholder')} /></div>
             </div>
           </div>
 
           <div className="grid-2 tracker-mindset-grid" style={{ marginTop: '1rem' }}>
             <article className="card tracker-mindset-card">
               <h2>{t('tracker.mindsetMantras')}</h2>
-              <textarea className="input-dark tracker-mindset-textarea" rows="4" value={data.mindsetMantras} onChange={(e) => update({ mindsetMantras: e.target.value })} placeholder={t('tracker.mindsetMantrasPlaceholder')} />
+              <textarea className="input-dark tracker-mindset-textarea" rows="4" value={data.mindsetMantras || ''} onChange={(e) => update({ mindsetMantras: e.target.value })} placeholder={t('tracker.mindsetMantrasPlaceholder')} />
             </article>
             <article className="card tracker-mindset-card">
-              <h2>{t('tracker.mindsetTargetState')}</h2>
-              <textarea className="input-dark tracker-mindset-textarea" rows="4" value={data.mindsetTargetState} onChange={(e) => update({ mindsetTargetState: e.target.value })} placeholder={t('tracker.mindsetTargetStatePlaceholder')} />
+              <h2>État cible &amp; pièges</h2>
+              <label className="field-label">{t('tracker.mindsetTargetState')}</label>
+              <textarea className="input-dark tracker-mindset-textarea" rows="4" value={data.mindsetTargetState || ''} onChange={(e) => update({ mindsetTargetState: e.target.value })} placeholder={t('tracker.mindsetTargetStatePlaceholder')} />
+              <label className="field-label">{t('tracker.mindsetPitfalls')}</label>
+              <textarea className="input-dark tracker-mindset-textarea" rows="4" value={data.mindsetPitfalls || ''} onChange={(e) => update({ mindsetPitfalls: e.target.value })} placeholder={t('tracker.mindsetPitfallsPlaceholder')} />
             </article>
           </div>
 
-          <div className="grid-2 tracker-mindset-grid" style={{ marginTop: '1rem' }}>
-            <article className="card tracker-mindset-card">
-              <h2>{t('tracker.mindsetPitfalls')}</h2>
-              <textarea className="input-dark tracker-mindset-textarea" rows="4" value={data.mindsetPitfalls} onChange={(e) => update({ mindsetPitfalls: e.target.value })} placeholder={t('tracker.mindsetPitfallsPlaceholder')} />
-            </article>
-            <article className="card tracker-mindset-card">
+          <div className="card tracker-mindset-card" style={{ marginTop: '1rem' }}>
+            <article>
               <h2>{t('tracker.mindsetPerformanceZone')}</h2>
               <div className="tracker-check-grid">
                 <label><input type="checkbox" checked={!!data.mindsetPerformanceRested} onChange={() => toggleMindsetCheck('mindsetPerformanceRested')} /> {t('tracker.mindsetPerformanceRested')}</label>
@@ -409,7 +593,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
                 <label><input type="checkbox" checked={!!data.mindsetPerformanceNoEmotion} onChange={() => toggleMindsetCheck('mindsetPerformanceNoEmotion')} /> {t('tracker.mindsetPerformanceNoEmotion')}</label>
               </div>
               <label className="field-label">{t('tracker.mindsetIntent')}</label>
-              <textarea className="input-dark tracker-mindset-textarea" rows="3" value={data.mindsetIntent} onChange={(e) => update({ mindsetIntent: e.target.value })} placeholder={t('tracker.mindsetIntentPlaceholder')} />
+              <textarea className="input-dark tracker-mindset-textarea" rows="3" value={data.mindsetIntent || ''} onChange={(e) => update({ mindsetIntent: e.target.value })} placeholder={t('tracker.mindsetIntentPlaceholder')} />
             </article>
           </div>
 
@@ -438,87 +622,68 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
         </section>
 
         <section className={`page ${page === 'plan' ? 'active' : ''}`}>
-          <h1 className="page-title">{t('tracker.tradingPlanTitle')}</h1>
-          <p className="page-sub">{t('tracker.tradingPlanSub')}</p>
+          <h1 className="page-title">Plan de trading</h1>
+          <p className="page-hero">« Un plan de trading clarifie tes objectifs, structure ta méthode et réduit les erreurs émotionnelles. »</p>
 
-          <div className="grid-2 tracker-mindset-grid">
-            <article className="card tracker-mindset-card">
-              <h2>{t('tracker.tradingPlanVision')}</h2>
-              <textarea className="input-dark tracker-mindset-textarea" rows="4" value={data.tradingPlanVision} onChange={(e) => update({ tradingPlanVision: e.target.value })} placeholder={t('tracker.tradingPlanVisionPlaceholder')} />
-            </article>
-            <article className="card tracker-mindset-card">
-              <h2>{t('tracker.tradingPlanGoals')}</h2>
-              <textarea className="input-dark tracker-mindset-textarea" rows="4" value={data.tradingPlanGoals} onChange={(e) => update({ tradingPlanGoals: e.target.value })} placeholder={t('tracker.tradingPlanGoalsPlaceholder')} />
-            </article>
+          <div className="card">
+            <h2>{t('tracker.tradingPlanVisionTitle')}</h2>
+            <p className="hint" style={{ marginTop: 0 }}>{t('tracker.tradingPlanVisionHint')}</p>
+            <textarea className="input-dark tracker-mindset-textarea" rows="4" value={data.tradingPlanVision || ''} onChange={(e) => update({ tradingPlanVision: e.target.value })} />
+          </div>
+
+          <div className="card" style={{ marginTop: '1rem' }}>
+            <h2>{t('tracker.tradingPlanAvailabilityTitle')}</h2>
+            <p className="hint" style={{ marginTop: 0 }}>{t('tracker.tradingPlanAvailabilityHint')}</p>
+            <textarea className="input-dark tracker-mindset-textarea" rows="3" value={data.tradingPlanAvailability || ''} onChange={(e) => update({ tradingPlanAvailability: e.target.value })} />
+          </div>
+
+          <div className="card" style={{ marginTop: '1rem' }}>
+            <h2>{t('tracker.tradingPlanRiskBudgetTitle')}</h2>
+            <p className="hint" style={{ marginTop: 0 }}>{t('tracker.tradingPlanRiskBudgetHint')}</p>
+            <textarea className="input-dark tracker-mindset-textarea" rows="3" value={data.tradingPlanRiskBudget || ''} onChange={(e) => update({ tradingPlanRiskBudget: e.target.value })} />
+          </div>
+
+          <div className="card" style={{ marginTop: '1rem' }}>
+            <h2>{t('tracker.tradingPlanMarketsTitle')}</h2>
+            <p className="hint" style={{ marginTop: 0 }}>{t('tracker.tradingPlanMarketsHint')}</p>
+            <textarea className="input-dark tracker-mindset-textarea" rows="3" value={data.tradingPlanMarkets || ''} onChange={(e) => update({ tradingPlanMarkets: e.target.value })} />
           </div>
 
           <div className="grid-2 tracker-mindset-grid" style={{ marginTop: '1rem' }}>
-            <article className="card tracker-mindset-card">
-              <h2>{t('tracker.tradingPlanAvailability')}</h2>
-              <textarea className="input-dark tracker-mindset-textarea" rows="4" value={data.tradingPlanAvailability} onChange={(e) => update({ tradingPlanAvailability: e.target.value })} placeholder={t('tracker.tradingPlanAvailabilityPlaceholder')} />
-            </article>
-            <article className="card tracker-mindset-card">
-              <h2>{t('tracker.tradingPlanRiskBudget')}</h2>
-              <textarea className="input-dark tracker-mindset-textarea" rows="4" value={data.tradingPlanRiskBudget} onChange={(e) => update({ tradingPlanRiskBudget: e.target.value })} placeholder={t('tracker.tradingPlanRiskBudgetPlaceholder')} />
-            </article>
-          </div>
+            <div className="card tracker-mindset-card">
+              <h2>{t('tracker.tradingPlanRiskTitle')}</h2>
+              <div className="field-stack">
+                 <div className="field-block"><label>{t('tracker.tradingPlanRiskPerTrade')}</label><input className="input-dark tracker-trading-input" style={{ minHeight: '2.25rem', paddingTop: '0.45rem', paddingBottom: '0.45rem' }} type="text" value={data.tradingPlanRiskPerTrade || ''} onChange={(e) => update({ tradingPlanRiskPerTrade: e.target.value })} placeholder={t('tracker.tradingPlanRiskPerTradePlaceholder')} /></div>
+                 <div className="field-block"><label>{t('tracker.tradingPlanDailyLoss')}</label><input className="input-dark tracker-trading-input" style={{ minHeight: '2.25rem', paddingTop: '0.45rem', paddingBottom: '0.45rem' }} type="text" value={data.tradingPlanDailyLoss || ''} onChange={(e) => update({ tradingPlanDailyLoss: e.target.value })} placeholder={t('tracker.tradingPlanDailyLossPlaceholder')} /></div>
+                 <div className="field-block"><label>{t('tracker.tradingPlanWeeklyLoss')}</label><input className="input-dark tracker-trading-input" style={{ minHeight: '2.25rem', paddingTop: '0.45rem', paddingBottom: '0.45rem' }} type="text" value={data.tradingPlanWeeklyLoss || ''} onChange={(e) => update({ tradingPlanWeeklyLoss: e.target.value })} placeholder={t('tracker.tradingPlanWeeklyLossPlaceholder')} /></div>
+              </div>
+            </div>
 
-          <div className="grid-2 tracker-mindset-grid" style={{ marginTop: '1rem' }}>
-            <article className="card tracker-mindset-card">
-              <h2>{t('tracker.tradingPlanMarkets')}</h2>
-              <textarea className="input-dark tracker-mindset-textarea" rows="4" value={data.tradingPlanMarkets} onChange={(e) => update({ tradingPlanMarkets: e.target.value })} placeholder={t('tracker.tradingPlanMarketsPlaceholder')} />
-            </article>
-            <article className="card tracker-mindset-card">
-              <h2>{t('tracker.tradingPlanSizing')}</h2>
-              <textarea className="input-dark tracker-mindset-textarea" rows="4" value={data.tradingPlanSizing} onChange={(e) => update({ tradingPlanSizing: e.target.value })} placeholder={t('tracker.tradingPlanSizingPlaceholder')} />
-            </article>
-          </div>
-
-          <div className="card tracker-mindset-card" style={{ marginTop: '1rem' }}>
-            <h2>{t('tracker.tradingPlanRiskTitle')}</h2>
-            <div className="grid-3 tracker-mindset-grid-3">
-              <div className="field-block"><label>{t('tracker.tradingPlanRiskPerTrade')}</label><input className="input-dark tracker-trading-input" type="text" value={data.tradingPlanRiskPerTrade} onChange={(e) => update({ tradingPlanRiskPerTrade: e.target.value })} placeholder={t('tracker.tradingPlanRiskPerTradePlaceholder')} /></div>
-              <div className="field-block"><label>{t('tracker.tradingPlanDailyLoss')}</label><input className="input-dark tracker-trading-input" type="text" value={data.tradingPlanDailyLoss} onChange={(e) => update({ tradingPlanDailyLoss: e.target.value })} placeholder={t('tracker.tradingPlanDailyLossPlaceholder')} /></div>
-              <div className="field-block"><label>{t('tracker.tradingPlanWeeklyLoss')}</label><input className="input-dark tracker-trading-input" type="text" value={data.tradingPlanWeeklyLoss} onChange={(e) => update({ tradingPlanWeeklyLoss: e.target.value })} placeholder={t('tracker.tradingPlanWeeklyLossPlaceholder')} /></div>
+            <div className="card tracker-mindset-card">
+              <h2>{t('tracker.tradingPlanSessionsTitle')}</h2>
+              <label>{t('tracker.tradingPlanSessions')}</label>
+              <textarea className="input-dark tracker-mindset-textarea" rows="2" style={{ minHeight: '2.25rem', paddingTop: '0.45rem', paddingBottom: '0.45rem' }} value={data.tradingPlanSessions || ''} onChange={(e) => update({ tradingPlanSessions: e.target.value })} placeholder={t('tracker.tradingPlanSessionsPlaceholder')} />
+              <label>{t('tracker.tradingPlanTimeframes')}</label>
+              <textarea className="input-dark tracker-mindset-textarea" rows="2" style={{ minHeight: '2.25rem', paddingTop: '0.45rem', paddingBottom: '0.45rem' }} value={data.tradingPlanTimeframes || ''} onChange={(e) => update({ tradingPlanTimeframes: e.target.value })} placeholder={t('tracker.tradingPlanTimeframesPlaceholder')} />
+              <label>{t('tracker.tradingPlanInstruments')}</label>
+              <textarea className="input-dark tracker-mindset-textarea" rows="2" style={{ minHeight: '2.25rem', paddingTop: '0.45rem', paddingBottom: '0.45rem' }} value={data.tradingPlanInstruments || ''} onChange={(e) => update({ tradingPlanInstruments: e.target.value })} placeholder={t('tracker.tradingPlanInstrumentsPlaceholder')} />
             </div>
           </div>
 
-          <div className="grid-2 tracker-mindset-grid" style={{ marginTop: '1rem' }}>
-            <article className="card tracker-mindset-card">
-              <h2>{t('tracker.tradingPlanSessions')}</h2>
-              <textarea className="input-dark tracker-mindset-textarea" rows="4" value={data.tradingPlanSessions} onChange={(e) => update({ tradingPlanSessions: e.target.value })} placeholder={t('tracker.tradingPlanSessionsPlaceholder')} />
-            </article>
-            <article className="card tracker-mindset-card">
-              <h2>{t('tracker.tradingPlanTimeframes')}</h2>
-              <textarea className="input-dark tracker-mindset-textarea" rows="4" value={data.tradingPlanTimeframes} onChange={(e) => update({ tradingPlanTimeframes: e.target.value })} placeholder={t('tracker.tradingPlanTimeframesPlaceholder')} />
-            </article>
+          <div className="card" style={{ marginTop: '1rem' }}>
+            <h2>{t('tracker.tradingPlanEntriesTitle')}</h2>
+            <label>{t('tracker.tradingPlanSetups')}</label>
+            <textarea className="input-dark tracker-mindset-textarea" rows="3" value={data.tradingPlanSetups || ''} onChange={(e) => update({ tradingPlanSetups: e.target.value })} placeholder={t('tracker.tradingPlanSetupsPlaceholder')} />
+            <label>{t('tracker.tradingPlanEntries')}</label>
+            <textarea className="input-dark tracker-mindset-textarea" rows="3" value={data.tradingPlanEntries || ''} onChange={(e) => update({ tradingPlanEntries: e.target.value })} placeholder={t('tracker.tradingPlanEntriesPlaceholder')} />
           </div>
 
-          <div className="grid-2 tracker-mindset-grid" style={{ marginTop: '1rem' }}>
-            <article className="card tracker-mindset-card">
-              <h2>{t('tracker.tradingPlanInstruments')}</h2>
-              <textarea className="input-dark tracker-mindset-textarea" rows="4" value={data.tradingPlanInstruments} onChange={(e) => update({ tradingPlanInstruments: e.target.value })} placeholder={t('tracker.tradingPlanInstrumentsPlaceholder')} />
-            </article>
-            <article className="card tracker-mindset-card">
-              <h2>{t('tracker.tradingPlanSetups')}</h2>
-              <textarea className="input-dark tracker-mindset-textarea" rows="4" value={data.tradingPlanSetups} onChange={(e) => update({ tradingPlanSetups: e.target.value })} placeholder={t('tracker.tradingPlanSetupsPlaceholder')} />
-            </article>
-          </div>
-
-          <div className="grid-2 tracker-mindset-grid" style={{ marginTop: '1rem' }}>
-            <article className="card tracker-mindset-card">
-              <h2>{t('tracker.tradingPlanEntries')}</h2>
-              <textarea className="input-dark tracker-mindset-textarea" rows="4" value={data.tradingPlanEntries} onChange={(e) => update({ tradingPlanEntries: e.target.value })} placeholder={t('tracker.tradingPlanEntriesPlaceholder')} />
-            </article>
-            <article className="card tracker-mindset-card">
-              <h2>{t('tracker.tradingPlanExits')}</h2>
-              <textarea className="input-dark tracker-mindset-textarea" rows="4" value={data.tradingPlanExits} onChange={(e) => update({ tradingPlanExits: e.target.value })} placeholder={t('tracker.tradingPlanExitsPlaceholder')} />
-            </article>
-          </div>
-
-          <div className="card tracker-mindset-card" style={{ marginTop: '1rem' }}>
-            <h2>{t('tracker.tradingPlanNever')}</h2>
-            <textarea className="input-dark tracker-mindset-textarea" rows="4" value={data.tradingPlanNever} onChange={(e) => update({ tradingPlanNever: e.target.value })} placeholder={t('tracker.tradingPlanNeverPlaceholder')} />
+          <div className="card" style={{ marginTop: '1rem' }}>
+            <h2>{t('tracker.tradingPlanExitsTitle')}</h2>
+            <label>{t('tracker.tradingPlanExits')}</label>
+            <textarea className="input-dark tracker-mindset-textarea" rows="3" value={data.tradingPlanExits || ''} onChange={(e) => update({ tradingPlanExits: e.target.value })} placeholder={t('tracker.tradingPlanExitsPlaceholder')} />
+            <label>{t('tracker.tradingPlanNever')}</label>
+            <textarea className="input-dark tracker-mindset-textarea" rows="3" value={data.tradingPlanNever || ''} onChange={(e) => update({ tradingPlanNever: e.target.value })} placeholder={t('tracker.tradingPlanNeverPlaceholder')} />
           </div>
         </section>
 
@@ -528,41 +693,45 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
 
           <div className="toolbar">
             <div>
-              <label>{t('tracker.weeklyMonth')}</label>
-              <input type="month" className="input-dark tracker-date-input" value={data.weeklyMonth || ''} onChange={(e) => update({ weeklyMonth: e.target.value })} />
+              <label htmlFor="w-month">{t('tracker.weeklyMonth')}</label>
+              <input type="month" id="w-month" className="input-dark tracker-date-input tracker-date-mini" title="Tous les trades de ce mois apparaissent dans le tableau" value={data.weeklyMonth || ''} onChange={(e) => update({ weeklyMonth: e.target.value })} />
             </div>
             <div>
-              <label>{t('tracker.weeklyWeek')}</label>
-              <input type="week" className="input-dark tracker-date-input" value={data.weeklyWeek || ''} onChange={(e) => update({ weeklyWeek: e.target.value })} />
+              <label htmlFor="w-week">{t('tracker.weeklyWeek')}</label>
+              <input type="week" id="w-week" className="input-dark tracker-date-input tracker-date-mini" title="Sert aux notes de semaine en bas de page" value={data.weeklyWeek || ''} onChange={(e) => update({ weeklyWeek: e.target.value })} />
             </div>
             <div>
               <button type="button" className="btn" onClick={addWeeklyTrade}>{t('tracker.weeklyAddTrade')}</button>
             </div>
           </div>
 
-          <div className="stats-row">
+          <div className="stats-row" id="w-stats">
             <div className="stat-box"><div className="v">{weeklyStats.count}</div><div className="l">{t('tracker.weeklyTradesCount')}</div></div>
-            <div className="stat-box"><div className={`v ${weeklyStats.net >= 0 ? 'pos' : 'neg'}`}>{weeklyStats.net.toFixed(0)}€</div><div className="l">{t('tracker.weeklyNet')}</div></div>
-            <div className="stat-box"><div className="v">{weeklyWinrate}%</div><div className="l">{t('tracker.weeklyWinrate')}</div></div>
-            <div className="stat-box"><div className="v">{weeklyStats.wins}/{weeklyStats.losses}</div><div className="l">{t('tracker.weeklyWinLose')}</div></div>
+            <div className="stat-box"><div className={`v ${weeklyStats.net >= 0 ? 'pos' : 'neg'}`}>{formatMoney(weeklyStats.net, isEnglish)} {currencySymbol}</div><div className="l">{t('tracker.weeklyNet')}</div></div>
+            <div className="stat-box"><div className="v">{weeklyWinrate.toFixed(1)} %</div><div className="l">{t('tracker.weeklyWinrate')}</div></div>
+            <div className="stat-box"><div className="v">{weeklyStats.wins} / {weeklyStats.losses}</div><div className="l">{t('tracker.weeklyWinLose')}</div></div>
+            <div className="stat-box"><div className="v">{weeklyStats.count ? (weeklyStats.net / weeklyStats.count).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0,00'} €</div><div className="l">Moyenne / trade</div></div>
+            <div className="stat-box"><div className="v">—</div><div className="l">Facteur profit</div></div>
           </div>
 
           <div className="card">
             <h2>{t('tracker.weeklyTradesTitle')}</h2>
             <div className="table-wrap">
-              <table className="data">
+              <table className="data" id="w-trades-table">
                 <thead>
                   <tr>
                     <th>{t('tracker.weeklyDate')}</th>
                     <th>{t('tracker.weeklyAsset')}</th>
                     <th>{t('tracker.weeklyDirection')}</th>
+                    <th>Prix de l’actif</th>
                     <th>{t('tracker.weeklyLots')}</th>
-                    <th>{t('tracker.weeklyEntry')}</th>
-                    <th>{t('tracker.weeklyExit')}</th>
+                    <th>{isEnglish ? `Entry (${currencyUnit})` : `Entrée (${currencyUnit})`}</th>
+                    <th>{isEnglish ? `Exit (${currencyUnit})` : `Sortie (${currencyUnit})`}</th>
                     <th>{t('tracker.weeklyRR')}</th>
-                    <th>{t('tracker.weeklyResult')}</th>
+                    <th>{isEnglish ? `Result (${currencySymbol})` : `Résultat (${currencySymbol})`}</th>
                     <th>{t('tracker.weeklyEmotion')}</th>
                     <th>{t('tracker.weeklyComment')}</th>
+                    <th>TradingView</th>
                     <th></th>
                   </tr>
                 </thead>
@@ -577,40 +746,58 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
                           <option value="short">Short</option>
                         </select>
                       </td>
+                      <td>
+                        {row.direction === 'short' ? (
+                          <input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.assetPrice, isEnglish)} onChange={(e) => updateWeeklyTrade(index, { assetPrice: toStoredAmount(e.target.value, isEnglish) })} placeholder={isEnglish ? 'Current price' : 'Prix actuel'} />
+                          ) : (
+                            <span className="hint" style={{ margin: 0 }}>{isEnglish ? 'Visible when selling' : 'Visible pour vendre'}</span>
+                          )}
+                      </td>
                       <td><input className="input-dark invest-holding-input" type="text" value={row.lots || ''} onChange={(e) => updateWeeklyTrade(index, { lots: e.target.value })} /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={row.entry || ''} onChange={(e) => updateWeeklyTrade(index, { entry: e.target.value })} /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={row.exit || ''} onChange={(e) => updateWeeklyTrade(index, { exit: e.target.value })} /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.entry, isEnglish)} onChange={(e) => updateWeeklyTrade(index, { entry: toStoredAmount(e.target.value, isEnglish) })} /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.exit, isEnglish)} onChange={(e) => updateWeeklyTrade(index, { exit: toStoredAmount(e.target.value, isEnglish) })} /></td>
                       <td><input className="input-dark invest-holding-input" type="text" value={row.rr || ''} onChange={(e) => updateWeeklyTrade(index, { rr: e.target.value })} /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={row.result || ''} onChange={(e) => updateWeeklyTrade(index, { result: e.target.value })} /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.result, isEnglish)} onChange={(e) => updateWeeklyTrade(index, { result: toStoredAmount(e.target.value, isEnglish) })} /></td>
                       <td><input className="input-dark invest-holding-input" type="text" value={row.emotion || ''} onChange={(e) => updateWeeklyTrade(index, { emotion: e.target.value })} /></td>
                       <td><input className="input-dark invest-holding-input" type="text" value={row.comment || ''} onChange={(e) => updateWeeklyTrade(index, { comment: e.target.value })} /></td>
+                      <td>
+                        <div className="s20-tv-stack">
+                          <input className="input-dark invest-holding-input" type="url" value={row.tvUrl || ''} onChange={(e) => updateWeeklyTrade(index, { tvUrl: e.target.value })} placeholder="tradingview.com/x/…" />
+                          <button type="button" className="btn-ghost btn-compact s20-tv-open" onClick={() => {
+                            const u = String(row.tvUrl || '').trim();
+                            if (!u) return alert('Colle d’abord le lien TradingView.');
+                            window.open(u.startsWith('http') ? u : `https://${u}`, '_blank', 'noopener,noreferrer');
+                          }}>Ouvrir</button>
+                        </div>
+                      </td>
                       <td><button type="button" className="btn btn-ghost" onClick={() => removeWeeklyTrade(index)}>✕</button></td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <p className="hint"><strong>Résultat :</strong> saisis le montant total si besoin ; la table conserve tes lignes du mois en cours.</p>
+            <p className="hint"><strong>{t('tracker.weeklyResultHintLabel')} :</strong> {isEnglish ? 'enter the total amount if needed; the table keeps your current month rows.' : 'saisis le montant total si besoin ; la table conserve tes lignes du mois en cours.'}</p>
           </div>
 
-          <div className="card" style={{ marginTop: '1rem' }}>
+          <div className="card">
             <h2>{t('tracker.weeklyNotesTitle')}</h2>
-            <label>{t('tracker.weeklyNotesLabel')}</label>
-            <textarea className="input-dark portfolio-note" rows="5" value={data.weeklyNotes || ''} onChange={(e) => update({ weeklyNotes: e.target.value })} />
+            <label htmlFor="w-notes">{t('tracker.weeklyNotesLabel')}</label>
+            <textarea id="w-notes" className="input-dark portfolio-note" rows="5" value={data.weeklyNotes || ''} onChange={(e) => update({ weeklyNotes: e.target.value })} />
           </div>
+          <p className="quote-footer">« La régularité bat le talent quand le talent n’est pas régulier. »</p>
         </section>
 
         <section className={`page ${page === 'quarter' ? 'active' : ''}`}>
-          <h1 className="page-title">{t('tracker.quarter')}</h1>
-          <p className="page-sub">{t('tracker.quarterSub')}</p>
+          <h1 className="page-title">Réflexion trimestrielle</h1>
+          <p className="page-sub">Grille type carnet : réussites, émotions, axes d’amélioration, objectifs.</p>
           <div className="toolbar">
             <div>
-              <label htmlFor="q-year">{t('tracker.quarterYear')}</label>
-              <input type="number" id="q-year" className="input-dark" min="2020" max="2100" step="1" value={data.quarterYear || ''} onChange={(e) => update({ quarterYear: e.target.value })} />
+              <label htmlFor="q-year">Année</label>
+              <input type="number" id="q-year" className="input-dark tracker-quarter-input" min="2020" max="2100" step="1" value={data.quarterYear || ''} onChange={(e) => update({ quarterYear: e.target.value })} />
             </div>
             <div>
-              <label htmlFor="q-n">{t('tracker.quarterNumber')}</label>
-              <select id="q-n" className="input-dark" value={data.quarterNumber || '1'} onChange={(e) => update({ quarterNumber: e.target.value })}>
+              <label htmlFor="q-n">Trimestre</label>
+              <select id="q-n" className="input-dark tracker-quarter-input" value={data.quarterNumber || '1'} onChange={(e) => update({ quarterNumber: e.target.value })}>
                 <option value="1">T1</option>
                 <option value="2">T2</option>
                 <option value="3">T3</option>
@@ -619,64 +806,78 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
             </div>
           </div>
 
-          <div className="grid-q6">
+          <div className="grid-2 tracker-mindset-grid" style={{ marginTop: '1rem' }}>
             <div className="card card-q">
-              <h2>{t('tracker.quarterSuccesses')}</h2>
-              <label>{t('tracker.quarterSuccessesLabel')}</label>
+              <h2>Mes réussites (3 derniers mois)</h2>
+              <label>Qu’ai-je bien fait ? De quoi suis-je fier ?</label>
               <textarea className="input-dark portfolio-note" rows="5" value={quarterSnapshot.quarterSuccesses || ''} onChange={(e) => setQuarterField('quarterSuccesses', e.target.value)} />
             </div>
             <div className="card card-q">
-              <h2>{t('tracker.quarterEmotion')}</h2>
-              <label>{t('tracker.quarterRespect')}</label>
-              <div className="stars" aria-label="Note sur 3"></div>
-              <label>{t('tracker.quarterEmotionLabel')}</label>
+              <h2>Bilan émotionnel</h2>
+              <label>Respect du plan (ressenti)</label>
+              <div className="stars" id="q-stars" role="group" aria-label="Note sur 5">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    className={`star-btn ${Number(data.quarterEmotionScore || 0) >= star ? 'is-active' : ''}`}
+                    onClick={() => update({ quarterEmotionScore: star })}
+                    aria-label={`${star} étoile${star > 1 ? 's' : ''}`}
+                  >
+                    ★
+                  </button>
+                ))}
+              </div>
+              <label>Quelle émotion a dominé ? Pourquoi ?</label>
               <textarea className="input-dark portfolio-note" rows="4" value={quarterSnapshot.quarterEmotionReason || ''} onChange={(e) => setQuarterField('quarterEmotionReason', e.target.value)} />
             </div>
             <div className="card card-q">
-              <h2>{t('tracker.quarterImprove')}</h2>
-              <label>{t('tracker.quarterImproveLabel')}</label>
+              <h2>Points à améliorer</h2>
+              <label>Freins, erreurs récurrentes…</label>
               <textarea className="input-dark portfolio-note" rows="5" value={quarterSnapshot.quarterImprove || ''} onChange={(e) => setQuarterField('quarterImprove', e.target.value)} />
             </div>
             <div className="card card-q">
-              <h2>{t('tracker.quarterGoalsReeval')}</h2>
-              <label>{t('tracker.quarterGoalsReevalLabel')}</label>
+              <h2>Réévaluation des objectifs</h2>
+              <label>Ajuster mes objectifs ? Mes moyens sont-ils cohérents ?</label>
               <textarea className="input-dark portfolio-note" rows="5" value={quarterSnapshot.quarterGoalsReeval || ''} onChange={(e) => setQuarterField('quarterGoalsReeval', e.target.value)} />
             </div>
             <div className="card card-q">
-              <h2>{t('tracker.quarterShortTerm')}</h2>
-              <div className="check-row"><input type="radio" name="q-obj" checked={quarterSnapshot.quarterShortTerm === 'oui'} onChange={() => setQuarterField('quarterShortTerm', 'oui')} /><label style={{ display: 'inline' }}>{t('tracker.yes')}</label></div>
-              <div className="check-row"><input type="radio" name="q-obj" checked={quarterSnapshot.quarterShortTerm === 'non'} onChange={() => setQuarterField('quarterShortTerm', 'non')} /><label style={{ display: 'inline' }}>{t('tracker.no')}</label></div>
-              <div className="check-row"><input type="radio" name="q-obj" checked={quarterSnapshot.quarterShortTerm === 'cours'} onChange={() => setQuarterField('quarterShortTerm', 'cours')} /><label style={{ display: 'inline' }}>{t('tracker.inProgress')}</label></div>
-              <label>{t('tracker.quarterShortPrecision')}</label>
+              <h2>Objectifs court terme atteints ?</h2>
+              <div className="check-row"><input type="radio" name="q-obj" id="q-obj-y" value="oui" checked={quarterSnapshot.quarterShortTerm === 'oui'} onChange={() => setQuarterField('quarterShortTerm', 'oui')} /><label htmlFor="q-obj-y" style={{ display: 'inline' }}>Oui</label></div>
+              <div className="check-row"><input type="radio" name="q-obj" id="q-obj-n" value="non" checked={quarterSnapshot.quarterShortTerm === 'non'} onChange={() => setQuarterField('quarterShortTerm', 'non')} /><label htmlFor="q-obj-n" style={{ display: 'inline' }}>Non</label></div>
+              <div className="check-row"><input type="radio" name="q-obj" id="q-obj-p" value="cours" checked={quarterSnapshot.quarterShortTerm === 'cours'} onChange={() => setQuarterField('quarterShortTerm', 'cours')} /><label htmlFor="q-obj-p" style={{ display: 'inline' }}>En cours</label></div>
+              <label>Précisions</label>
               <textarea className="input-dark portfolio-note" rows="3" value={quarterSnapshot.quarterShortPrecision || ''} onChange={(e) => setQuarterField('quarterShortPrecision', e.target.value)} />
             </div>
             <div className="card card-q">
-              <h2>{t('tracker.quarterCommitment')}</h2>
-              <label>{t('tracker.quarterCommitmentLabel')}</label>
+              <h2>Engagement pour le trimestre suivant</h2>
+              <label>Ce que je m’engage à faire</label>
               <textarea className="input-dark portfolio-note" rows="5" value={quarterSnapshot.quarterCommitment || ''} onChange={(e) => setQuarterField('quarterCommitment', e.target.value)} />
             </div>
           </div>
 
           <div className="card" style={{ marginTop: '1rem' }}>
-            <h2>{t('tracker.quarterSummary')}</h2>
-            <label>{t('tracker.quarterSummaryLabel')}</label>
+            <h2>Synthèse &amp; stratégie</h2>
+            <label>Bilan chiffré / ressenti global</label>
             <textarea className="input-dark portfolio-note" rows="3" value={quarterSnapshot.quarterSummary || ''} onChange={(e) => setQuarterField('quarterSummary', e.target.value)} />
-            <label>{t('tracker.quarterLessons')}</label>
+            <label>Principales leçons</label>
             <textarea className="input-dark portfolio-note" rows="3" value={quarterSnapshot.quarterLessons || ''} onChange={(e) => setQuarterField('quarterLessons', e.target.value)} />
-            <label>{t('tracker.quarterStrategy')}</label>
+            <label>Évolution du plan</label>
             <textarea className="input-dark portfolio-note" rows="3" value={quarterSnapshot.quarterStrategy || ''} onChange={(e) => setQuarterField('quarterStrategy', e.target.value)} />
-            <label>{t('tracker.quarterForward')}</label>
+            <label>Intentions prochain trimestre</label>
             <textarea className="input-dark portfolio-note" rows="3" value={quarterSnapshot.quarterForward || ''} onChange={(e) => setQuarterField('quarterForward', e.target.value)} />
           </div>
+          <p className="quote-footer">« Ce que tu fais chaque jour t’amène là où tu seras demain. »</p>
         </section>
 
         <section className={`page ${page === 'year' ? 'active' : ''}`}>
-          <h1 className="page-title">{t('tracker.year')}</h1>
-          <p className="page-sub">{t('tracker.yearSub')}</p>
+          <span className="dec-arrow" aria-hidden="true">↗</span>
+          <h1 className="page-title">Bilan annuel</h1>
+          <p className="page-sub">Une ligne par mois — complète les stats et leçons (les totaux de trades peuvent être repris à la main ou depuis ton suivi).</p>
           <div className="toolbar">
             <div>
               <label htmlFor="an-year">{t('tracker.annualYear')}</label>
-              <input type="number" id="an-year" className="input-dark tracker-date-input" min="2020" max="2100" step="1" value={data.annualYear || ''} onChange={(e) => update({ annualYear: e.target.value })} />
+              <input type="number" id="an-year" className="input-dark tracker-date-input tracker-quarter-input" min="2020" max="2100" step="1" value={data.annualYear || ''} onChange={(e) => update({ annualYear: e.target.value })} />
             </div>
           </div>
           <div className="card">
@@ -693,16 +894,16 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
                     <th>{t('tracker.annualLesson')}</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="an-body">
                   {annualRows.map((row, index) => (
                     <tr key={index}>
-                      <td>{row.month || ''}</td>
-                      <td>{row.trades || ''}</td>
-                      <td>{row.winners || ''}</td>
-                      <td>{row.losers || ''}</td>
-                      <td>{row.performance || ''}</td>
-                      <td>{row.emotions || ''}</td>
-                      <td>{row.lesson || ''}</td>
+                      <td><input className="input-dark tracker-quarter-input" type="text" value={row.month || ''} onChange={(e) => setAnnualField(index, 'month', e.target.value)} /></td>
+                      <td><input className="input-dark tracker-quarter-input" type="text" value={row.trades || ''} onChange={(e) => setAnnualField(index, 'trades', e.target.value)} /></td>
+                      <td><input className="input-dark tracker-quarter-input" type="text" value={row.winners || ''} onChange={(e) => setAnnualField(index, 'winners', e.target.value)} /></td>
+                      <td><input className="input-dark tracker-quarter-input" type="text" value={row.losers || ''} onChange={(e) => setAnnualField(index, 'losers', e.target.value)} /></td>
+                      <td><input className="input-dark tracker-quarter-input" type="text" value={row.performance || ''} onChange={(e) => setAnnualField(index, 'performance', e.target.value)} /></td>
+                      <td><input className="input-dark tracker-quarter-input" type="text" value={row.emotions || ''} onChange={(e) => setAnnualField(index, 'emotions', e.target.value)} /></td>
+                      <td><input className="input-dark tracker-quarter-input" type="text" value={row.lesson || ''} onChange={(e) => setAnnualField(index, 'lesson', e.target.value)} /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -711,47 +912,147 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
           </div>
         </section>
 
-        <section className={`page ${page === 'series' ? 'active' : ''}`}>
-          <h1 className="page-title">{t('tracker.series')}</h1>
-          <p className="page-sub">{t('tracker.seriesSub')}</p>
+        <section className={`page ${page === 'series20' ? 'active' : ''}`}>
+          <span className="dec-arrow" aria-hidden="true">↗</span>
+          <h1 className="page-title">Série de 20 trades</h1>
+          <p className="page-sub">Deux parties de 10 + bilan G20 calculé automatiquement. Colle pour chaque ligne le <strong>lien snapshot TradingView</strong> (menu graphique → Partager → copier le lien) pour rouvrir le trade en un clic. <strong>Archive</strong> une série terminée pour comparer tes stats d’une série à l’autre.</p>
+
           <div className="card">
-            <h2>{t('tracker.seriesHistory')}</h2>
+            <h2>Historique des séries enregistrées</h2>
+            <p className="hint" style={{ marginTop: 0 }}>Chaque archive conserve les 20 lignes, le bilan et les indicateurs au moment de l’enregistrement. Utilise <strong>Restaurer</strong> pour recharger une série dans l’éditeur (remplace la série actuelle).</p>
             <div className="table-wrap">
               <table className="data">
-                <thead><tr><th>{t('tracker.seriesHistoryDate')}</th><th>{t('tracker.seriesHistoryLabel')}</th><th>{t('tracker.seriesHistoryRate')}</th><th>{t('tracker.seriesHistoryGP')}</th><th>{t('tracker.seriesHistoryRatio')}</th></tr></thead>
+                <thead>
+                  <tr><th>Date</th><th>Libellé</th><th>% réussite</th><th>G / P</th><th>Ratio</th><th></th></tr>
+                </thead>
                 <tbody>
-                  {(data.seriesHistory || []).map((row, index) => (
-                    <tr key={index}><td>{row.date || ''}</td><td>{row.label || ''}</td><td>{row.rate || ''}</td><td>{row.gp || ''}</td><td>{row.ratio || ''}</td></tr>
+                  {seriesHistory.length ? seriesHistory.map((item, index) => (
+                    <tr key={item.id || index}>
+                      <td>{item.savedAt ? new Date(item.savedAt).toLocaleString('fr-FR') : '—'}</td>
+                      <td>{item.label || '—'}</td>
+                      <td>{typeof item.stats?.winrate === 'number' ? `${item.stats.winrate.toFixed(0)} %` : '—'}</td>
+                      <td>{typeof item.stats?.wins === 'number' ? `${item.stats.wins} / ${item.stats.losses ?? '—'}` : '—'}</td>
+                      <td>{typeof item.stats?.ratio === 'number' ? item.stats.ratio.toFixed(2) : '—'}</td>
+                      <td>
+                        <button type="button" className="btn btn-ghost btn-compact" onClick={() => update({ seriesP1: item.part1 || [], seriesP2: item.part2 || [], seriesPlan: item.bilan?.plan || '', seriesEmotion: item.bilan?.emotion || '', seriesLesson: item.bilan?.lesson || '', seriesNext: item.bilan?.next || '' })}>Restaurer</button>
+                        <button type="button" className="btn btn-ghost btn-compact" style={{ marginLeft: '0.35rem', color: 'var(--danger)', borderColor: 'rgba(196,92,92,0.4)' }} onClick={() => update({ seriesHistory: seriesHistory.filter((_, i) => i !== index) })}>Suppr</button>
+                      </td>
+                    </tr>
+                  )) : <tr><td colSpan="6" className="hint">Aucune archive pour l’instant.</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="card">
+            <h2>Partie 1 (trades 1–10)</h2>
+            <div className="table-wrap">
+              <table className="data">
+                <thead>
+                  <tr><th>N°</th><th>Date</th><th>Actif</th><th>Direction</th><th>Entrée</th><th>SL</th><th>TP</th><th>Résultat</th><th>Émotion</th><th>TradingView</th></tr>
+                </thead>
+                <tbody>
+                  {series20Part1.map((row, index) => (
+                    <tr key={`s20-p1-${index}`}>
+                      <td>{index + 1}</td>
+                      <td><input type="date" className="input-dark tracker-series-input" value={row.date || ''} onChange={(e) => updateSeriesRow('seriesP1', index, 'date', e.target.value)} /></td>
+                      <td><input type="text" className="input-dark tracker-series-input" value={row.symbol || ''} onChange={(e) => updateSeriesRow('seriesP1', index, 'symbol', e.target.value)} /></td>
+                      <td><select className="input-dark tracker-series-input" value={row.side || 'long'} onChange={(e) => updateSeriesRow('seriesP1', index, 'side', e.target.value)}><option value="long">Long</option><option value="short">Short</option></select></td>
+                      <td><input type="text" className="input-dark tracker-series-input" value={row.entry || ''} onChange={(e) => updateSeriesRow('seriesP1', index, 'entry', e.target.value)} /></td>
+                      <td><input type="text" className="input-dark tracker-series-input" value={row.sl || ''} onChange={(e) => updateSeriesRow('seriesP1', index, 'sl', e.target.value)} /></td>
+                      <td><input type="text" className="input-dark tracker-series-input" value={row.tp || ''} onChange={(e) => updateSeriesRow('seriesP1', index, 'tp', e.target.value)} /></td>
+                      <td><input type="text" className="input-dark tracker-series-input" value={row.result || ''} onChange={(e) => updateSeriesRow('seriesP1', index, 'result', e.target.value)} /></td>
+                      <td><input type="text" className="input-dark tracker-series-input" value={row.emotion || ''} onChange={(e) => updateSeriesRow('seriesP1', index, 'emotion', e.target.value)} /></td>
+                      <td>
+                        <div className="s20-tv-stack">
+                          <input type="url" className="input-dark tracker-series-input" value={row.tvUrl || ''} onChange={(e) => updateSeriesRow('seriesP1', index, 'tvUrl', e.target.value)} placeholder="tradingview.com/x/…" />
+                          <button type="button" className="btn-ghost btn-compact s20-tv-open" onClick={() => {
+                            const u = String(row.tvUrl || '').trim();
+                            if (!u) return alert('Colle d’abord le lien TradingView.');
+                            window.open(u.startsWith('http') ? u : `https://${u}`, '_blank', 'noopener,noreferrer');
+                          }}>Ouvrir</button>
+                        </div>
+                      </td>
+                    </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           </div>
-          <div className="card" style={{ marginTop: '1rem' }}>
-            <h2>{t('tracker.seriesPart1')}</h2>
-            <div className="table-wrap"><table className="data"><thead><tr><th>N°</th><th>Date</th><th>Actif</th><th>Direction</th><th>Entrée</th><th>SL</th><th>TP</th><th>Résultat</th><th>Émotion</th><th>TradingView</th></tr></thead><tbody>{seriesP1.map((row, index) => (<tr key={index}><td>{index+1}</td><td>{row.date || ''}</td><td>{row.asset || ''}</td><td>{row.direction || ''}</td><td>{row.entry || ''}</td><td>{row.sl || ''}</td><td>{row.tp || ''}</td><td>{row.result || ''}</td><td>{row.emotion || ''}</td><td>{row.tv || ''}</td></tr>))}</tbody></table></div>
-          </div>
-          <div className="card" style={{ marginTop: '1rem' }}>
-            <h2>{t('tracker.seriesPart2')}</h2>
-            <div className="table-wrap"><table className="data"><thead><tr><th>N°</th><th>Date</th><th>Actif</th><th>Direction</th><th>Entrée</th><th>SL</th><th>TP</th><th>Résultat</th><th>Émotion</th><th>TradingView</th></tr></thead><tbody>{seriesP2.map((row, index) => (<tr key={index}><td>{index+11}</td><td>{row.date || ''}</td><td>{row.asset || ''}</td><td>{row.direction || ''}</td><td>{row.entry || ''}</td><td>{row.sl || ''}</td><td>{row.tp || ''}</td><td>{row.result || ''}</td><td>{row.emotion || ''}</td><td>{row.tv || ''}</td></tr>))}</tbody></table></div>
-          </div>
-          <div className="card" style={{ marginTop: '1rem' }}>
-            <h2>{t('tracker.seriesBilan')}</h2>
-            <div className="stats-row">
-              <div className="stat-box"><div className="v">0%</div><div className="l">{t('tracker.seriesRate')}</div></div>
-              <div className="stat-box"><div className="v">0</div><div className="l">{t('tracker.seriesRatio')}</div></div>
-              <div className="stat-box"><div className="v">0 / 0</div><div className="l">{t('tracker.seriesWinLose')}</div></div>
+
+          <div className="card">
+            <h2>Partie 2 (trades 11–20)</h2>
+            <div className="table-wrap">
+              <table className="data">
+                <thead>
+                  <tr><th>N°</th><th>Date</th><th>Actif</th><th>Direction</th><th>Entrée</th><th>SL</th><th>TP</th><th>Résultat</th><th>Émotion</th><th>TradingView</th></tr>
+                </thead>
+                <tbody>
+                  {series20Part2.map((row, index) => (
+                    <tr key={`s20-p2-${index}`}>
+                      <td>{index + 11}</td>
+                      <td><input type="date" className="input-dark tracker-series-input" value={row.date || ''} onChange={(e) => updateSeriesRow('seriesP2', index, 'date', e.target.value)} /></td>
+                      <td><input type="text" className="input-dark tracker-series-input" value={row.symbol || ''} onChange={(e) => updateSeriesRow('seriesP2', index, 'symbol', e.target.value)} /></td>
+                      <td><select className="input-dark tracker-series-input" value={row.side || 'long'} onChange={(e) => updateSeriesRow('seriesP2', index, 'side', e.target.value)}><option value="long">Long</option><option value="short">Short</option></select></td>
+                      <td><input type="text" className="input-dark tracker-series-input" value={row.entry || ''} onChange={(e) => updateSeriesRow('seriesP2', index, 'entry', e.target.value)} /></td>
+                      <td><input type="text" className="input-dark tracker-series-input" value={row.sl || ''} onChange={(e) => updateSeriesRow('seriesP2', index, 'sl', e.target.value)} /></td>
+                      <td><input type="text" className="input-dark tracker-series-input" value={row.tp || ''} onChange={(e) => updateSeriesRow('seriesP2', index, 'tp', e.target.value)} /></td>
+                      <td><input type="text" className="input-dark tracker-series-input" value={row.result || ''} onChange={(e) => updateSeriesRow('seriesP2', index, 'result', e.target.value)} /></td>
+                      <td><input type="text" className="input-dark tracker-series-input" value={row.emotion || ''} onChange={(e) => updateSeriesRow('seriesP2', index, 'emotion', e.target.value)} /></td>
+                      <td>
+                        <div className="s20-tv-stack">
+                          <input type="url" className="input-dark tracker-series-input" value={row.tvUrl || ''} onChange={(e) => updateSeriesRow('seriesP2', index, 'tvUrl', e.target.value)} placeholder="tradingview.com/x/…" />
+                          <button type="button" className="btn-ghost btn-compact s20-tv-open" onClick={() => {
+                            const u = String(row.tvUrl || '').trim();
+                            if (!u) return alert('Colle d’abord le lien TradingView.');
+                            window.open(u.startsWith('http') ? u : `https://${u}`, '_blank', 'noopener,noreferrer');
+                          }}>Ouvrir</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <label>{t('tracker.seriesPlanRespect')}</label>
-            <textarea className="input-dark portfolio-note" rows="2" value={data.seriesPlan || ''} onChange={(e) => update({ seriesPlan: e.target.value })} />
-            <label>{t('tracker.seriesDominantEmotion')}</label>
-            <input className="input-dark" type="text" value={data.seriesEmotion || ''} onChange={(e) => update({ seriesEmotion: e.target.value })} />
-            <label>{t('tracker.seriesMainLesson')}</label>
-            <textarea className="input-dark portfolio-note" rows="2" value={data.seriesLesson || ''} onChange={(e) => update({ seriesLesson: e.target.value })} />
-            <label>{t('tracker.seriesNextGoal')}</label>
-            <textarea className="input-dark portfolio-note" rows="2" value={data.seriesNext || ''} onChange={(e) => update({ seriesNext: e.target.value })} />
+          </div>
+
+          <div className="card">
+            <h2>Bilan G20</h2>
+            <div className="stats-row">
+              <div className="stat-box"><div className="v">{seriesWinrate}%</div><div className="l">% réussite</div></div>
+              <div className="stat-box"><div className="v">{seriesStats.wins} / {seriesStats.losses}</div><div className="l">Gagnants / perdants</div></div>
+              <div className="stat-box"><div className={`v ${seriesStats.net >= 0 ? 'pos' : 'neg'}`}>{seriesStats.net.toFixed(2)}€</div><div className="l">Net</div></div>
+            </div>
+            <div className="grid-2 s20-bilan-grid">
+              <div>
+                <label>Respect du plan</label>
+                <textarea className="input-dark" rows="2" value={data.seriesPlan || ''} onChange={(e) => update({ seriesPlan: e.target.value })} />
+              </div>
+              <div className="s20-emotion-row s20-emotion-row--stacked">
+                <label>Émotion dominante du bloc</label>
+                <input className="input-dark tracker-series-input" type="text" value={data.seriesEmotion || ''} onChange={(e) => update({ seriesEmotion: e.target.value })} />
+              </div>
+            </div>
+            <label>Leçon principale</label>
+            <textarea className="input-dark" rows="2" value={data.seriesLesson || ''} onChange={(e) => update({ seriesLesson: e.target.value })} />
+            <label>Objectif pour la prochaine série</label>
+            <textarea className="input-dark" rows="2" value={data.seriesNext || ''} onChange={(e) => update({ seriesNext: e.target.value })} />
             <div style={{ marginTop: '1rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
-              <button type="button" className="btn btn-compact">{t('tracker.seriesArchive')}</button>
+              <button type="button" className="btn" onClick={() => {
+                const label = window.prompt('Libellé pour cette série', data.seriesHistoryLabel || `Série du ${new Date().toLocaleDateString('fr-FR')}`);
+                if (label === null) return;
+                const entry = {
+                  id: `s20-${Date.now()}`,
+                  savedAt: new Date().toISOString(),
+                  label: label.trim() || `Série du ${new Date().toLocaleDateString('fr-FR')}`,
+                  part1: series20Part1,
+                  part2: series20Part2,
+                  bilan: { plan: data.seriesPlan || '', emotion: data.seriesEmotion || '', lesson: data.seriesLesson || '', next: data.seriesNext || '' },
+                  stats: { winrate: seriesWinrate, wins: seriesStats.wins, losses: seriesStats.losses, ratio: seriesStats.losses ? Math.abs(seriesStats.net) / seriesStats.losses : 0 },
+                };
+                update({ seriesHistory: [entry, ...seriesHistory], seriesHistoryLabel: entry.label });
+              }}>Archiver cette série dans l’historique</button>
+              <span className="hint" style={{ margin: 0 }}>Crée une copie figée (20 trades + bilan + stats).</span>
             </div>
           </div>
         </section>

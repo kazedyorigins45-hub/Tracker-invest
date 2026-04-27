@@ -6,6 +6,7 @@ import { canAccess, getSubscriptionLabel } from '@/lib/plans';
 import { useAccountPayload } from '@/lib/use-account-payload';
 import { useLocale } from '@/lib/locale';
 import DashboardContent from '@/components/DashboardContent';
+import LogoMark from '@/components/LogoMark';
 import ThemeToggle from '@/components/ThemeToggle';
 import LanguageToggle from '@/components/LanguageToggle';
 
@@ -224,6 +225,7 @@ export default function MindsetHub({ userEmail = '', planCode = 'starter', subsc
 
       <main className="main">
         <div className="mindset-topbar">
+          <LogoMark />
           <ThemeToggle className="theme-toggle--app" />
           <LanguageToggle className="theme-toggle--app" />
         </div>

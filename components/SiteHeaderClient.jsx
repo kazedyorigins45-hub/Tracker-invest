@@ -1,6 +1,7 @@
 "use client";
 
 import Link from 'next/link';
+import LogoMark from '@/components/LogoMark';
 import ThemeToggle from '@/components/ThemeToggle';
 import LanguageToggle from '@/components/LanguageToggle';
 import { useLocale } from '@/lib/locale';
@@ -39,6 +40,7 @@ export default function SiteHeaderClient({ user, planCode, subscription }) {
             <Link href="/login">{t('site.login')}</Link>
           )}
           <div className="site-header-controls">
+            <LogoMark />
             <ThemeToggle className="theme-toggle--header" />
             <LanguageToggle className="theme-toggle--header" />
           </div>

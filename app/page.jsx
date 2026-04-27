@@ -3,7 +3,7 @@ import HomeContent from '@/components/HomeContent';
 
 export const metadata = {
   title: 'Accueil',
-  description: 'Découvre Mindset Invest, une suite premium d’abonnements pour progresser en discipline et en investissement.',
+  description: 'Mindset Invest — trading, investissement et mindset dans un même univers.',
 };
 
 export default function HomePage() {

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { canAccess, getSubscriptionLabel } from '@/lib/plans';
 import { useAccountPayload } from '@/lib/use-account-payload';
 import { useLocale } from '@/lib/locale';
+import LogoMark from '@/components/LogoMark';
 import ThemeToggle from '@/components/ThemeToggle';
 import LanguageToggle from '@/components/LanguageToggle';
 
@@ -14,11 +15,7 @@ const NAV = [
   ['classes', 'classes'],
   ['holdings', 'holdings'],
   ['immo', 'immo'],
-  ['goals', 'goals'],
   ['monthly', 'monthly'],
-  ['export', 'export'],
-  ['memo', 'memo'],
-  ['finance', 'finance'],
   ['project', 'project'],
 ];
 
@@ -32,6 +29,11 @@ const MANDATORY_DOCS = [
   'Offre de prêt signée & assurance emprunteur',
 ];
 
+const HUB_SEGMENTS = [
+  { v: 'actif', l: 'Actifs' },
+  { v: 'passif', l: 'Revenu passif' },
+];
+
 function defaultInvestState() {
   return {
     page: 'cover',
@@ -39,9 +41,16 @@ function defaultInvestState() {
     horizon: '',
     vision: '',
     memoDocs: {},
-    holdings: [
-      { className: 'crypto', synth: 'Actifs', asset: 'BTC', geckoId: 'bitcoin', quantity: '0.82', avgPrice: '42 000€', sellPrice: '', sellDate: '', saleResult: '', notes: '', value: '34 400€' },
-      { className: 'metaux', synth: 'Actifs', asset: 'Or', geckoId: '', quantity: '150g', avgPrice: '63€', sellPrice: '', sellDate: '', saleResult: '', notes: '', value: '9 450€' },
+    immoActiveFiche: 'fiche-1',
+    immoFicheLabels: {
+      'fiche-1': 'Fiche 1',
+      'fiche-2': 'Fiche 2',
+      'fiche-3': 'Fiche 3',
+    },
+    immoLinkedHoldingIndex: '',
+      holdings: [
+      { className: 'crypto', hubSegment: 'actif', synth: 'Actifs', asset: 'BTC', geckoId: 'bitcoin', quantity: '0.82', avgPrice: '42 000€', sellPrice: '', sellDate: '', saleResult: '', notes: '', value: '34 400€' },
+      { className: 'metaux', hubSegment: 'actif', synth: 'Actifs', asset: 'Or', geckoId: '', quantity: '150g', avgPrice: '63€', sellPrice: '', sellDate: '', saleResult: '', notes: '', value: '9 450€' },
     ],
     purchasePrice: '300000',
     acquisitionFeesPct: '3',
@@ -117,14 +126,23 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   const { t } = useLocale();
   const update = (patch) => setData((prev) => ({ ...prev, ...patch }));
   const updateProfile = (patch) => setPortfolioState((prev) => ({ ...prev, ...patch }));
+  const [liveStatus, setLiveStatus] = React.useState('');
+  const immoActiveFiche = data.immoActiveFiche || 'fiche-1';
+  const immoFicheLabels = data.immoFicheLabels || defaultInvestState().immoFicheLabels;
+  const immoFicheLabel = immoFicheLabels[immoActiveFiche] || 'Fiche active';
+
+  React.useEffect(() => {
+    if (['export', 'memo', 'finance'].includes(page)) update({ page: 'cover' });
+  }, [page]);
   const projectScoreKeys = ['projectOpportunities', 'projectTechnology', 'projectEcosystem', 'projectRoadmap', 'projectMarketing', 'projectMomentum'];
   const projectScore = Math.round(projectScoreKeys.reduce((sum, key) => sum + Number(data[key] || 0), 0) / projectScoreKeys.length);
   const selectedMonth = data.monthlyMonth || monthKey();
   const monthlySnapshot = data.monthlyByMonth?.[selectedMonth] || { monthlySummary: '', monthlyLesson: '', monthlyNext: '' };
   const holdings = (Array.isArray(data.holdings) && data.holdings.length ? data.holdings : defaultInvestState().holdings).map((row) => ({
     ...row,
-    computedValue: computeHoldingValue(row.quantity, row.avgPrice),
+    computedValue: row.value || computeHoldingValue(row.quantity, row.avgPrice),
   }));
+  const immoLinkedHoldings = holdings.filter((row) => String(row.className || '').toLowerCase() === 'immobilier');
 
   const switchProfile = (nextProfile) => {
     updateProfile({ current: nextProfile });
@@ -149,6 +167,23 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   const annualCharges = Number(data.annualCharges || 0);
   const annualPayment = Number(data.loanPayment || 0) * 12;
   const annualCashflow = annualIncome - annualPayment - annualCharges;
+  const totalOverviewValue = holdings.reduce((sum, row) => sum + parseAmount(row.computedValue || row.value || 0), 0);
+  const classTotals = holdings.reduce((acc, row) => {
+    const key = String(row.className || 'autre').trim().toLowerCase();
+    acc[key] = (acc[key] || 0) + parseAmount(row.computedValue || row.value || 0);
+    return acc;
+  }, {});
+
+  const overviewClasses = ['crypto', 'metaux', 'matieres', 'immobilier', 'obligations', 'actions', 'autre'];
+  const overviewLabels = {
+    crypto: 'Crypto',
+    metaux: 'Métaux précieux',
+    matieres: 'Matières premières',
+    immobilier: 'Immobilier',
+    obligations: 'Obligations / monétaire',
+    actions: 'Actions / ETF',
+    autre: 'Autre',
+  };
 
   const toggleDoc = (doc) => update({ memoDocs: { ...(data.memoDocs || {}), [doc]: !data.memoDocs?.[doc] } });
 
@@ -158,11 +193,79 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   };
 
   const addHolding = () => {
-    update({ holdings: [...holdings, { className: 'autre', synth: 'Actifs', asset: '', geckoId: '', quantity: '', avgPrice: '', sellPrice: '', sellDate: '', saleResult: '', notes: '', value: '' }] });
+    update({ holdings: [...holdings, { className: 'autre', hubSegment: 'actif', synth: 'Actifs', asset: '', geckoId: '', quantity: '', avgPrice: '', sellPrice: '', sellDate: '', saleResult: '', notes: '', value: '' }] });
   };
 
   const removeHolding = (index) => {
     update({ holdings: holdings.filter((_, rowIndex) => rowIndex !== index) });
+  };
+
+  const renameImmoFiche = () => {
+    if (typeof window === 'undefined') return;
+    const currentLabel = immoFicheLabels[immoActiveFiche] || 'Fiche active';
+    const nextLabel = window.prompt('Nom de la fiche', currentLabel);
+    if (nextLabel === null) return;
+    const trimmed = nextLabel.trim();
+    if (!trimmed) return;
+    update({ immoFicheLabels: { ...immoFicheLabels, [immoActiveFiche]: trimmed } });
+  };
+
+  const classOptionsHtml = (selected) => ['crypto', 'metaux', 'matieres', 'immobilier', 'obligations', 'actions', 'autre']
+    .map((v) => `<option value="${v}"${selected === v ? ' selected' : ''}>${v}</option>`).join('');
+
+  const hubSegmentOptionsHtml = (selected) => HUB_SEGMENTS
+    .map((c) => `<option value="${c.v}"${(selected === c.v ? ' selected' : '')}>${c.l}</option>`).join('');
+
+  const fetchLiveSellPrice = async (index) => {
+    const row = holdings[index];
+    if (!row) return;
+    const gid = String(row.geckoId || '').trim().toLowerCase().replace(/\s+/g, '-');
+    if (!gid) return;
+    try {
+      const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(gid)}&vs_currencies=eur`);
+      const json = await res.json();
+      const price = json?.[gid]?.eur;
+      if (Number.isFinite(Number(price))) {
+        const row = holdings[index];
+        const qty = parseAmount(row.quantity || 0);
+        const buy = parseAmount(row.avgPrice || 0);
+        const sale = Number(price);
+        const result = Number.isFinite(qty) && Number.isFinite(buy) ? ((sale - buy) * qty) : 0;
+        updateHolding(index, { sellPrice: String(price), saleResult: String(Math.round(result * 100) / 100) });
+      }
+    } catch {}
+  };
+
+  const refreshLiveValues = async () => {
+    const ids = [];
+    holdings.forEach((row) => {
+      const gid = String(row.geckoId || '').trim().toLowerCase().replace(/\s+/g, '-');
+      if (gid) ids.push(gid);
+    });
+    const uniq = [...new Set(ids)];
+    if (!uniq.length) {
+      setLiveStatus('Renseigne au moins un ID CoinGecko.');
+      return;
+    }
+    setLiveStatus('Récupération…');
+    try {
+      const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(uniq.join(','))}&vs_currencies=eur`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const prices = await res.json();
+      let updated = 0;
+      const nextHoldings = holdings.map((row) => {
+        const gid = String(row.geckoId || '').trim().toLowerCase().replace(/\s+/g, '-');
+        const price = prices?.[gid]?.eur;
+        if (!gid || !Number.isFinite(Number(price))) return row;
+        const q = parseAmount(row.quantity || 0);
+        updated += 1;
+        return { ...row, value: String(Math.round(Number(price) * q * 100) / 100) };
+      });
+      update({ holdings: nextHoldings });
+      setLiveStatus(updated ? `${updated} position(s) mise(s) à jour.` : 'Aucun prix trouvé.');
+    } catch {
+      setLiveStatus('Erreur réseau ou limite CoinGecko. Réessaie plus tard.');
+    }
   };
 
   const setMonthlyField = (key, value) => {
@@ -248,6 +351,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
 
       <main className="main">
         <div className="mindset-topbar">
+          <LogoMark />
           <ThemeToggle className="theme-toggle--app" />
           <LanguageToggle className="theme-toggle--app" />
         </div>
@@ -270,14 +374,23 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
           <h1 className="page-title">{t('invest.overview')}</h1>
           <p className="page-sub">Répartition par classe d'actifs (valeurs estimées en €).</p>
           <div className="stats-row">
-            <div className="stat-box"><div className="v">125k€</div><div className="l">Valeur totale</div></div>
-            <div className="stat-box"><div className="v pos">+14%</div><div className="l">Perf cumulée</div></div>
-            <div className="stat-box"><div className="v">7</div><div className="l">Actifs</div></div>
-            <div className="stat-box"><div className="v">5</div><div className="l">Années</div></div>
+            <div className="stat-box"><div className="v">{Math.round(totalOverviewValue).toLocaleString('fr-FR')}€</div><div className="l">Total estimé</div></div>
+            <div className="stat-box"><div className="v">{holdings.length}</div><div className="l">Positions</div></div>
           </div>
-          <div className="grid-2">
-            <article className="card"><h2>Répartition</h2><p className="hint">Vue synthétique de l'allocation par classe d'actifs.</p></article>
-            <article className="card"><h2>{t('invest.reminder')}</h2><p className="hint">L’investissement long terme ne se pilote pas comme le trading court terme.</p></article>
+          <div className="card">
+            <h2>Répartition</h2>
+            <div className="overview-breakdown">
+              {overviewClasses.map((key) => {
+                const amt = classTotals[key] || 0;
+                const pct = totalOverviewValue > 0 ? ((amt / totalOverviewValue) * 100).toFixed(1) : '0.0';
+                return (
+                  <div key={key} className="overview-breakdown-row">
+                    <span>{overviewLabels[key]}</span>
+                    <span>{Math.round(amt).toLocaleString('fr-FR')}€ <span style={{ color: 'var(--text-muted)' }}>({pct}%)</span></span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </section>
 
@@ -300,7 +413,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
 
         <section className={`page ${page === 'holdings' ? 'active' : ''}`}>
           <h1 className="page-title">{t('invest.portfolio')}</h1>
-          <p className="page-sub">Une ligne par ligne d'actif. <strong>Valeur estimée</strong> = position ouverte. Pour les <strong>cryptos</strong>, renseigne l'<strong>ID CoinGecko</strong> + la <strong>qté</strong> et ton <strong>prix d'achat €/u</strong> : au moment de la vente, clique <strong>Cours</strong> à côté du prix de vente pour <strong>remplir automatiquement le prix de vente</strong> au cours actuel, puis indique la <strong>date de vente</strong> pour clôturer la ligne. Le bouton <strong>Actualiser les cours</strong> met surtout à jour la colonne <strong>Valeur €</strong> des positions encore détenues.</p>
+          <p className="page-sub">Une ligne par actif. <strong>Valeur estimée</strong> = position ouverte. Pour les <strong>cryptos</strong>, renseigne l'<strong>ID CoinGecko</strong> + la <strong>qté</strong> et ton <strong>prix d'achat €/u</strong> : au moment de la vente, clique <strong>Cours</strong> à côté du prix de vente pour <strong>remplir automatiquement le prix de vente</strong> au cours actuel, puis indique la <strong>date de vente</strong> pour clôturer la ligne. Le bouton <strong>Actualiser les cours</strong> met surtout à jour la colonne <strong>Valeur €</strong> des positions encore détenues.</p>
           <datalist id="inv-gecko-presets">
             <option value="bitcoin" /><option value="ethereum" /><option value="solana" /><option value="cardano" />
             <option value="ripple" /><option value="dogecoin" /><option value="polkadot" /><option value="avalanche-2" />
@@ -308,9 +421,10 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
           </datalist>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', marginBottom: '1rem' }}>
             <button type="button" className="btn" onClick={addHolding} style={{ marginBottom: 0, fontSize: '0.85rem' }}>+ Ajouter une position</button>
-            <button type="button" className="btn btn-ghost" onClick={() => {}} style={{ fontSize: '0.85rem' }}>Actualiser les cours (CoinGecko)</button>
+            <button type="button" className="btn btn-ghost" onClick={refreshLiveValues} style={{ fontSize: '0.85rem' }}>Actualiser les cours (CoinGecko)</button>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }} />
           </div>
+          {liveStatus ? <p className="hint" style={{ marginTop: 0 }}>{liveStatus}</p> : null}
           <div className="card table-wrap">
             <table className="data">
               <thead>
@@ -321,14 +435,35 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
               <tbody>
                 {holdings.map((row, index) => (
                   <tr key={`${row.asset || 'row'}-${index}`}>
-                    <td><input className="input-dark invest-holding-input" type="text" value={row.className || ''} onChange={(e) => updateHolding(index, { className: e.target.value })} placeholder="crypto" /></td>
-                    <td><input className="input-dark invest-holding-input" type="text" value={row.synth || ''} onChange={(e) => updateHolding(index, { synth: e.target.value })} placeholder="Actifs" /></td>
+                    <td>
+                      <select className="input-dark invest-holding-input" value={row.className || 'autre'} onChange={(e) => updateHolding(index, { className: e.target.value })}>
+                        {['crypto', 'metaux', 'matieres', 'immobilier', 'obligations', 'actions', 'autre'].map((v) => <option key={v} value={v}>{v}</option>)}
+                      </select>
+                    </td>
+                    <td>
+                      <select className="input-dark invest-holding-input" value={row.hubSegment || 'actif'} onChange={(e) => updateHolding(index, { hubSegment: e.target.value })}>
+                        <option value="actif">Actifs</option>
+                        <option value="passif">Revenu passif</option>
+                      </select>
+                    </td>
                     <td><input className="input-dark invest-holding-input" type="text" value={row.asset} onChange={(e) => updateHolding(index, { asset: e.target.value })} placeholder="Ex. BTC" /></td>
                     <td><input className="input-dark invest-holding-input" list="inv-gecko-presets" type="text" value={row.geckoId || ''} onChange={(e) => updateHolding(index, { geckoId: e.target.value })} placeholder="bitcoin" /></td>
                     <td className="num"><input className="input-dark invest-holding-input invest-holding-input--num" type="text" value={row.computedValue} readOnly placeholder="Ex. 34 400€" /></td>
                     <td><input className="input-dark invest-holding-input" type="text" value={row.quantity} onChange={(e) => updateHolding(index, { quantity: e.target.value })} placeholder="Ex. 0.82" /></td>
                     <td><input className="input-dark invest-holding-input invest-holding-input--num" type="text" value={row.avgPrice} onChange={(e) => updateHolding(index, { avgPrice: e.target.value })} placeholder="Ex. 42 000€" /></td>
-                    <td><input className="input-dark invest-holding-input invest-holding-input--num" type="text" value={row.sellPrice || ''} onChange={(e) => updateHolding(index, { sellPrice: e.target.value })} placeholder="Prix de vente" /></td>
+                    <td>
+                      <div className="inv-sale-cell">
+                        <input className="input-dark invest-holding-input invest-holding-input--num" type="text" value={row.sellPrice || ''} onChange={(e) => {
+                          const nextSell = e.target.value;
+                          const qty = parseAmount(row.quantity || 0);
+                          const buy = parseAmount(row.avgPrice || 0);
+                          const sale = parseAmount(nextSell);
+                          const result = Number.isFinite(qty) && Number.isFinite(buy) && Number.isFinite(sale) ? ((sale - buy) * qty) : 0;
+                          updateHolding(index, { sellPrice: nextSell, saleResult: String(Math.round(result * 100) / 100) });
+                        }} placeholder="Prix de vente" />
+                        <button type="button" className="btn-inv-sale-live" onClick={() => fetchLiveSellPrice(index)} title="Remplir le prix de vente au cours CoinGecko actuel (€ par unité). Nécessite l’ID CoinGecko.">Vente</button>
+                      </div>
+                    </td>
                     <td><input className="input-dark invest-holding-input" type="date" value={row.sellDate || ''} onChange={(e) => updateHolding(index, { sellDate: e.target.value })} /></td>
                     <td><input className="input-dark invest-holding-input invest-holding-input--num" type="text" value={row.saleResult || ''} onChange={(e) => updateHolding(index, { saleResult: e.target.value })} placeholder="Résultat" /></td>
                     <td><input className="input-dark invest-holding-input" type="text" value={row.notes || ''} onChange={(e) => updateHolding(index, { notes: e.target.value })} placeholder="Notes" /></td>
@@ -349,22 +484,44 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
           <div className="card">
             <h2>Fiches bien (max. 3)</h2>
             <div className="immo-tool-row">
-              <div style={{ flex: 1, minWidth: '12rem' }}>
+              <div style={{ flex: '1 1 18rem', minWidth: '18rem' }}>
                 <label htmlFor="immo-select-fiche">Fiche active</label>
-                <select id="immo-select-fiche" className="input-dark" />
+                <select id="immo-select-fiche" className="input-dark immo-active-select" value={immoActiveFiche} onChange={(e) => update({ immoActiveFiche: e.target.value })}>
+                  <option value="fiche-1">{immoFicheLabels['fiche-1'] || 'Fiche 1'}</option>
+                  <option value="fiche-2">{immoFicheLabels['fiche-2'] || 'Fiche 2'}</option>
+                  <option value="fiche-3">{immoFicheLabels['fiche-3'] || 'Fiche 3'}</option>
+                </select>
               </div>
-              <button type="button" className="btn btn-ghost">Renommer</button>
+              <button type="button" className="btn btn-ghost" onClick={renameImmoFiche}>Renommer</button>
               <button type="button" className="btn btn-ghost">Dupliquer</button>
               <button type="button" className="btn">+ Fiche</button>
             </div>
-            <p className="hint" style={{ marginTop: 0 }}>Chaque fiche mémorise ses propres champs et sa checklist. Change de fiche avant une autre simulation pour comparer ensuite dans le tableau multi-biens.</p>
+            <p className="hint" style={{ marginTop: 0 }}>Chaque fiche mémorise ses propres champs et sa checklist. Change de fiche avant une autre simulation pour comparer ensuite dans le tableau multi-biens. Fiche active : <strong>{immoFicheLabel}</strong>.</p>
           </div>
 
           <div className="card">
             <h2>Lier une position Elite Invest</h2>
             <label htmlFor="immo-link-holding">Préremplir depuis « Mes positions » (classe Immobilier)</label>
-            <select id="immo-link-holding" className="input-dark">
+            <select
+              id="immo-link-holding"
+              className="input-dark"
+              value={data.immoLinkedHoldingIndex || ''}
+              onChange={(e) => {
+                const selectedIndex = e.target.value;
+                if (!selectedIndex) return update({ immoLinkedHoldingIndex: '' });
+                const selected = immoLinkedHoldings[Number(selectedIndex)];
+                update({
+                  immoLinkedHoldingIndex: selectedIndex,
+                  purchasePrice: String(parseAmount(selected?.computedValue || selected?.value || 0)),
+                });
+              }}
+            >
               <option value="">— Aucune liaison</option>
+              {immoLinkedHoldings.length ? immoLinkedHoldings.map((row, idx) => (
+                <option key={`${row.asset || 'immo'}-${idx}`} value={String(idx)}>
+                  {row.asset || `Bien ${idx + 1}`} — {row.synth || 'Immobilier'} — {row.computedValue || row.value || '0€'}
+                </option>
+              )) : <option value="" disabled>Aucune position Immobilier</option>}
             </select>
             <p className="hint">Utilise la <strong>valeur estimée</strong> de la ligne comme prix FAI indicatif. Tu peux ajuster après.</p>
           </div>
@@ -434,7 +591,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
 
           <div className="card">
             <h2>Plus-value à la revente (très simplifié)</h2>
-            <p className="hint" style={{ marginTop: 0 }}>Base approximative : prix de revente <strong>hors frais de vente</strong> - (prix d'achat + travaux initiaux). Aucun barème légal 22 ans, etc.</p>
+            <p className="hint" style={{ marginTop: 0 }}>Base approximative : prix de revente <strong>hors frais de vente</strong> âˆ’ (prix d'achat + travaux initiaux). Aucun barème légal 22 ans, etc.</p>
             <div className="grid-2">
               <div>
                 <label htmlFor="immo-pv-taux">Prélèvements sur PV estimée (%)</label>

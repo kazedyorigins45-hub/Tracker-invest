@@ -3,6 +3,7 @@
 import AppSidebar from '@/components/AppSidebar';
 import Link from 'next/link';
 import { getSubscriptionLabel } from '@/lib/plans';
+import LogoMark from '@/components/LogoMark';
 import ThemeToggle from '@/components/ThemeToggle';
 import LanguageToggle from '@/components/LanguageToggle';
 import { useLocale } from '@/lib/locale';
@@ -26,6 +27,7 @@ export default function AppShell({ planCode, subscription, current, title, subti
             <span className="app-subscription-badge">{subscriptionLabel}</span>
             <span>{userEmail}</span>
             <div className="app-topbar-controls">
+              <LogoMark />
               <ThemeToggle className="theme-toggle--app" />
               <LanguageToggle className="theme-toggle--app" />
             </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import LogoMark from '@/components/LogoMark';
 import ThemeToggle from '@/components/ThemeToggle';
 import LanguageToggle from '@/components/LanguageToggle';
 import { PLANS, getPlan } from '@/lib/plans';
@@ -112,6 +113,7 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
 
       <main className="main">
         <div className="mindset-topbar">
+          <LogoMark />
           <ThemeToggle className="theme-toggle--app" />
           <LanguageToggle className="theme-toggle--app" />
         </div>

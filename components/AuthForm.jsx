@@ -68,7 +68,7 @@ export default function AuthForm() {
       <div className="auth-head">
         <span className="badge">{t('site.login')}</span>
         <h1>Mindset Invest</h1>
-        <p>Connecte-toi pour accéder à ton espace. Les abonnements Stripe seront branchés ensuite.</p>
+        <p>Connecte-toi pour accéder à ton espace. Chaque compte a ses propres données ; avec Supabase, elles peuvent être synchronisées entre tes appareils.</p>
         {selectedPlan ? (
           <p className="auth-selection">
             {t('site.login')}: {selectedPlan.name} — {selectedBilling === 'yearly' ? t('pricing.yearly') : t('pricing.monthly')}
@@ -95,7 +95,7 @@ export default function AuthForm() {
       {message ? <p className="form-message">{message}</p> : null}
 
       <button className="btn btn-gold" type="submit" disabled={loading}>
-        {loading ? 'Chargement…' : mode === 'login' ? t('site.login') : 'Créer mon compte'}
+        {loading ? 'Chargement…' : mode === 'login' ? 'Se connecter' : 'Créer mon compte'}
       </button>
     </form>
   );
