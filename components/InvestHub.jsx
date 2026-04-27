@@ -17,6 +17,7 @@ const NAV = [
   ['immo', 'immo'],
   ['goals', 'goals'],
   ['monthly', 'monthly'],
+  ['annual', 'annual'],
   ['project', 'project'],
 ];
 
@@ -134,6 +135,11 @@ function defaultInvestState() {
     monthlySummary: '',
     monthlyLesson: '',
     monthlyNext: '',
+    annualYear: '',
+    annualPride: '',
+    annualLessons: '',
+    annualAdjustments: '',
+    annualNextFocus: '',
     goalTarget: '',
     goalWhy: '',
     goalSteps: '',
@@ -162,6 +168,22 @@ function defaultPortfolioState() {
       crypto: 'Crypto',
     },
   };
+}
+
+function buildInvestAnnualRows(year, monthlyByMonth = {}) {
+  const labels = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+  const selectedYear = year || String(new Date().getFullYear());
+  return labels.map((label, index) => {
+    const key = `${selectedYear}-${String(index + 1).padStart(2, '0')}`;
+    const month = monthlyByMonth?.[key] || {};
+    return {
+      key,
+      month: label,
+      movements: month.monthlySummary || '',
+      lesson: month.monthlyLesson || '',
+      next: month.monthlyNext || '',
+    };
+  });
 }
 
 function parseAmount(input) {
@@ -364,6 +386,9 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   const projectScore = Math.round(projectScoreKeys.reduce((sum, key) => sum + Number(data[key] || 0), 0) / projectScoreKeys.length);
   const selectedMonth = data.monthlyMonth || monthKey();
   const monthlySnapshot = data.monthlyByMonth?.[selectedMonth] || { monthlySummary: '', monthlyLesson: '', monthlyNext: '' };
+  const selectedAnnualYear = data.annualYear || String(new Date().getFullYear());
+  const annualRows = buildInvestAnnualRows(selectedAnnualYear, data.monthlyByMonth || {});
+  const annualFilledMonths = annualRows.filter((row) => row.movements || row.lesson || row.next).length;
   const holdings = (Array.isArray(data.holdings) && data.holdings.length ? data.holdings : defaultInvestState().holdings).map((row) => ({
     ...row,
     computedValue: row.value || computeHoldingValue(row.quantity, row.avgPrice),
@@ -1225,6 +1250,56 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
             <textarea id="inv-mo-lesson" rows="3" className="input-dark" value={monthlySnapshot.monthlyLesson || ''} onChange={(e) => setMonthlyField('monthlyLesson', e.target.value)} />
             <label htmlFor="inv-mo-next">Focus mois suivant</label>
             <textarea id="inv-mo-next" rows="3" className="input-dark" value={monthlySnapshot.monthlyNext || ''} onChange={(e) => setMonthlyField('monthlyNext', e.target.value)} />
+          </div>
+        </section>
+
+        <section className={`page ${page === 'annual' ? 'active' : ''}`}>
+          <h1 className="page-title">Bilan annuel (investissement)</h1>
+          <p className="page-sub">Rétrospection de l’année écoulée. Le tableau se complète automatiquement depuis les bilans mensuels.</p>
+          <div className="toolbar" style={{ marginBottom: '1rem' }}>
+            <label htmlFor="inv-annual-year" style={{ display: 'inline-block', marginRight: '0.5rem' }}>Année</label>
+            <input type="number" id="inv-annual-year" className="input-dark" min="2020" max="2100" step="1" style={{ maxWidth: '10rem', display: 'inline-block' }} value={selectedAnnualYear} onChange={(e) => update({ annualYear: e.target.value })} />
+            <span className="hint" style={{ margin: 0 }}>{annualFilledMonths}/12 mois renseignés</span>
+          </div>
+          <div className="card table-wrap">
+            <table className="immo-compare invest-annual-table">
+              <thead>
+                <tr>
+                  <th>Mois</th>
+                  <th>Mouvements</th>
+                  <th>Leçon / observation</th>
+                  <th>Focus suivant</th>
+                </tr>
+              </thead>
+              <tbody>
+                {annualRows.map((row) => (
+                  <tr key={row.key}>
+                    <td>{row.month}</td>
+                    <td>{row.movements || <span className="hint">—</span>}</td>
+                    <td>{row.lesson || <span className="hint">—</span>}</td>
+                    <td>{row.next || <span className="hint">—</span>}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="grid-2" style={{ marginTop: '1rem' }}>
+            <div className="card">
+              <h2>Ce dont je suis fier</h2>
+              <textarea className="input-dark" rows="4" value={data.annualPride || ''} onChange={(e) => update({ annualPride: e.target.value })} placeholder="Décisions, patience, discipline, allocations réussies…" />
+            </div>
+            <div className="card">
+              <h2>Leçons principales</h2>
+              <textarea className="input-dark" rows="4" value={data.annualLessons || ''} onChange={(e) => update({ annualLessons: e.target.value })} placeholder="Ce que l’année t’a appris sur ton comportement investisseur…" />
+            </div>
+            <div className="card">
+              <h2>Ajustements de stratégie</h2>
+              <textarea className="input-dark" rows="4" value={data.annualAdjustments || ''} onChange={(e) => update({ annualAdjustments: e.target.value })} placeholder="Allocation, rythme d’achat, gestion du risque, classes à renforcer/réduire…" />
+            </div>
+            <div className="card">
+              <h2>Cap pour l’année suivante</h2>
+              <textarea className="input-dark" rows="4" value={data.annualNextFocus || ''} onChange={(e) => update({ annualNextFocus: e.target.value })} placeholder="Priorités et règles pour la prochaine année…" />
+            </div>
           </div>
         </section>
 

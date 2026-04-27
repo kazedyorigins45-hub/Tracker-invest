@@ -1288,6 +1288,8 @@ a { color: inherit; }
 table.data, table.split, table.immo-compare { width: 100%; border-collapse: collapse; font-size: 0.74rem; table-layout: fixed; }
 table.data { min-width: 1180px; }
 table.immo-compare { min-width: 820px; }
+.invest-annual-table { min-width: 980px; }
+.invest-annual-table td { vertical-align: top; white-space: normal; }
 table.data th, table.split th, table.immo-compare th { text-align: left; color: var(--muted); font-weight: 600; padding: 0.3rem 0.22rem; border-bottom: 1px solid var(--border); white-space: normal; }
 table.data td, table.split td, table.immo-compare td { padding: 0.28rem 0.22rem; border-bottom: 1px solid rgba(212,175,55,0.1); overflow: hidden; text-overflow: ellipsis; word-break: break-word; }
 table.data input, table.data select, table.data textarea { width: 100%; min-width: 0; }
