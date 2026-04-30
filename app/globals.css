@@ -1166,6 +1166,7 @@ a { color: inherit; }
   background: rgba(0,0,0,0.35);
   border: 1px solid var(--border);
   color: var(--text);
+  border-radius: 8px;
 }
 .mindset-shell.invest-hub textarea {
   min-height: 90px;
@@ -1328,7 +1329,7 @@ a { color: inherit; }
   margin-bottom: 1.25rem;
   background: var(--card-2);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border-radius: 12px;
   padding: 1.5rem 1.75rem;
   backdrop-filter: blur(8px);
 }
@@ -1396,6 +1397,7 @@ a { color: inherit; }
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid var(--border);
   color: var(--text);
+  border-radius: 8px;
 }
 .mindset-shell.tracker-hub textarea:not(.input-dark) {
   min-height: 100px;
@@ -1439,13 +1441,13 @@ a { color: inherit; }
   width: 100%;
   border-collapse: collapse;
   font-size: 0.82rem;
-  background: #f2e8dc;
+  background: var(--card-2);
   border-radius: 8px;
   overflow: hidden;
 }
 .mindset-shell.tracker-hub table.data th {
   text-align: left;
-  background: #0d1520;
+  background: rgba(0,0,0,0.45);
   color: var(--gold-bright);
   font-size: 0.62rem;
   letter-spacing: 0.08em;
@@ -1455,9 +1457,10 @@ a { color: inherit; }
 }
 .mindset-shell.tracker-hub table.data td {
   padding: 0.4rem 0.35rem;
-  border-bottom: 1px solid rgba(0,0,0,0.08);
-  border-right: 1px solid rgba(0,0,0,0.06);
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
   vertical-align: middle;
+  color: var(--text);
 }
 .mindset-shell.tracker-hub table.data td:last-child { border-right: none; }
 .mindset-shell.tracker-hub table.data td input,
@@ -1467,6 +1470,15 @@ a { color: inherit; }
   margin: 0;
   width: 100%;
   min-width: 3rem;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 6px;
+}
+.mindset-shell.tracker-hub table.data td input:focus,
+.mindset-shell.tracker-hub table.data td select:focus {
+  outline: none;
+  border-color: rgba(201, 169, 98, 0.7);
 }
 .mindset-shell.tracker-hub .card-q textarea {
   min-height: 120px;
@@ -1589,12 +1601,57 @@ table.data td.num, table.split td.num, table.immo-compare td.num { text-align: r
 .mindset-shell.invest-hub table.data {
   width: 100%;
   border-collapse: collapse;
-  background: #f2e8dc;
+  background: var(--card-2);
   border-radius: 8px;
   overflow: hidden;
   font-size: 0.82rem;
   table-layout: auto;
   min-width: 1260px;
+}
+.mindset-shell.invest-hub table.data th {
+  background: rgba(0,0,0,0.45);
+  color: var(--gold-bright);
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.55rem 0.4rem;
+  border-bottom: 1px solid var(--border);
+}
+.mindset-shell.invest-hub table.data td {
+  padding: 0.35rem;
+  border-bottom: 1px solid var(--border);
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
+  word-break: normal;
+  color: var(--text);
+}
+.mindset-shell.invest-hub table.data td input,
+.mindset-shell.invest-hub table.data td select {
+  margin: 0;
+  font-size: 0.82rem;
+  min-height: 38px;
+  height: 38px;
+  background: var(--input-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.mindset-shell.invest-hub table.data td select {
+  min-width: 100%;
+  height: auto !important;
+  min-height: 36px !important;
+  padding: 0.42rem 1.85rem 0.42rem 0.65rem !important;
+  line-height: 1.2 !important;
+  padding-right: 1.6rem;
+  white-space: nowrap;
+  text-overflow: clip;
+  overflow: visible;
+}
+.mindset-shell.invest-hub table.data td input {
+  height: auto !important;
+  min-height: 36px !important;
+  padding: 0.42rem 0.65rem !important;
+  line-height: 1.2 !important;
 }
 .mindset-shell.invest-hub table.data th {
   background: #0d1520;
