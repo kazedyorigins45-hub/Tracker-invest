@@ -29,6 +29,7 @@ function defaultState() {
 }
 
 export default function MindsetHub({ userEmail = '', planCode = 'starter', subscription = null }) {
+  const { t } = useLocale();
   const [state, setState] = useAccountPayload(STORAGE_KEY, defaultState());
   const [activePage, setActivePage] = useState('home');
   const [sidebarOpen, setSidebarOpen] = useState(false);
