@@ -229,6 +229,8 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
   const [profileState, setProfileState] = useAccountPayload('trackerHub_profiles_v1', defaultProfileState());
   const profile = profileState.current || 'default';
   const [data, setData] = useAccountPayload(`trackerHub_v2_${profile}`, defaultTrackerState());
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const closeSidebar = () => setSidebarOpen(false);
 
   const page = data.page === 'tradingPlan' ? 'plan' : (data.page || 'cover');
   const subscriptionLabel = getSubscriptionLabel(subscription, planCode);
@@ -491,7 +493,8 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
 
   return (
     <div className="mindset-shell tracker-hub">
-      <aside className="sidebar">
+      <aside className={`sidebar${sidebarOpen ? ' sidebar--open' : ''}`}>
+        <div className="sidebar-close" onClick={closeSidebar} aria-label="Fermer le menu">✕</div>
         <div className="brand">
           <div className="tag">ELITE TRACKER</div>
           <Link href="/dashboard" className="brand-link"><h1>Elite Tracker</h1></Link>
@@ -538,8 +541,13 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
       </aside>
 
       <main className="main">
-        <div className="mindset-topbar" style={{ justifyContent: 'flex-end' }}>
-          <LogoMark />
+        <div className="mindset-topbar">
+          <div className="mindset-topbar-left">
+            <button type="button" className="hamburger-btn" onClick={() => setSidebarOpen((v) => !v)} aria-label="Menu">
+              <span /><span /><span />
+            </button>
+            <LogoMark />
+          </div>
           <ThemeToggle className="theme-toggle--app" />
           <LanguageToggle className="theme-toggle--app" />
         </div>

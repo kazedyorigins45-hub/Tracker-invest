@@ -424,6 +424,8 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   const [liveStatus, setLiveStatus] = React.useState('');
   const [feedback, setFeedback] = React.useState('');
   const [isRefreshingLive, setIsRefreshingLive] = React.useState(false);
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const closeSidebar = () => setSidebarOpen(false);
 
   const notify = (message) => {
     setFeedback(message);
@@ -783,7 +785,8 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
 
   return (
     <div className="mindset-shell invest-hub">
-      <aside className="sidebar">
+      <aside className={`sidebar${sidebarOpen ? ' sidebar--open' : ''}`}>
+        <div className="sidebar-close" onClick={closeSidebar} aria-label="Fermer le menu">✕</div>
         <div className="brand">
           <div className="tag">{t('app.invest')}</div>
           <Link href="/dashboard" className="brand-link"><h1>Elite Invest</h1></Link>
@@ -831,7 +834,12 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
 
       <main className="main">
         <div className="mindset-topbar">
-          <LogoMark />
+          <div className="mindset-topbar-left">
+            <button type="button" className="hamburger-btn" onClick={() => setSidebarOpen((v) => !v)} aria-label="Menu">
+              <span /><span /><span />
+            </button>
+            <LogoMark />
+          </div>
           <ThemeToggle className="theme-toggle--app" />
           <LanguageToggle className="theme-toggle--app" />
         </div>
