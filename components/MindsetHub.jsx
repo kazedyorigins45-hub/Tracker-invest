@@ -31,53 +31,26 @@ function defaultState() {
 export default function MindsetHub({ userEmail = '', planCode = 'starter', subscription = null }) {
   const [state, setState] = useAccountPayload(STORAGE_KEY, defaultState());
   const [activePage, setActivePage] = useState('home');
-  const [mounted, setMounted] = useState(false);
-  const [editingJournalId, setEditingJournalId] = useState(null);
-  const [journalDraft, setJournalDraft] = useState({ title: '', body: '' });
-  const subscriptionLabel = getSubscriptionLabel(subscription, planCode);
-  const { t, locale } = useLocale();
-  const dateLocale = locale === 'en' ? 'fr-FR' : 'en-US';
-  const isTraderPlan = planCode === 'trader';
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const closeSidebar = () => setSidebarOpen(false);
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    const resetDailyRoutines = () => {
-      const key = todayKey();
-      setState((prev) => ({
-        ...prev,
-        routineByDay: { [key]: prev.routineByDay?.[key] || [false, false, false, false] },
-        morningRoutineByDay: { [key]: prev.morningRoutineByDay?.[key] || [false, false, false, false] },
-      }));
-    };
-
-    resetDailyRoutines();
-
-    const now = new Date();
-    const midnight = new Date(now);
-    midnight.setHours(24, 0, 0, 0);
-    const timeout = window.setTimeout(resetDailyRoutines, midnight.getTime() - now.getTime() + 1000);
-
-    return () => window.clearTimeout(timeout);
-  }, [setState]);
+  function renderPage(name) {
+    setActivePage(name);
+    setSidebarOpen(false);
+    const el = document.getElementById(`page-${name}`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 
   const stats = useMemo(() => {
-    const journalCount = state.journal.length;
-    const rulesCount = state.rules.filter((r) => r && String(r.text || '').trim()).length;
-
+    const journalCount = (state.journal || []).length;
+    const rulesCount = (state.rules || []).length;
+    const days = Object.keys(state.routineByDay || {});
     let streak = 0;
-    const check = new Date();
-    for (let i = 0; i < 365; i++) {
-      const key = `${check.getFullYear()}-${String(check.getMonth() + 1).padStart(2, '0')}-${String(check.getDate()).padStart(2, '0')}`;
-      const arr = state.routineByDay[key];
-      if (arr && Array.isArray(arr) && arr.some(Boolean)) {
-        streak += 1;
-        check.setDate(check.getDate() - 1);
-      } else break;
+    for (let i = days.length - 1; i >= 0; i--) {
+      const day = days[i];
+      const checks = state.routineByDay[day] || [];
+      if (checks.every((v) => v === true)) { streak++; } else { break; }
     }
-
     return { journalCount, rulesCount, streak: streak > 0 ? streak : '—' };
   }, [state]);
 
@@ -165,7 +138,8 @@ export default function MindsetHub({ userEmail = '', planCode = 'starter', subsc
 
   return (
     <div className="mindset-shell">
-      <aside className="sidebar">
+      <aside className={`sidebar${sidebarOpen ? ' sidebar--open' : ''}`}>
+        <div className="sidebar-close" onClick={closeSidebar} aria-label="Fermer le menu">✕</div>
         {isTraderPlan ? (
           <div className="brand-block">
             <div className="brand-top">
@@ -225,7 +199,12 @@ export default function MindsetHub({ userEmail = '', planCode = 'starter', subsc
 
       <main className="main">
         <div className="mindset-topbar">
-          <LogoMark />
+          <div className="mindset-topbar-left">
+            <button type="button" className="hamburger-btn" onClick={() => setSidebarOpen((v) => !v)} aria-label="Menu">
+              <span /><span /><span />
+            </button>
+            <LogoMark />
+          </div>
           <ThemeToggle className="theme-toggle--app" />
           <LanguageToggle className="theme-toggle--app" />
         </div>
