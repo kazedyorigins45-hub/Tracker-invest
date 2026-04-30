@@ -53,6 +53,7 @@ export default function MindsetHub({ userEmail = '', planCode = 'starter', subsc
     }
     return { journalCount, rulesCount, streak: streak > 0 ? streak : '—' };
   }, [state]);
+  const isTraderPlan = planCode === 'tracker' || planCode === 'both';
 
   const activeRoutine = state.routineByDay[todayKey()] || [false, false, false, false];
   const activeRoutineCount = (activeRoutine || []).filter(Boolean).length;
