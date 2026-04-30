@@ -29,10 +29,14 @@ function defaultState() {
 }
 
 export default function MindsetHub({ userEmail = '', planCode = 'starter', subscription = null }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const dateLocale = locale === 'en' ? 'en-US' : 'fr-FR';
+  const subscriptionLabel = getSubscriptionLabel(subscription, planCode);
   const [state, setState] = useAccountPayload(STORAGE_KEY, defaultState());
   const [activePage, setActivePage] = useState('home');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
   const closeSidebar = () => setSidebarOpen(false);
 
   function renderPage(name) {

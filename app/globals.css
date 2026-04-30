@@ -89,6 +89,7 @@ a { color: inherit; }
   justify-content: space-between;
   gap: 1rem;
   padding: 0.95rem 0;
+  position: relative;
 }
 
 .brand {
@@ -102,12 +103,29 @@ a { color: inherit; }
 
 .brand-dark { color: var(--gold); }
 
+.site-header-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+.site-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+.nav-login-link {
+  color: var(--gold-bright) !important;
+}
 .nav,
 .footer-links {
   display: flex;
   gap: 1rem;
   flex-wrap: wrap;
   align-items: center;
+}
+.site-hamburger {
+  display: none;
 }
 
 .nav a,
@@ -1936,13 +1954,17 @@ table.data td.num, table.split td.num, table.immo-compare td.num { text-align: r
   .mindset-shell .sidebar { position: fixed !important; top: 0 !important; left: 0 !important; width: 290px !important; height: 100dvh !important; z-index: 40 !important; transform: translateX(-100%) !important; transition: transform 0.28s ease !important; border-bottom: none !important; }
   .mindset-shell .sidebar.sidebar--open { transform: translateX(0) !important; box-shadow: 0 0 0 9999px rgba(0,0,0,0.6) !important; }
   .mindset-shell .sidebar .sidebar-inner { flex: 1 1 auto !important; overflow-y: auto !important; max-height: none !important; }
+  .home-wrap { padding: 1.5rem 1rem 3rem; }
+  .home-hero { grid-template-columns: 1fr; }
+  .home-hero-main { padding: 1rem; }
   .app-main { padding: 1.25rem; }
   .site-header-inner,
   .footer-grid,
   .app-topbar { flex-direction: column; align-items: flex-start; }
   .main { padding: 1.25rem; }
-  .mindset-topbar { justify-content: center; flex-wrap: wrap; }
+  .mindset-topbar { justify-content: center; }
   .mindset-topbar-left { margin-right: 0; }
+  .profile-dropdown { right: auto; left: 0; }
   .journal-layout { grid-template-columns: 1fr; }
   .home-hero { grid-template-columns: 1fr; }
   .mindset-home-hero { grid-template-columns: 1fr; }

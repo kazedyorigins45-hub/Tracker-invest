@@ -1,13 +1,28 @@
 "use client";
 
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import LogoMark from '@/components/LogoMark';
 import ThemeToggle from '@/components/ThemeToggle';
 import LanguageToggle from '@/components/LanguageToggle';
 import { useLocale } from '@/lib/locale';
 
-export default function SiteHeaderClient({ user, planCode, subscription }) {
+export default function SiteHeaderClient({ user: serverUser, planCode: serverPlanCode, subscription: serverSubscription }) {
   const { t } = useLocale();
+  const [user, setUser] = useState(serverUser);
+  const [planCode, setPlanCode] = useState(serverPlanCode || 'starter');
+  const [subscription, setSubscription] = useState(serverSubscription);
+
+  useEffect(() => {
+    if (serverUser) return;
+    fetch('/api/account-data').then(r => r.json()).then(d => {
+      if (d?.user) {
+        setUser(d.user);
+        setPlanCode(d.planCode || 'starter');
+        setSubscription(d.subscription);
+      }
+    }).catch(() => {});
+  }, [serverUser]);
 
   return (
     <header className="site-header">
