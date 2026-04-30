@@ -36,6 +36,13 @@ const HUB_SEGMENTS = [
   { v: 'passif', l: 'Revenu passif' },
 ];
 
+function classLabel(row = {}) {
+  const raw = String(row.className || row.class || 'autre').toLowerCase();
+  if (raw === 'immobilier') return 'immo';
+  if (raw === 'oblig') return 'obligations';
+  return raw || 'autre';
+}
+
 const MAX_IMMO_FICHES = 3;
 
 const IMMO_FIELD_IDS = [
@@ -140,6 +147,7 @@ function defaultInvestState() {
     annualLessons: '',
     annualAdjustments: '',
     annualNextFocus: '',
+    goals: { target: '', why: '', steps: '' },
     goalTarget: '',
     goalWhy: '',
     goalSteps: '',
@@ -179,11 +187,55 @@ function buildInvestAnnualRows(year, monthlyByMonth = {}) {
     return {
       key,
       month: label,
-      movements: month.monthlySummary || '',
-      lesson: month.monthlyLesson || '',
-      next: month.monthlyNext || '',
+      movements: month.monthlySummary || month.sum || '',
+      lesson: month.monthlyLesson || month.lesson || '',
+      next: month.monthlyNext || month.next || '',
     };
   });
+}
+
+function normalizeInvestHolding(row = {}) {
+  const rawClassName = row.className || row.class || 'autre';
+  const className = rawClassName === 'oblig' ? 'obligations' : rawClassName;
+  const normalized = {
+    ...row,
+    className,
+    class: className,
+    hubSegment: row.hubSegment || 'actif',
+    asset: row.asset || row.label || '',
+    geckoId: row.geckoId || '',
+    quantity: row.quantity || row.qty || '',
+    avgPrice: row.avgPrice || row.buyAvg || '',
+    sellPrice: row.sellPrice || row.salePrice || '',
+    sellDate: row.sellDate || row.saleDate || '',
+    saleResult: row.saleResult || '',
+    notes: row.notes || '',
+    value: row.value || '',
+  };
+  return {
+    ...normalized,
+    computedValue: normalized.value || computeHoldingValue(normalized.quantity, normalized.avgPrice),
+  };
+}
+
+function investHoldingPatch(patch = {}) {
+  const next = { ...patch };
+  if (next.className === 'oblig') next.className = 'obligations';
+  if (Object.prototype.hasOwnProperty.call(patch, 'className')) next.class = patch.className;
+  if (Object.prototype.hasOwnProperty.call(patch, 'asset')) next.label = patch.asset;
+  if (Object.prototype.hasOwnProperty.call(patch, 'quantity')) next.qty = patch.quantity;
+  if (Object.prototype.hasOwnProperty.call(patch, 'avgPrice')) next.buyAvg = patch.avgPrice;
+  if (Object.prototype.hasOwnProperty.call(patch, 'sellPrice')) next.salePrice = patch.sellPrice;
+  if (Object.prototype.hasOwnProperty.call(patch, 'sellDate')) next.saleDate = patch.sellDate;
+  return next;
+}
+
+function storedHoldingsOrDefaults(holdings) {
+  return Array.isArray(holdings) ? holdings : defaultInvestState().holdings;
+}
+
+function emptyHolding() {
+  return { className: 'crypto', class: 'crypto', hubSegment: 'actif', synth: 'Actifs', asset: '', label: '', geckoId: '', quantity: '', qty: '', avgPrice: '', buyAvg: '', sellPrice: '', salePrice: '', sellDate: '', saleDate: '', saleResult: '', notes: '', value: '' };
 }
 
 function parseAmount(input) {
@@ -363,6 +415,11 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   const subscriptionLabel = getSubscriptionLabel(subscription, planCode);
   const { t } = useLocale();
   const update = (patch) => setData((prev) => ({ ...prev, ...patch }));
+  const setInvestMeta = (key, value) => setData((prev) => ({
+    ...prev,
+    [key]: value,
+    meta: { ...(prev.meta || {}), [key]: value },
+  }));
   const updateProfile = (patch) => setPortfolioState((prev) => ({ ...prev, ...patch }));
   const [liveStatus, setLiveStatus] = React.useState('');
   const [feedback, setFeedback] = React.useState('');
@@ -384,15 +441,23 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   }, [page]);
   const projectScoreKeys = ['projectOpportunities', 'projectTechnology', 'projectEcosystem', 'projectRoadmap', 'projectMarketing', 'projectMomentum'];
   const projectScore = Math.round(projectScoreKeys.reduce((sum, key) => sum + Number(data[key] || 0), 0) / projectScoreKeys.length);
+  const investMeta = { name: data.name || '', horizon: data.horizon || '', vision: data.vision || '', ...(data.meta || {}) };
   const selectedMonth = data.monthlyMonth || monthKey();
-  const monthlySnapshot = data.monthlyByMonth?.[selectedMonth] || { monthlySummary: '', monthlyLesson: '', monthlyNext: '' };
+  const monthlySnapshot = {
+    monthlySummary: '', monthlyLesson: '', monthlyNext: '',
+    ...(data.monthly?.[selectedMonth] ? {
+      monthlySummary: data.monthly[selectedMonth].sum || '',
+      monthlyLesson: data.monthly[selectedMonth].lesson || '',
+      monthlyNext: data.monthly[selectedMonth].next || '',
+    } : {}),
+    ...(data.monthlyByMonth?.[selectedMonth] || {}),
+  };
   const selectedAnnualYear = data.annualYear || String(new Date().getFullYear());
-  const annualRows = buildInvestAnnualRows(selectedAnnualYear, data.monthlyByMonth || {});
+  const annualMonthlySource = { ...(data.monthly || {}), ...(data.monthlyByMonth || {}) };
+  const annualRows = buildInvestAnnualRows(selectedAnnualYear, annualMonthlySource);
   const annualFilledMonths = annualRows.filter((row) => row.movements || row.lesson || row.next).length;
-  const holdings = (Array.isArray(data.holdings) && data.holdings.length ? data.holdings : defaultInvestState().holdings).map((row) => ({
-    ...row,
-    computedValue: row.value || computeHoldingValue(row.quantity, row.avgPrice),
-  }));
+  const goalsState = { target: data.goalTarget || '', why: data.goalWhy || '', steps: data.goalSteps || '', ...(data.goals || {}) };
+  const holdings = (Array.isArray(data.holdings) && data.holdings.length ? data.holdings : defaultInvestState().holdings).map(normalizeInvestHolding);
   const isHoldingSold = (row) => !!String(row.sellDate || row.saleDate || '').trim();
   const openHoldings = holdings.filter((row) => !isHoldingSold(row));
   const immoLinkedHoldings = openHoldings.filter((row) => ['immobilier', 'immo'].includes(String(row.className || '').toLowerCase()));
@@ -422,8 +487,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   const annualCashflow = annualIncome - annualPayment - annualCharges;
   const totalOverviewValue = openHoldings.reduce((sum, row) => sum + parseAmount(row.computedValue || row.value || 0), 0);
   const classTotals = openHoldings.reduce((acc, row) => {
-    const rawKey = String(row.className || 'autre').trim().toLowerCase();
-    const key = rawKey === 'immobilier' ? 'immo' : rawKey;
+    const key = classLabel(row);
     acc[key] = (acc[key] || 0) + parseAmount(row.computedValue || row.value || 0);
     return acc;
   }, {});
@@ -461,21 +525,29 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
 
   const updateHolding = (index, patch) => {
     setData((prev) => {
-      const baseHoldings = Array.isArray(prev.holdings) && prev.holdings.length ? prev.holdings : defaultInvestState().holdings;
-      return { ...prev, holdings: baseHoldings.map((row, rowIndex) => (rowIndex === index ? { ...row, ...patch } : row)) };
+      const baseHoldings = storedHoldingsOrDefaults(prev.holdings);
+      const aliases = investHoldingPatch(patch);
+      return { ...prev, holdings: baseHoldings.map((row, rowIndex) => (rowIndex === index ? { ...row, ...aliases } : row)) };
+    });
+  };
+
+  const updateHoldingGeckoId = (index, value) => {
+    setData((prev) => {
+      const baseHoldings = storedHoldingsOrDefaults(prev.holdings);
+      return { ...prev, holdings: baseHoldings.map((row, rowIndex) => (rowIndex === index ? { ...row, geckoId: value } : row)) };
     });
   };
 
   const addHolding = () => {
     setData((prev) => {
-      const baseHoldings = Array.isArray(prev.holdings) && prev.holdings.length ? prev.holdings : defaultInvestState().holdings;
-      return { ...prev, holdings: [...baseHoldings, { className: 'crypto', hubSegment: 'actif', synth: 'Actifs', asset: '', geckoId: '', quantity: '', avgPrice: '', sellPrice: '', sellDate: '', saleResult: '', notes: '', value: '' }] };
+      const baseHoldings = storedHoldingsOrDefaults(prev.holdings);
+      return { ...prev, holdings: [...baseHoldings, emptyHolding()] };
     });
   };
 
   const removeHolding = (index) => {
     setData((prev) => {
-      const baseHoldings = Array.isArray(prev.holdings) && prev.holdings.length ? prev.holdings : defaultInvestState().holdings;
+      const baseHoldings = storedHoldingsOrDefaults(prev.holdings);
       return { ...prev, holdings: baseHoldings.filter((_, rowIndex) => rowIndex !== index) };
     });
   };
@@ -558,6 +630,10 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   const fetchLiveSellPrice = async (index) => {
     const row = holdings[index];
     if (!row) return;
+    if (classLabel(row) !== 'crypto') {
+      setLiveStatus('Cours automatique disponible uniquement pour les cryptos via CoinGecko.');
+      return;
+    }
     const gid = String(row.geckoId || '').trim().toLowerCase().replace(/\s+/g, '-');
     if (!gid) return;
     try {
@@ -567,13 +643,13 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
       if (Number.isFinite(Number(price))) {
         const sale = Number(price);
         setData((prev) => {
-          const baseHoldings = Array.isArray(prev.holdings) && prev.holdings.length ? prev.holdings : defaultInvestState().holdings;
+          const baseHoldings = storedHoldingsOrDefaults(prev.holdings);
           const next = baseHoldings.map((current, rowIndex) => {
             if (rowIndex !== index) return current;
-            const qty = parseAmount(current.quantity || 0);
-            const buy = parseAmount(current.avgPrice || 0);
+            const qty = parseAmount(current.quantity || current.qty || 0) || 1;
+            const buy = parseAmount(current.avgPrice || current.buyAvg || 0);
             const result = Number.isFinite(qty) && Number.isFinite(buy) ? ((sale - buy) * qty) : 0;
-            return { ...current, sellPrice: String(price), saleResult: String(Math.round(result * 100) / 100) };
+            return { ...current, sellPrice: String(price), salePrice: String(price), saleResult: String(Math.round(result * 100) / 100) };
           });
           return { ...prev, holdings: next };
         });
@@ -584,12 +660,13 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   const refreshLiveValues = async () => {
     const ids = [];
     holdings.forEach((row) => {
+      if (classLabel(row) !== 'crypto') return;
       const gid = String(row.geckoId || '').trim().toLowerCase().replace(/\s+/g, '-');
       if (gid) ids.push(gid);
     });
     const uniq = [...new Set(ids)];
     if (!uniq.length) {
-      setLiveStatus('Renseigne au moins un ID CoinGecko.');
+      setLiveStatus('Renseigne au moins un ID CoinGecko sur une ligne crypto ouverte.');
       return;
     }
     setLiveStatus('Récupération…');
@@ -600,12 +677,12 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
       const prices = await res.json();
       let updated = 0;
       setData((prev) => {
-        const baseHoldings = Array.isArray(prev.holdings) && prev.holdings.length ? prev.holdings : defaultInvestState().holdings;
+        const baseHoldings = storedHoldingsOrDefaults(prev.holdings);
         const nextHoldings = baseHoldings.map((row) => {
           const gid = String(row.geckoId || '').trim().toLowerCase().replace(/\s+/g, '-');
           const price = prices?.[gid]?.eur;
           if (!gid || isHoldingSold(row) || !Number.isFinite(Number(price))) return row;
-          const q = parseAmount(row.quantity || 0);
+          const q = parseAmount(row.quantity || row.qty || 0) || 1;
           updated += 1;
           return { ...row, value: String(Math.round(Number(price) * q * 100) / 100) };
         });
@@ -624,13 +701,28 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
     setData((prev) => {
       const month = prev.monthlyMonth || monthKey();
       const bucket = prev.monthlyByMonth?.[month] || {};
-      return { ...prev, monthlyMonth: month, monthlyByMonth: { ...(prev.monthlyByMonth || {}), [month]: { ...bucket, [key]: value } } };
+      const refKeyMap = { monthlySummary: 'sum', monthlyLesson: 'lesson', monthlyNext: 'next' };
+      const refKey = refKeyMap[key] || key;
+      const refBucket = prev.monthly?.[month] || {};
+      return {
+        ...prev,
+        monthlyMonth: month,
+        monthlyByMonth: { ...(prev.monthlyByMonth || {}), [month]: { ...bucket, [key]: value } },
+        monthly: { ...(prev.monthly || {}), [month]: { ...refBucket, [refKey]: value } },
+      };
     });
+  };
+
+  const setGoalField = (key, value) => {
+    setData((prev) => ({
+      ...prev,
+      goals: { target: prev.goalTarget || '', why: prev.goalWhy || '', steps: prev.goalSteps || '', ...(prev.goals || {}), [key]: value },
+    }));
   };
 
   const exportRows = [
     ['Actif', 'Quantité', 'Prix moyen', 'Valeur'],
-    ...holdings.map((row) => [row.asset || '', row.quantity || '', row.avgPrice || '', row.computedValue || '']),
+    ...holdings.map((row) => [row.asset || '', row.quantity || row.qty || '', row.avgPrice || row.buyAvg || '', row.computedValue || '']),
   ];
 
   const copyTsv = async () => {
@@ -690,13 +782,11 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   };
 
   return (
-    <div className="mindset-shell">
+    <div className="mindset-shell invest-hub">
       <aside className="sidebar">
         <div className="brand">
           <div className="tag">{t('app.invest')}</div>
           <Link href="/dashboard" className="brand-link"><h1>Elite Invest</h1></Link>
-          <p className="invest-quote">{t('invest.subtitle')}</p>
-          <p className="app-plan">{t('app.subscription')} : {subscriptionLabel}</p>
         </div>
 
         <nav className="sidebar-apps" aria-label="Navigation site">
@@ -753,11 +843,11 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
           <div className="card">
             <h2>{t('invest.identity')}</h2>
             <div className="grid-2">
-              <div className="field-block"><label>Nom / famille de portefeuille</label><input className="input-dark invest-short-input" type="text" value={data.name} onChange={(e) => update({ name: e.target.value })} placeholder={`ex. ${profileLabel}`} /></div>
-              <div className="field-block"><label>Horizon principal</label><input className="input-dark invest-medium-input" type="text" value={data.horizon} onChange={(e) => update({ horizon: e.target.value })} placeholder="ex. 5–15 ans" /></div>
+              <div className="field-block"><label>Nom / famille de portefeuille</label><input className="input-dark invest-short-input" type="text" value={investMeta.name || ''} onChange={(e) => setInvestMeta('name', e.target.value)} placeholder={`ex. ${profileLabel}`} /></div>
+              <div className="field-block"><label>Horizon principal</label><input className="input-dark invest-medium-input" type="text" value={investMeta.horizon || ''} onChange={(e) => setInvestMeta('horizon', e.target.value)} placeholder="ex. 5–15 ans" /></div>
             </div>
             <label className="field-label">Vision &amp; règles (DCA, pas de levier, etc.)</label>
-            <textarea className="input-dark invest-vision-textarea" rows="4" value={data.vision} onChange={(e) => update({ vision: e.target.value })} placeholder="Décris ton cadre d'investissement…" />
+            <textarea className="input-dark invest-vision-textarea" rows="4" value={investMeta.vision || ''} onChange={(e) => setInvestMeta('vision', e.target.value)} placeholder="Décris ton cadre d'investissement…" />
           </div>
         </section>
 
@@ -816,62 +906,65 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
             <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }} />
           </div>
           {liveStatus ? <p className="hint" style={{ marginTop: 0 }}>{liveStatus}</p> : null}
-          <div className="card table-wrap">
-            <table className="data">
-              <thead>
-                <tr>
-                  <th>Classe</th><th>Synthèse « Mes invest. »</th><th>Libellé</th><th>ID CoinGecko</th><th className="num">Valeur €</th><th>Qté</th><th>Prix achat €/u</th><th>Prix vente €/u</th><th>Date vente</th><th>Rés. vente €</th><th>Notes</th><th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {holdings.map((row, index) => (
-                  <tr key={`${row.asset || 'row'}-${index}`} className={isHoldingSold(row) ? 'row-sold' : ''}>
-                    <td>
-                      <select className="input-dark invest-holding-input" value={row.className === 'immobilier' ? 'immo' : (row.className || 'autre')} onChange={(e) => updateHolding(index, { className: e.target.value })}>
-                        <option value="crypto">Crypto (hold)</option>
-                        <option value="metaux">Métaux précieux</option>
-                        <option value="matieres">Matières premières</option>
-                        <option value="immo">Immobilier</option>
-                        <option value="obligations">Obligations / monétaire</option>
-                        <option value="actions">Actions / ETF</option>
-                        <option value="autre">Autre</option>
-                      </select>
-                    </td>
-                    <td>
-                      <select className="input-dark invest-holding-input" value={row.hubSegment || 'actif'} onChange={(e) => updateHolding(index, { hubSegment: e.target.value })}>
-                        <option value="actif">Actifs</option>
-                        <option value="passif">Revenu passif</option>
-                      </select>
-                    </td>
-                    <td><input className="input-dark invest-holding-input" type="text" value={row.asset} onChange={(e) => updateHolding(index, { asset: e.target.value })} placeholder="Ex. BTC" /></td>
-                    <td><input className="input-dark invest-holding-input" list="inv-gecko-presets" type="text" value={row.geckoId || ''} onChange={(e) => updateHolding(index, { geckoId: e.target.value })} placeholder="bitcoin" /></td>
-                    <td className="num"><input className="input-dark invest-holding-input invest-holding-input--num" type="text" value={row.computedValue} readOnly placeholder="Ex. 34 400€" /></td>
-                    <td><input className="input-dark invest-holding-input" type="text" value={row.quantity} onChange={(e) => updateHolding(index, { quantity: e.target.value, value: '' })} placeholder="Ex. 0.82" /></td>
-                    <td><input className="input-dark invest-holding-input invest-holding-input--num" type="text" value={row.avgPrice} onChange={(e) => updateHolding(index, { avgPrice: e.target.value, value: '' })} placeholder="Ex. 42 000€" /></td>
-                    <td>
-                      <div className="inv-sale-cell">
-                        <input className="input-dark invest-holding-input invest-holding-input--num" type="text" value={row.sellPrice || ''} onChange={(e) => {
-                          const nextSell = e.target.value;
-                          const qty = parseAmount(row.quantity || 0);
-                          const buy = parseAmount(row.avgPrice || 0);
-                          const sale = parseAmount(nextSell);
-                          const result = Number.isFinite(qty) && Number.isFinite(buy) && Number.isFinite(sale) ? ((sale - buy) * qty) : 0;
-                          updateHolding(index, { sellPrice: nextSell, saleResult: String(Math.round(result * 100) / 100) });
-                        }} placeholder="Prix de vente" />
-                        <button type="button" className="btn-inv-sale-live" onClick={() => fetchLiveSellPrice(index)} title="Remplir le prix de vente au cours CoinGecko actuel (€ par unité). Nécessite l’ID CoinGecko.">Cours</button>
-                      </div>
-                    </td>
-                    <td><input className="input-dark invest-holding-input" type="date" value={row.sellDate || row.saleDate || ''} onChange={(e) => updateHolding(index, { sellDate: e.target.value, saleDate: e.target.value })} /></td>
-                    <td><input className="input-dark invest-holding-input invest-holding-input--num" type="text" value={row.saleResult || ''} onChange={(e) => updateHolding(index, { saleResult: e.target.value })} placeholder="Résultat" /></td>
-                    <td><input className="input-dark invest-holding-input" type="text" value={row.notes || ''} onChange={(e) => updateHolding(index, { notes: e.target.value })} placeholder="Notes" /></td>
-                    <td style={{ width: '1%' }}><button type="button" className="btn btn-ghost" onClick={() => removeHolding(index)}>✕</button></td>
+          <div className="card">
+            <div className="table-wrap">
+              <table className="data">
+                <thead>
+                  <tr>
+                    <th>Classe</th><th>Synthèse « Mes invest. »</th><th>Libellé</th><th>ID CoinGecko</th><th>Valeur €</th><th>Qté</th><th>Prix achat €/u</th><th>Prix vente €/u</th><th>Date vente</th><th>Rés. vente €</th><th>Notes</th><th></th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {holdings.map((row, index) => (
+                    <tr key={`${row.asset || 'row'}-${index}`} className={isHoldingSold(row) ? 'row-sold' : ''}>
+                      <td>
+                        <select className="input-dark invest-holding-input" value={row.className === 'immobilier' ? 'immo' : row.className === 'oblig' ? 'obligations' : (row.className || 'autre')} onChange={(e) => updateHolding(index, { className: e.target.value })}>
+                          <option value="crypto">Crypto (hold)</option>
+                          <option value="metaux">Métaux précieux</option>
+                          <option value="matieres">Matières premières</option>
+                          <option value="immo">Immobilier</option>
+                          <option value="obligations">Obligations / monétaire</option>
+                          <option value="actions">Actions / ETF</option>
+                          <option value="autre">Autre</option>
+                        </select>
+                      </td>
+                      <td>
+                        <select className="input-dark invest-holding-input" value={row.hubSegment || 'actif'} onChange={(e) => updateHolding(index, { hubSegment: e.target.value })}>
+                          <option value="actif">Actifs</option>
+                          <option value="passif">Revenu passif</option>
+                        </select>
+                      </td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={row.asset} onChange={(e) => updateHolding(index, { asset: e.target.value })} placeholder="Ex. BTC" /></td>
+                      <td><input className="input-dark invest-holding-input" list="inv-gecko-presets" type="text" value={row.geckoId || ''} onInput={(e) => updateHoldingGeckoId(index, e.currentTarget.value)} onChange={(e) => updateHoldingGeckoId(index, e.currentTarget.value)} placeholder="bitcoin" autoComplete="off" /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={row.computedValue} readOnly placeholder="Ex. 34 400€" /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={row.quantity} onChange={(e) => updateHolding(index, { quantity: e.target.value, value: '' })} placeholder="Ex. 0.82" /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={row.avgPrice} onChange={(e) => updateHolding(index, { avgPrice: e.target.value, value: '' })} placeholder="Ex. 42 000€" /></td>
+                      <td>
+                        <div className="inv-sale-cell">
+                          <input className="input-dark invest-holding-input" type="text" value={row.sellPrice || ''} onChange={(e) => {
+                            const nextSell = e.target.value;
+                            const qty = parseAmount(row.quantity || row.qty || 0) || 1;
+                            const buy = parseAmount(row.avgPrice || row.buyAvg || 0);
+                            const sale = parseAmount(nextSell);
+                            const result = Number.isFinite(qty) && Number.isFinite(buy) && Number.isFinite(sale) ? ((sale - buy) * qty) : 0;
+                            updateHolding(index, { sellPrice: nextSell, saleResult: String(Math.round(result * 100) / 100) });
+                          }} placeholder="Prix de vente" />
+                          <button type="button" className="btn-inv-sale-live" onClick={() => fetchLiveSellPrice(index)} disabled={classLabel(row) !== 'crypto'} title={classLabel(row) === 'crypto' ? 'Remplir le prix de vente au cours CoinGecko actuel (€ par unité). Nécessite l’ID CoinGecko.' : 'Cours automatique disponible uniquement pour les cryptos via CoinGecko.'}>Cours</button>
+                        </div>
+                      </td>
+                      <td><input className="input-dark invest-holding-input" type="date" value={row.sellDate || row.saleDate || ''} onChange={(e) => updateHolding(index, { sellDate: e.target.value, saleDate: e.target.value })} /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={row.saleResult || ''} onChange={(e) => updateHolding(index, { saleResult: e.target.value })} placeholder="Résultat" /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={row.notes || ''} onChange={(e) => updateHolding(index, { notes: e.target.value })} placeholder="Notes" /></td>
+                      <td><button type="button" className="link-del" onClick={() => removeHolding(index)}>×</button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             <div className="toolbar" style={{ marginTop: '1rem' }}>
               <button type="button" className="btn btn-gold" onClick={addHolding}>+ Ajouter une ligne</button>
             </div>
+            <p className="hint">Les % utilisent uniquement les positions <strong>non vendues</strong>. La colonne <strong>Synthèse</strong> classe chaque ligne ouverte pour les barres <em>Actifs</em> vs <em>Revenu passif</em> sur la page Mes investissements ; une fois la <strong>date de vente</strong> renseignée, l'encaissement (prix de vente × qté) alimente les <em>fonds disponibles</em>. Cours via CoinGecko (gratuit, limite de fréquence).</p>
           </div>
         </section>
 
@@ -1224,14 +1317,14 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
             <div className="card">
               <h2>Objectif patrimonial</h2>
               <label htmlFor="inv-goal-target">Cible (€)</label>
-              <input type="text" id="inv-goal-target" className="input-dark" value={data.goalTarget || ''} onChange={(e) => update({ goalTarget: e.target.value })} placeholder="ex. 500 000" />
+              <input type="text" id="inv-goal-target" className="input-dark" value={goalsState.target || ''} onChange={(e) => setGoalField('target', e.target.value)} placeholder="ex. 500 000" />
               <label htmlFor="inv-goal-why">Pourquoi</label>
-              <textarea id="inv-goal-why" className="input-dark" rows="4" value={data.goalWhy || ''} onChange={(e) => update({ goalWhy: e.target.value })} />
+              <textarea id="inv-goal-why" className="input-dark" rows="4" value={goalsState.why || ''} onChange={(e) => setGoalField('why', e.target.value)} />
             </div>
             <div className="card">
               <h2>Échéances</h2>
               <label htmlFor="inv-goal-steps">Jalons (texte libre)</label>
-              <textarea id="inv-goal-steps" className="input-dark" rows="6" value={data.goalSteps || ''} onChange={(e) => update({ goalSteps: e.target.value })} />
+              <textarea id="inv-goal-steps" className="input-dark" rows="6" value={goalsState.steps || ''} onChange={(e) => setGoalField('steps', e.target.value)} />
             </div>
           </div>
         </section>

@@ -239,9 +239,27 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
   const morningItems = locale === 'en' ? MORNING_ITEMS_EN : MORNING_ITEMS_FR;
   const commitmentItems = locale === 'en' ? COMMITMENT_ITEMS_EN : COMMITMENT_ITEMS_FR;
   const profileLabel = profileState.labels?.[profile] || (profile === 'alt' ? t('tracker.profileSecondary') : t('tracker.profilePrimary'));
+  const journalMeta = {
+    name: data.journalName || '',
+    period: data.journalPeriod || '',
+    mainGoal: data.journalObjective || '',
+    ...(data.journalMeta || {}),
+  };
   const selectedMonth = data.monthlyMonth || monthKey();
-  const monthlySnapshot = data.monthlyByMonth?.[selectedMonth] || {
-    monthlyCapital: '', monthlyBest: '', monthlyEmotion: '', monthlyRatio: '', monthlyLesson: '', monthlyResult: '', monthlyGoal: '', monthlyFeel: '', monthlyGood: '', monthlyBad: '', monthlyNext: '',
+  const refMonthlySnapshot = data.monthly?.[selectedMonth] || {};
+  const monthlySnapshot = {
+    monthlyCapital: refMonthlySnapshot.capital || '',
+    monthlyBest: refMonthlySnapshot.best || '',
+    monthlyEmotion: refMonthlySnapshot.emotion || '',
+    monthlyRatio: refMonthlySnapshot.ratioManual || '',
+    monthlyLesson: refMonthlySnapshot.lesson || '',
+    monthlyResult: refMonthlySnapshot.resultManual || '',
+    monthlyGoal: refMonthlySnapshot.goal || '',
+    monthlyFeel: refMonthlySnapshot.feel || '',
+    monthlyGood: refMonthlySnapshot.good || '',
+    monthlyBad: refMonthlySnapshot.bad || '',
+    monthlyNext: refMonthlySnapshot.next || '',
+    ...(data.monthlyByMonth?.[selectedMonth] || {}),
   };
   const quarterKey = `${data.quarterYear || new Date().getFullYear()}-Q${data.quarterNumber || '1'}`;
   const quarterDefaults = {
@@ -250,9 +268,15 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
   const quarterSnapshot = { ...quarterDefaults, ...(data.quarterByKey?.[quarterKey] || {}) };
 
   const update = (patch) => setData((prev) => ({ ...prev, ...patch }));
+  const setJournalMeta = (key, value) => setData((prev) => {
+    const flatKey = key === 'mainGoal' ? 'journalObjective' : key === 'name' ? 'journalName' : 'journalPeriod';
+    return { ...prev, [flatKey]: value, journalMeta: { ...(prev.journalMeta || {}), [key]: value } };
+  });
   const weeklyTrades = Array.isArray(data.weeklyTrades) ? data.weeklyTrades : [];
   const selectedWeeklyMonth = data.weeklyMonth || '';
   const selectedWeeklyWeek = data.weeklyWeek || '';
+  const weeklyNotesKey = selectedWeeklyWeek || selectedWeeklyMonth || monthKey();
+  const weeklyNotesValue = typeof data.weeklyNotes === 'object' && data.weeklyNotes !== null ? (data.weeklyNotes[weeklyNotesKey] || '') : (data.weeklyNotes || data.weeklyNotesText || '');
   const visibleWeeklyTrades = weeklyTrades
     .map((row, originalIndex) => ({ row, originalIndex }))
     .filter(({ row }) => {
@@ -286,7 +310,17 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
     setData((prev) => {
       const month = prev.monthlyMonth || monthKey();
       const bucket = prev.monthlyByMonth?.[month] || {};
-      return { ...prev, monthlyMonth: month, monthlyByMonth: { ...(prev.monthlyByMonth || {}), [month]: { ...bucket, [key]: value } } };
+      const refKeyMap = {
+        monthlyCapital: 'capital', monthlyBest: 'best', monthlyEmotion: 'emotion', monthlyRatio: 'ratioManual', monthlyLesson: 'lesson', monthlyResult: 'resultManual', monthlyGoal: 'goal', monthlyFeel: 'feel', monthlyGood: 'good', monthlyBad: 'bad', monthlyNext: 'next',
+      };
+      const refKey = refKeyMap[key] || key;
+      const refBucket = prev.monthly?.[month] || {};
+      return {
+        ...prev,
+        monthlyMonth: month,
+        monthlyByMonth: { ...(prev.monthlyByMonth || {}), [month]: { ...bucket, [key]: value } },
+        monthly: { ...(prev.monthly || {}), [month]: { ...refBucket, [refKey]: value } },
+      };
     });
   };
 
@@ -456,7 +490,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
   }, [page]);
 
   return (
-    <div className="mindset-shell">
+    <div className="mindset-shell tracker-hub">
       <aside className="sidebar">
         <div className="brand">
           <div className="tag">ELITE TRACKER</div>
@@ -518,15 +552,15 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
             <div className="grid-3 tracker-cover-grid" style={{ marginTop: '1rem' }}>
               <div className="field-block">
                 <label>Nom</label>
-                <input className="input-dark tracker-cover-input" type="text" value={data.journalName || ''} onChange={(e) => update({ journalName: e.target.value })} placeholder="Ton nom" />
+                <input className="input-dark tracker-cover-input" type="text" value={journalMeta.name || ''} onChange={(e) => setJournalMeta('name', e.target.value)} placeholder="Ton nom" />
               </div>
               <div className="field-block">
                 <label>Période</label>
-                <input className="input-dark tracker-cover-input" type="text" value={data.journalPeriod || ''} onChange={(e) => update({ journalPeriod: e.target.value })} placeholder="ex. 2026 — T1" />
+                <input className="input-dark tracker-cover-input" type="text" value={journalMeta.period || ''} onChange={(e) => setJournalMeta('period', e.target.value)} placeholder="ex. 2026 — T1" />
               </div>
               <div className="field-block">
                 <label>Objectif principal</label>
-                <input className="input-dark tracker-cover-input" type="text" value={data.journalObjective || ''} onChange={(e) => update({ journalObjective: e.target.value })} placeholder="Objectif clé" />
+                <input className="input-dark tracker-cover-input" type="text" value={journalMeta.mainGoal || ''} onChange={(e) => setJournalMeta('mainGoal', e.target.value)} placeholder="Objectif clé" />
               </div>
             </div>
             <p className="quote-footer">« Au milieu de chaque difficulté se trouve une opportunité. » — Albert Einstein</p>
@@ -828,7 +862,13 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
           <div className="card">
             <h2>{t('tracker.weeklyNotesTitle')}</h2>
             <label htmlFor="w-notes">{t('tracker.weeklyNotesLabel')}</label>
-            <textarea id="w-notes" className="input-dark portfolio-note" rows="5" value={data.weeklyNotes || ''} onChange={(e) => update({ weeklyNotes: e.target.value })} />
+            <textarea id="w-notes" className="input-dark portfolio-note" rows="5" value={weeklyNotesValue} onChange={(e) => {
+              const value = e.target.value;
+              update({
+                weeklyNotes: { ...(typeof data.weeklyNotes === 'object' && data.weeklyNotes !== null ? data.weeklyNotes : {}), [weeklyNotesKey]: value },
+                weeklyNotesText: value,
+              });
+            }} />
           </div>
           <p className="quote-footer">« La régularité bat le talent quand le talent n’est pas régulier. »</p>
         </section>
