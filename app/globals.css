@@ -1930,9 +1930,9 @@ table.data td.num, table.split td.num, table.immo-compare td.num { text-align: r
   .sidebar-inner { max-height: 50vh; overflow-y: auto; }
   .hamburger-btn { display: flex; }
   .sidebar-close { display: block; }
-  .mindset-shell .sidebar { position: fixed; top: 0; left: 0; width: 290px; height: 100dvh; z-index: 40; transform: translateX(-100%); transition: transform 0.28s ease; }
-  .mindset-shell .sidebar.sidebar--open { transform: translateX(0); box-shadow: 0 0 0 9999px rgba(0,0,0,0.6); }
-  .mindset-shell .sidebar .sidebar-inner { flex: 1 1 auto; overflow-y: auto; max-height: none; }
+  .mindset-shell .sidebar { position: fixed !important; top: 0 !important; left: 0 !important; width: 290px !important; height: 100dvh !important; z-index: 40 !important; transform: translateX(-100%) !important; transition: transform 0.28s ease !important; border-bottom: none !important; }
+  .mindset-shell .sidebar.sidebar--open { transform: translateX(0) !important; box-shadow: 0 0 0 9999px rgba(0,0,0,0.6) !important; }
+  .mindset-shell .sidebar .sidebar-inner { flex: 1 1 auto !important; overflow-y: auto !important; max-height: none !important; }
   .app-main { padding: 1.25rem; }
   .site-header-inner,
   .footer-grid,
