@@ -274,6 +274,15 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
     const flatKey = key === 'mainGoal' ? 'journalObjective' : key === 'name' ? 'journalName' : 'journalPeriod';
     return { ...prev, [flatKey]: value, journalMeta: { ...(prev.journalMeta || {}), [key]: value } };
   });
+  const notify = (msg) => {
+    if (typeof window !== 'undefined') window.setTimeout(() => update({ feedback: msg }), 0);
+  };
+  const setWeeklyMonth = (ym) => {
+    if (!ym) { update({ weeklyMonth: '', weeklyWeek: '' }); return; }
+    const firstDay = ym + '-01';
+    const week = isoWeekKey(firstDay);
+    update({ weeklyMonth: ym, weeklyWeek: week });
+  };
   const weeklyTrades = Array.isArray(data.weeklyTrades) ? data.weeklyTrades : [];
   const selectedWeeklyMonth = data.weeklyMonth || '';
   const selectedWeeklyWeek = data.weeklyWeek || '';
@@ -790,7 +799,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
           <div className="toolbar">
             <div>
               <label htmlFor="w-month">{t('tracker.weeklyMonth')}</label>
-              <input type="month" id="w-month" className="input-dark tracker-date-input tracker-date-mini" title="Tous les trades de ce mois apparaissent dans le tableau" value={data.weeklyMonth || ''} onChange={(e) => update({ weeklyMonth: e.target.value })} />
+              <input type="month" id="w-month" className="input-dark tracker-date-input tracker-date-mini" title="Tous les trades de ce mois apparaissent dans le tableau" value={data.weeklyMonth || ''} onChange={(e) => setWeeklyMonth(e.target.value)} />
             </div>
             <div>
               <label htmlFor="w-week">{t('tracker.weeklyWeek')}</label>
