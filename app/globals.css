@@ -1341,6 +1341,33 @@ a { color: inherit; }
   margin: 0 0 1rem;
   font-weight: 600;
 }
+.mindset-shell.tracker-hub .page-title {
+  font-family: var(--font-cinzel), serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--gold-bright);
+  letter-spacing: 0.12em;
+  margin: 0 0 0.5rem;
+  text-transform: uppercase;
+}
+.mindset-shell.tracker-hub .page-hero {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-style: italic;
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin: 0 0 1.5rem;
+  max-width: 40rem;
+  line-height: 1.55;
+}
+.mindset-shell.tracker-hub .dec-arrow {
+  float: right;
+  font-size: 1.75rem;
+  color: var(--gold);
+  opacity: 0.85;
+  line-height: 1;
+  user-select: none;
+  display: block;
+}
 .mindset-shell.tracker-hub label {
   display: block;
   font-size: 0.68rem;
@@ -1370,7 +1397,7 @@ a { color: inherit; }
   border: 1px solid var(--border);
   color: var(--text);
 }
-.mindset-shell.tracker-hub textarea {
+.mindset-shell.tracker-hub textarea:not(.input-dark) {
   min-height: 100px;
   resize: vertical;
   line-height: 1.5;
@@ -1380,13 +1407,69 @@ a { color: inherit; }
   max-width: 52rem;
 }
 .mindset-shell.tracker-hub .toolbar > div { flex: 0 0 auto; min-width: 160px; }
+.mindset-shell.tracker-hub .stats-row {
+  margin-bottom: 1.5rem;
+}
+.mindset-shell.tracker-hub .hint {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: 0.75rem;
+  line-height: 1.45;
+}
+.mindset-shell.tracker-hub .quote-footer {
+  font-family: var(--font-playfair), Georgia, serif;
+  font-style: italic;
+  font-size: 0.88rem;
+  color: var(--muted);
+  text-align: center;
+  margin: 2rem auto 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+  max-width: 36rem;
+}
+.mindset-shell.tracker-hub .check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+  font-size: 0.88rem;
+}
+.mindset-shell.tracker-hub .check-row input { width: auto; margin-top: 0.2rem; accent-color: var(--gold); }
+.mindset-shell.tracker-hub table.data {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  background: #f2e8dc;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.mindset-shell.tracker-hub table.data th {
+  text-align: left;
+  background: #0d1520;
+  color: var(--gold-bright);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.65rem 0.45rem;
+  border-bottom: 1px solid var(--border);
+}
+.mindset-shell.tracker-hub table.data td {
+  padding: 0.4rem 0.35rem;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+  border-right: 1px solid rgba(0,0,0,0.06);
+  vertical-align: middle;
+}
+.mindset-shell.tracker-hub table.data td:last-child { border-right: none; }
 .mindset-shell.tracker-hub table.data td input,
 .mindset-shell.tracker-hub table.data td select {
+  font-size: 0.78rem;
+  padding: 0.4rem 0.35rem;
   margin: 0;
   width: 100%;
-  font-size: 0.82rem;
-  padding: 0.40rem 0.35rem;
   min-width: 3rem;
+}
+.mindset-shell.tracker-hub .card-q textarea {
+  min-height: 120px;
 }
 @media (max-width: 960px) {
   .mindset-shell.tracker-hub input:not(.input-dark),
