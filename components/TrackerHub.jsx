@@ -282,7 +282,6 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
   const visibleWeeklyTrades = weeklyTrades
     .map((row, originalIndex) => ({ row, originalIndex }))
     .filter(({ row }) => {
-      if (selectedWeeklyWeek) return isoWeekKey(row.date) === selectedWeeklyWeek;
       if (selectedWeeklyMonth) return String(row.date || '').slice(0, 7) === selectedWeeklyMonth;
       return true;
     });
@@ -298,7 +297,16 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
     update({ weeklyTrades: next });
   };
   const addWeeklyTrade = () => {
-    update({ weeklyTrades: [...weeklyTrades, { date: '', asset: '', direction: 'long', assetPrice: '', lots: '', entry: '', exit: '', rr: '', result: '', emotion: '', comment: '', tvUrl: '' }] });
+    const ym = data.weeklyMonth || monthKey();
+    const parts = ym.split('-').map(Number);
+    const today = new Date();
+    let dateStr;
+    if (today.getFullYear() === parts[0] && today.getMonth() + 1 === parts[1]) {
+      dateStr = today.toISOString().slice(0, 10);
+    } else {
+      dateStr = ym + '-01';
+    }
+    update({ weeklyTrades: [...weeklyTrades, { date: dateStr, asset: '', direction: 'long', assetPrice: '', lots: '', entry: '', exit: '', rr: '', result: '', emotion: '', comment: '', tvUrl: '' }] });
   };
   const removeWeeklyTrade = (index) => {
     update({ weeklyTrades: weeklyTrades.filter((_, rowIndex) => rowIndex !== index) });
