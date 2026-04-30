@@ -1101,9 +1101,9 @@ a { color: inherit; }
   color: var(--muted);
   margin-bottom: 0.4rem;
 }
-.mindset-shell.invest-hub input,
-.mindset-shell.invest-hub select,
-.mindset-shell.invest-hub textarea {
+.mindset-shell.invest-hub input:not(.input-dark),
+.mindset-shell.invest-hub select:not(.input-dark),
+.mindset-shell.invest-hub textarea:not(.input-dark) {
   width: 100%;
   background: #f2e8dc;
   border: 1px solid rgba(0,0,0,0.12);
@@ -1278,13 +1278,34 @@ a { color: inherit; }
   margin: 0 0 1rem;
   font-weight: 600;
 }
-.mindset-shell.tracker-hub input[type="text"],
-.mindset-shell.tracker-hub input[type="number"],
-.mindset-shell.tracker-hub input[type="date"],
-.mindset-shell.tracker-hub input[type="week"],
-.mindset-shell.tracker-hub input[type="month"],
-.mindset-shell.tracker-hub select,
-.mindset-shell.tracker-hub textarea {
+.mindset-shell.tracker-hub .card {
+  margin-bottom: 1.25rem;
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.75rem;
+  backdrop-filter: blur(8px);
+}
+.mindset-shell.tracker-hub .card h2 {
+  font-family: var(--font-cinzel), serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin: 0 0 1rem;
+  font-weight: 600;
+}
+.mindset-shell.tracker-hub label {
+  display: block;
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.45rem;
+}
+.mindset-shell.tracker-hub input:not(.input-dark),
+.mindset-shell.tracker-hub select:not(.input-dark),
+.mindset-shell.tracker-hub textarea:not(.input-dark) {
   width: 100%;
   background: #f2e8dc;
   border: 1px solid rgba(0,0,0,0.12);
@@ -1296,7 +1317,9 @@ a { color: inherit; }
   line-height: 1.5;
   box-sizing: border-box;
 }
-.mindset-shell.tracker-hub .input-dark {
+.mindset-shell.tracker-hub input.input-dark,
+.mindset-shell.tracker-hub select.input-dark,
+.mindset-shell.tracker-hub textarea.input-dark {
   background: rgba(0, 0, 0, 0.35);
   border: 1px solid var(--border);
   color: var(--text);
@@ -1305,9 +1328,6 @@ a { color: inherit; }
   min-height: 100px;
   resize: vertical;
   line-height: 1.5;
-}
-.mindset-shell.tracker-hub .card {
-  margin-bottom: 1.25rem;
 }
 .mindset-shell.tracker-hub .page-sub {
   margin: 0 0 2rem;
@@ -1323,11 +1343,9 @@ a { color: inherit; }
   min-width: 3rem;
 }
 @media (max-width: 960px) {
-  .mindset-shell.tracker-hub input[type="text"],
-  .mindset-shell.tracker-hub input[type="number"],
-  .mindset-shell.tracker-hub input[type="date"],
-  .mindset-shell.tracker-hub textarea,
-  .mindset-shell.tracker-hub select {
+  .mindset-shell.tracker-hub input:not(.input-dark),
+  .mindset-shell.tracker-hub textarea:not(.input-dark),
+  .mindset-shell.tracker-hub select:not(.input-dark) {
     min-height: 44px;
     font-size: 0.92rem;
     padding: 0.6rem 0.8rem;
