@@ -917,7 +917,7 @@ a { color: inherit; }
 .sidebar-apps .app-link:hover { color: var(--gold-bright); background: rgba(201, 169, 98, 0.08); }
 .sidebar-apps .app-link.is-current { color: var(--gold-bright); border-left-color: var(--gold); background: rgba(201, 169, 98, 0.1); pointer-events: none; }
 .sidebar-apps .app-link.is-locked { opacity: 0.45; }
-.sidebar-inner { flex: 0 0 auto; min-height: 0; overflow: visible; }
+.sidebar-inner { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; }
 .nav-item {
   padding: 0.7rem 0.85rem;
   font-size: 0.75rem;
@@ -1018,12 +1018,6 @@ a { color: inherit; }
   padding: 0.2rem 0.45rem;
   border-radius: 6px;
   background: rgba(0,0,0,0.3);
-}
-@media (max-width: 960px) {
-  .hamburger-btn { display: flex; }
-  .sidebar-close { display: block; }
-  .sidebar { position: fixed; top: 0; left: 0; width: 290px; height: 100dvh; z-index: 40; transform: translateX(-100%); transition: transform 0.28s ease; }
-  .sidebar.sidebar--open { transform: translateX(0); box-shadow: 0 0 0 9999px rgba(0,0,0,0.6); }
 }
 .sidebar-bottom .app-plan { font-size: 0.6rem; margin: 0.25rem 0; }
 .sidebar-bottom span { display: block; margin-bottom: 0.25rem; word-break: break-all; font-size: 0.58rem; line-height: 1.25; }
@@ -1932,7 +1926,12 @@ table.data td.num, table.split td.num, table.immo-compare td.num { text-align: r
   .mindset-shell { height: auto; min-height: 100vh; }
   .app-sidebar,
   .sidebar { width: 100%; height: auto; max-height: none; border-right: 0; border-bottom: 1px solid var(--border); }
-  .sidebar-inner { max-height: none; overflow: visible; }
+  .sidebar-inner { max-height: 50vh; overflow-y: auto; }
+  .hamburger-btn { display: flex; }
+  .sidebar-close { display: block; }
+  .mindset-shell .sidebar { position: fixed; top: 0; left: 0; width: 290px; height: 100dvh; z-index: 40; transform: translateX(-100%); transition: transform 0.28s ease; }
+  .mindset-shell .sidebar.sidebar--open { transform: translateX(0); box-shadow: 0 0 0 9999px rgba(0,0,0,0.6); }
+  .mindset-shell .sidebar .sidebar-inner { flex: 1 1 auto; overflow-y: auto; max-height: none; }
   .app-main { padding: 1.25rem; }
   .site-header-inner,
   .footer-grid,
