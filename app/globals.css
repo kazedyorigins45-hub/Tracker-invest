@@ -1741,6 +1741,27 @@ table.data td.num, table.split td.num, table.immo-compare td.num { text-align: r
 .immo-mini-stats .v { font-family: var(--font-cinzel), serif; color: var(--gold-bright); font-size: 0.95rem; }
 .immo-mini-stats .v.neg { color: #c98a8a; }
 .immo-mini-stats .v.pos { color: #7ab896; }
+.immo-profit-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.65rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: 10px;
+  border: 1px solid rgba(201, 138, 138, 0.45);
+  background: rgba(201, 138, 138, 0.1);
+  color: #c98a8a;
+  font-size: 0.75rem;
+}
+.immo-profit-badge.is-profitable {
+  border-color: rgba(122, 184, 150, 0.5);
+  background: rgba(122, 184, 150, 0.12);
+  color: #7ab896;
+}
+.immo-profit-badge strong { display: block; font-size: 0.76rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.immo-profit-badge span:not(.immo-profit-dot) { display: block; color: var(--muted); margin-top: 0.12rem; }
+.immo-profit-dot { width: 0.85rem; height: 0.85rem; border-radius: 4px; background: #c98a8a; box-shadow: 0 0 0 3px rgba(201, 138, 138, 0.16); flex: 0 0 auto; }
+.immo-profit-badge.is-profitable .immo-profit-dot { background: #7ab896; box-shadow: 0 0 0 3px rgba(122, 184, 150, 0.16); }
 .data tr.row-sold { opacity: 0.58; }
 .data tr.row-sold td { background: rgba(255, 255, 255, 0.015); }
 .immo-compare tr.best td { background: rgba(212, 175, 55, 0.12); border-color: rgba(212, 175, 55, 0.34); }

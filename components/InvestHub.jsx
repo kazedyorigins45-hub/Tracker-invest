@@ -159,6 +159,7 @@ function defaultInvestState() {
     projectMarketing: 7,
     projectMomentum: 7,
     projectVerdict: '',
+    projectArchives: [],
   };
 }
 
@@ -442,7 +443,12 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
     if (['export', 'memo', 'finance'].includes(page)) update({ page: 'cover' });
   }, [page]);
   const projectScoreKeys = ['projectOpportunities', 'projectTechnology', 'projectEcosystem', 'projectRoadmap', 'projectMarketing', 'projectMomentum'];
-  const projectScore = Math.round(projectScoreKeys.reduce((sum, key) => sum + Number(data[key] || 0), 0) / projectScoreKeys.length);
+  const projectScores = projectScoreKeys.map((key) => Math.min(10, Math.max(0, parseAmount(data[key]))));
+  const projectAverage = projectScores.length ? Math.round((projectScores.reduce((sum, score) => sum + score, 0) / projectScores.length) * 10) / 10 : 0;
+  const projectScore = projectAverage;
+  const projectArchives = Array.isArray(data.projectArchives) ? data.projectArchives : [];
+  const projectVerdictLabel = projectAverage >= 7.5 ? 'Projet intéressant' : projectAverage >= 5 ? 'Projet à surveiller' : 'Projet risqué';
+  const projectVerdictClass = projectAverage >= 7.5 ? 'pos' : projectAverage >= 5 ? '' : 'neg';
   const investMeta = { name: data.name || '', horizon: data.horizon || '', vision: data.vision || '', ...(data.meta || {}) };
   const selectedMonth = data.monthlyMonth || monthKey();
   const monthlySnapshot = {
@@ -722,6 +728,51 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
     }));
   };
 
+  const currentProjectSnapshot = () => ({
+    id: `project-${Date.now()}`,
+    savedAt: new Date().toISOString(),
+    name: String(data.projectName || '').trim() || `Projet ${projectArchives.length + 1}`,
+    scores: projectScoreKeys.reduce((acc, key) => ({ ...acc, [key]: Math.min(10, Math.max(0, parseAmount(data[key]))) }), {}),
+    average: projectAverage,
+    verdict: data.projectVerdict || '',
+  });
+
+  const saveProjectAnalysis = () => {
+    const snapshot = currentProjectSnapshot();
+    setData((prev) => ({ ...prev, projectArchives: [snapshot, ...(Array.isArray(prev.projectArchives) ? prev.projectArchives : [])] }));
+    notify(`Projet « ${snapshot.name} » enregistré.`);
+  };
+
+  const resetProjectAnalysis = () => {
+    setData((prev) => ({
+      ...prev,
+      projectName: '',
+      projectOpportunities: 0,
+      projectTechnology: 0,
+      projectEcosystem: 0,
+      projectRoadmap: 0,
+      projectMarketing: 0,
+      projectMomentum: 0,
+      projectVerdict: '',
+    }));
+    notify('Nouveau projet prêt à être analysé.');
+  };
+
+  const loadProjectAnalysis = (project) => {
+    if (!project) return;
+    update({
+      projectName: project.name || '',
+      ...projectScoreKeys.reduce((acc, key) => ({ ...acc, [key]: project.scores?.[key] ?? 0 }), {}),
+      projectVerdict: project.verdict || '',
+    });
+    notify(`Projet « ${project.name || 'archivé'} » rechargé.`);
+  };
+
+  const deleteProjectAnalysis = (id) => {
+    setData((prev) => ({ ...prev, projectArchives: (Array.isArray(prev.projectArchives) ? prev.projectArchives : []).filter((project) => project.id !== id) }));
+    notify('Projet supprimé des archives.');
+  };
+
   const exportRows = [
     ['Actif', 'Quantité', 'Prix moyen', 'Valeur'],
     ...holdings.map((row) => [row.asset || '', row.quantity || row.qty || '', row.avgPrice || row.buyAvg || '', row.computedValue || '']),
@@ -755,13 +806,28 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   });
 
   const miniStat = (label, value, cls = '') => <div><div className="k">{label}</div><div className={`v ${cls}`}>{value}</div></div>;
+  const immoRentabilityBadge = (score, label = 'Rentabilité') => {
+    const rentable = Number(score) > 0;
+    return (
+      <div className={`immo-profit-badge ${rentable ? 'is-profitable' : 'is-not-profitable'}`}>
+        <span className="immo-profit-dot" aria-hidden="true" />
+        <div>
+          <strong>{rentable ? 'Rentable' : 'Non rentable'}</strong>
+          <span>{label} : {formatEuro2(Number.isFinite(Number(score)) ? Number(score) : 0)}</span>
+        </div>
+      </div>
+    );
+  };
   const rentalMini = (row) => (
-    <div className="immo-mini-stats">
-      {miniStat('Revenu brut / an', formatEuro2(row.brut))}
-      {miniStat('Cash-flow net / an', formatEuro2(row.cf), row.cf >= 0 ? 'pos' : 'neg')}
-      {miniStat('Rendement brut', formatPct(row.rBrut))}
-      {miniStat('Rendement net / apport', row.apportForYield > 0 ? formatPct(row.rNet) : '—', row.apportForYield > 0 ? (row.cf >= 0 ? 'pos' : 'neg') : '')}
-    </div>
+    <>
+      <div className="immo-mini-stats">
+        {miniStat('Revenu brut / an', formatEuro2(row.brut))}
+        {miniStat('Cash-flow net / an', formatEuro2(row.cf), row.cf >= 0 ? 'pos' : 'neg')}
+        {miniStat('Rendement brut', formatPct(row.rBrut))}
+        {miniStat('Rendement net / apport', row.apportForYield > 0 ? formatPct(row.rNet) : '—', row.apportForYield > 0 ? (row.cf >= 0 ? 'pos' : 'neg') : '')}
+      </div>
+      {immoRentabilityBadge(row.cf, 'cash-flow annuel')}
+    </>
   );
 
   const exportImmoTsv = async () => {
@@ -1217,7 +1283,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
               <input type="text" id="immo-s5-loyer" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s5-loyer')} onChange={(e) => setImmoField('immo-s5-loyer', e.target.value)} placeholder="ex. 0 ou 900" />
               <label htmlFor="immo-s5-vac">Vacance (%)</label>
               <input type="text" id="immo-s5-vac" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s5-vac')} onChange={(e) => setImmoField('immo-s5-vac', e.target.value)} placeholder="ex. 5" />
-              <div className="immo-scen-out" id="immo-out-s5"><div className="immo-mini-stats">{miniStat('Revenu locatif brut / an', formatEuro2(immoResult.details.gross5))}{miniStat('Cash-flow locatif / an', formatEuro2(immoResult.details.annualCf5), immoResult.details.annualCf5 >= 0 ? 'pos' : 'neg')}{miniStat('Prix revente net visé', formatEuro2(immoResult.details.saleNet5))}{miniStat('Gain total estimé', formatEuro2(immoResult.details.profit5), immoResult.details.profit5 >= 0 ? 'pos' : 'neg')}</div><p className="hint">Équiv. / an : <strong>{formatEuro2(immoResult.details.eq5)}</strong> — CRD : {formatEuro2(immoResult.details.bal5)}.</p></div>
+              <div className="immo-scen-out" id="immo-out-s5"><div className="immo-mini-stats">{miniStat('Revenu locatif brut / an', formatEuro2(immoResult.details.gross5))}{miniStat('Cash-flow locatif / an', formatEuro2(immoResult.details.annualCf5), immoResult.details.annualCf5 >= 0 ? 'pos' : 'neg')}{miniStat('Prix revente net visé', formatEuro2(immoResult.details.saleNet5))}{miniStat('Gain total estimé', formatEuro2(immoResult.details.profit5), immoResult.details.profit5 >= 0 ? 'pos' : 'neg')}</div><p className="hint">Équiv. / an : <strong>{formatEuro2(immoResult.details.eq5)}</strong> — CRD : {formatEuro2(immoResult.details.bal5)}.</p>{immoRentabilityBadge(immoResult.details.profit5, 'gain total estimé')}</div>
             </div>
             <div className="card immo-scen">
               <h3>Revente rapide (« flip »)</h3>
@@ -1225,7 +1291,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
               <input type="text" id="immo-s6-mois" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s6-mois')} onChange={(e) => setImmoField('immo-s6-mois', e.target.value)} placeholder="ex. 14" />
               <label htmlFor="immo-s6-plus">Plus-value à la revente (% sur prix d'achat)</label>
               <input type="text" id="immo-s6-plus" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s6-plus')} onChange={(e) => setImmoField('immo-s6-plus', e.target.value)} placeholder="ex. 12" />
-              <div className="immo-scen-out" id="immo-out-s6"><div className="immo-mini-stats">{miniStat('Sortie nette (revente)', formatEuro2(immoResult.details.saleNet6))}{miniStat('Charges + crédit période', formatEuro2(-immoResult.details.cumCf6), 'neg')}{miniStat('Gain total estimé', formatEuro2(immoResult.details.profit6), immoResult.details.profit6 >= 0 ? 'pos' : 'neg')}{miniStat('Équiv. / an', formatEuro2(immoResult.details.eq6), immoResult.details.eq6 >= 0 ? 'pos' : 'neg')}</div></div>
+              <div className="immo-scen-out" id="immo-out-s6"><div className="immo-mini-stats">{miniStat('Sortie nette (revente)', formatEuro2(immoResult.details.saleNet6))}{miniStat('Charges + crédit période', formatEuro2(-immoResult.details.cumCf6), 'neg')}{miniStat('Gain total estimé', formatEuro2(immoResult.details.profit6), immoResult.details.profit6 >= 0 ? 'pos' : 'neg')}{miniStat('Équiv. / an', formatEuro2(immoResult.details.eq6), immoResult.details.eq6 >= 0 ? 'pos' : 'neg')}</div>{immoRentabilityBadge(immoResult.details.profit6, 'gain total estimé')}</div>
               <p className="hint">Sans loyer pendant la période : charges et crédit restent dus.</p>
             </div>
             <div className="card immo-scen">
@@ -1238,7 +1304,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
               <input type="text" id="immo-s7-prixlot" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s7-prixlot')} onChange={(e) => setImmoField('immo-s7-prixlot', e.target.value)} placeholder="ex. 195000" />
               <label htmlFor="immo-s7-delai">Délai avant vente (mois)</label>
               <input type="text" id="immo-s7-delai" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s7-delai')} onChange={(e) => setImmoField('immo-s7-delai', e.target.value)} placeholder="ex. 24" />
-              <div className="immo-scen-out" id="immo-out-s7"><div className="immo-mini-stats">{miniStat('Projet total', formatEuro2(immoResult.details.total7))}{miniStat('Apport requis', formatEuro2(immoResult.details.apport7))}{miniStat('Recettes nettes lots', formatEuro2(immoResult.details.saleNet7))}{miniStat('Gain total estimé', formatEuro2(immoResult.details.profit7), immoResult.details.profit7 >= 0 ? 'pos' : 'neg')}</div><p className="hint">Équiv. / an : <strong>{formatEuro2(immoResult.details.eq7)}</strong> — mens. : {formatEuro2(immoResult.details.mens7)}/mo.</p></div>
+              <div className="immo-scen-out" id="immo-out-s7"><div className="immo-mini-stats">{miniStat('Projet total', formatEuro2(immoResult.details.total7))}{miniStat('Apport requis', formatEuro2(immoResult.details.apport7))}{miniStat('Recettes nettes lots', formatEuro2(immoResult.details.saleNet7))}{miniStat('Gain total estimé', formatEuro2(immoResult.details.profit7), immoResult.details.profit7 >= 0 ? 'pos' : 'neg')}</div><p className="hint">Équiv. / an : <strong>{formatEuro2(immoResult.details.eq7)}</strong> — mens. : {formatEuro2(immoResult.details.mens7)}/mo.</p>{immoRentabilityBadge(immoResult.details.profit7, 'gain total estimé')}</div>
               <p className="hint">Option, permis de diviser, copro : à modéliser en prolongeant le délai et les travaux.</p>
             </div>
             <div className="card immo-scen">
@@ -1249,7 +1315,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
               <input type="text" id="immo-s8-prix" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s8-prix')} onChange={(e) => setImmoField('immo-s8-prix', e.target.value)} placeholder="ex. 260000" />
               <label htmlFor="immo-s8-mois">Durée avant décision (mois)</label>
               <input type="text" id="immo-s8-mois" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s8-mois')} onChange={(e) => setImmoField('immo-s8-mois', e.target.value)} placeholder="ex. 6" />
-              <div className="immo-scen-out" id="immo-out-s8"><div className="immo-mini-stats">{miniStat('Engagement', formatEuro2(immoResult.details.prime8))}{miniStat('Durée (mois)', String(Math.round(immoResult.details.mois8)))}{miniStat('Coût / mois bloqué', formatEuro2(immoResult.details.prime8 / immoResult.details.mois8), 'neg')}{miniStat('Prix cible', immoResult.details.prix8 > 0 ? formatEuro2(immoResult.details.prix8) : '—')}</div></div>
+              <div className="immo-scen-out" id="immo-out-s8"><div className="immo-mini-stats">{miniStat('Engagement', formatEuro2(immoResult.details.prime8))}{miniStat('Durée (mois)', String(Math.round(immoResult.details.mois8)))}{miniStat('Coût / mois bloqué', formatEuro2(immoResult.details.prime8 / immoResult.details.mois8), 'neg')}{miniStat('Prix cible', immoResult.details.prix8 > 0 ? formatEuro2(immoResult.details.prix8) : '—')}</div>{immoRentabilityBadge(immoResult.details.prix8 - immoBase.totalProjet - immoResult.details.prime8, 'écart prix cible')}</div>
               <p className="hint">Vue <strong>très simplifiée</strong> : compare le coût d'immobilisation du cash au rendement locatif ailleurs (pas de valorisation d'option réelle).</p>
             </div>
           </div>
@@ -1460,7 +1526,12 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
           <div className="card portfolio-card portfolio-card--large">
             <div className="grid-2 portfolio-grid-spaced">
               <div className="field-block"><label>{t('invest.projectName')}</label><input className="input-dark invest-project-input" type="text" value={data.projectName || ''} onChange={(e) => update({ projectName: e.target.value })} placeholder={t('invest.projectNamePlaceholder')} /></div>
-              <div className="field-block"><label>{t('invest.projectScore')}</label><input className="input-dark invest-project-input" type="text" value={projectScore} readOnly /></div>
+              <div className="field-block"><label>Moyenne du projet</label><input className="input-dark invest-project-input" type="text" value={`${projectAverage.toLocaleString('fr-FR')} / 10`} readOnly /></div>
+            </div>
+            <div className="stats-row" style={{ marginTop: '1rem' }}>
+              <div className="stat-box"><div className={`v ${projectVerdictClass}`}>{projectAverage.toLocaleString('fr-FR')} / 10</div><div className="l">Moyenne calculée</div></div>
+              <div className="stat-box"><div className={`v ${projectVerdictClass}`}>{projectVerdictLabel}</div><div className="l">Verdict automatique</div></div>
+              <div className="stat-box"><div className="v">{projectArchives.length}</div><div className="l">Projet(s) enregistré(s)</div></div>
             </div>
             <div className="grid-2 portfolio-grid-spaced">
               <div className="field-block"><label>{t('invest.projectOpportunities')}</label><input className="input-dark invest-project-input" type="number" min="0" max="10" value={data.projectOpportunities} onChange={(e) => update({ projectOpportunities: e.target.value })} /></div>
@@ -1472,6 +1543,46 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
             </div>
             <label>{t('invest.projectVerdict')}</label>
             <textarea className="input-dark portfolio-note invest-project-textarea" rows="4" value={data.projectVerdict || ''} onChange={(e) => update({ projectVerdict: e.target.value })} placeholder={t('invest.projectVerdictPlaceholder')} />
+            <div className="toolbar" style={{ marginTop: '1rem' }}>
+              <button type="button" className="btn" onClick={saveProjectAnalysis}>Enregistrer ce projet</button>
+              <button type="button" className="btn btn-ghost" onClick={resetProjectAnalysis}>Nouveau projet</button>
+            </div>
+            <p className="hint"><strong>Calcul :</strong> moyenne automatique des 6 critères notés sur 10. Les archives restent enregistrées quand tu démarres un nouveau projet.</p>
+          </div>
+
+          <div className="card portfolio-card portfolio-card--large" style={{ marginTop: '1rem' }}>
+            <h2>Projets enregistrés</h2>
+            {projectArchives.length ? (
+              <div className="table-wrap">
+                <table className="immo-compare invest-project-archive-table">
+                  <thead>
+                    <tr>
+                      <th>Projet</th>
+                      <th className="num">Moyenne</th>
+                      <th>Date</th>
+                      <th>Verdict</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {projectArchives.map((project) => (
+                      <tr key={project.id || `${project.name}-${project.savedAt}`}>
+                        <td>{project.name || 'Projet sans nom'}</td>
+                        <td className="num">{Number(project.average || 0).toLocaleString('fr-FR')} / 10</td>
+                        <td>{project.savedAt ? new Date(project.savedAt).toLocaleDateString('fr-FR') : '—'}</td>
+                        <td>{project.verdict || <span className="hint">—</span>}</td>
+                        <td>
+                          <div className="btn-row" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                            <button type="button" className="btn btn-ghost" onClick={() => loadProjectAnalysis(project)}>Recharger</button>
+                            <button type="button" className="btn btn-ghost" onClick={() => deleteProjectAnalysis(project.id)}>Supprimer</button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : <p className="hint">Aucun projet enregistré pour l’instant.</p>}
           </div>
         </section>
       </main>
