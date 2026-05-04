@@ -211,6 +211,7 @@ function normalizeInvestHolding(row = {}) {
     sellDate: row.sellDate || row.saleDate || '',
     saleResult: row.saleResult || '',
     notes: row.notes || '',
+    monthlyPassiveIncome: row.monthlyPassiveIncome || row.passiveMonthlyIncome || '',
     value: row.value || '',
   };
   return {
@@ -228,6 +229,7 @@ function investHoldingPatch(patch = {}) {
   if (Object.prototype.hasOwnProperty.call(patch, 'avgPrice')) next.buyAvg = patch.avgPrice;
   if (Object.prototype.hasOwnProperty.call(patch, 'sellPrice')) next.salePrice = patch.sellPrice;
   if (Object.prototype.hasOwnProperty.call(patch, 'sellDate')) next.saleDate = patch.sellDate;
+  if (Object.prototype.hasOwnProperty.call(patch, 'monthlyPassiveIncome')) next.passiveMonthlyIncome = patch.monthlyPassiveIncome;
   return next;
 }
 
@@ -236,7 +238,7 @@ function storedHoldingsOrDefaults(holdings) {
 }
 
 function emptyHolding() {
-  return { className: 'crypto', class: 'crypto', hubSegment: 'actif', synth: 'Actifs', asset: '', label: '', geckoId: '', quantity: '', qty: '', avgPrice: '', buyAvg: '', sellPrice: '', salePrice: '', sellDate: '', saleDate: '', saleResult: '', notes: '', value: '' };
+  return { className: 'crypto', class: 'crypto', hubSegment: 'actif', synth: 'Actifs', asset: '', label: '', geckoId: '', quantity: '', qty: '', avgPrice: '', buyAvg: '', sellPrice: '', salePrice: '', sellDate: '', saleDate: '', saleResult: '', monthlyPassiveIncome: '', passiveMonthlyIncome: '', notes: '', value: '' };
 }
 
 function parseAmount(input) {
@@ -985,7 +987,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Classe</th><th>Synthèse « Mes invest. »</th><th>Libellé</th><th>ID CoinGecko</th><th>Valeur €</th><th>Qté</th><th>Prix achat €/u</th><th>Prix vente €/u</th><th>Date vente</th><th>Rés. vente €</th><th>Notes</th><th></th>
+                    <th>Classe</th><th>Synthèse « Mes invest. »</th><th>Revenu / mois</th><th>Libellé</th><th>ID CoinGecko</th><th>Valeur €</th><th>Qté</th><th>Prix achat €/u</th><th>Prix vente €/u</th><th>Date vente</th><th>Rés. vente €</th><th>Notes</th><th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1007,6 +1009,11 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                           <option value="actif">Actifs</option>
                           <option value="passif">Revenu passif</option>
                         </select>
+                      </td>
+                      <td>
+                        {(row.hubSegment || 'actif') === 'passif' ? (
+                          <input className="input-dark invest-holding-input" type="text" value={row.monthlyPassiveIncome || ''} onChange={(e) => updateHolding(index, { monthlyPassiveIncome: e.target.value })} placeholder="Ex. 450€ / mois" />
+                        ) : <span className="hint" style={{ margin: 0 }}>—</span>}
                       </td>
                       <td><input className="input-dark invest-holding-input" type="text" value={row.asset} onChange={(e) => updateHolding(index, { asset: e.target.value })} placeholder="Ex. BTC" /></td>
                       <td><input className="input-dark invest-holding-input" list="inv-gecko-presets" type="text" value={row.geckoId || ''} onInput={(e) => updateHoldingGeckoId(index, e.currentTarget.value)} onChange={(e) => updateHoldingGeckoId(index, e.currentTarget.value)} placeholder="bitcoin" autoComplete="off" /></td>
@@ -1038,7 +1045,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
             <div className="toolbar" style={{ marginTop: '1rem' }}>
               <button type="button" className="btn btn-gold" onClick={addHolding}>+ Ajouter une ligne</button>
             </div>
-            <p className="hint">Les % utilisent uniquement les positions <strong>non vendues</strong>. La colonne <strong>Synthèse</strong> classe chaque ligne ouverte pour les barres <em>Actifs</em> vs <em>Revenu passif</em> sur la page Mes investissements ; une fois la <strong>date de vente</strong> renseignée, l'encaissement (prix de vente × qté) alimente les <em>fonds disponibles</em>. Cours via CoinGecko (gratuit, limite de fréquence).</p>
+            <p className="hint">Les % utilisent uniquement les positions <strong>non vendues</strong>. La colonne <strong>Synthèse</strong> classe chaque ligne ouverte pour les barres <em>Actifs</em> vs <em>Revenu passif</em>. Quand tu choisis <strong>Revenu passif</strong>, la colonne <strong>Revenu / mois</strong> devient renseignable pour noter le revenu mensuel généré. Une fois la <strong>date de vente</strong> renseignée, l'encaissement (prix de vente × qté) alimente les <em>fonds disponibles</em>. Cours via CoinGecko (gratuit, limite de fréquence).</p>
           </div>
         </section>
 
