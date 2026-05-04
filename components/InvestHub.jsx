@@ -195,6 +195,24 @@ function buildInvestAnnualRows(year, monthlyByMonth = {}) {
   });
 }
 
+function buildInvestMonthlyGains(year, holdings = []) {
+  const selectedYear = String(year || new Date().getFullYear());
+  return holdings.reduce((acc, row) => {
+    const sellMonth = String(row.sellDate || row.saleDate || '').slice(0, 7);
+    if (sellMonth.startsWith(`${selectedYear}-`)) {
+      acc[sellMonth] = (acc[sellMonth] || 0) + parseAmount(row.saleResult || 0);
+    }
+    const monthlyPassive = parseAmount(row.monthlyPassiveIncome || row.passiveMonthlyIncome || 0);
+    if (!String(row.sellDate || row.saleDate || '').trim() && String(row.hubSegment || '') === 'passif' && monthlyPassive > 0) {
+      for (let month = 1; month <= 12; month += 1) {
+        const key = `${selectedYear}-${String(month).padStart(2, '0')}`;
+        acc[key] = (acc[key] || 0) + monthlyPassive;
+      }
+    }
+    return acc;
+  }, {});
+}
+
 function normalizeInvestHolding(row = {}) {
   const rawClassName = row.className || row.class || 'autre';
   const className = rawClassName === 'oblig' ? 'obligations' : rawClassName;
@@ -464,13 +482,14 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   };
   const selectedAnnualYear = data.annualYear || String(new Date().getFullYear());
   const annualMonthlySource = { ...(data.monthly || {}), ...(data.monthlyByMonth || {}) };
-  const annualRows = buildInvestAnnualRows(selectedAnnualYear, annualMonthlySource);
-  const annualFilledMonths = annualRows.filter((row) => row.movements || row.lesson || row.next).length;
   const goalsState = { target: data.goalTarget || '', why: data.goalWhy || '', steps: data.goalSteps || '', ...(data.goals || {}) };
   const holdings = (Array.isArray(data.holdings) && data.holdings.length ? data.holdings : defaultInvestState().holdings).map(normalizeInvestHolding);
   const isHoldingSold = (row) => !!String(row.sellDate || row.saleDate || '').trim();
   const openHoldings = holdings.filter((row) => !isHoldingSold(row));
   const immoLinkedHoldings = openHoldings.filter((row) => ['immobilier', 'immo'].includes(String(row.className || '').toLowerCase()));
+  const annualGainsByMonth = buildInvestMonthlyGains(selectedAnnualYear, holdings);
+  const annualRows = buildInvestAnnualRows(selectedAnnualYear, annualMonthlySource).map((row) => ({ ...row, gain: annualGainsByMonth[row.key] || 0 }));
+  const annualFilledMonths = annualRows.filter((row) => row.movements || row.lesson || row.next || row.gain).length;
 
   const switchProfile = (nextProfile) => {
     updateProfile({ current: nextProfile });
@@ -869,7 +888,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
           {canAccess(planCode, 'portfolio') ? <Link href="/portfolio" className="app-link">{t('app.portfolio')}</Link> : null}
         </nav>
 
-        <div className="profile-bar">
+        <div className="profile-bar profile-bar--hidden">
           <label htmlFor="inv-profile-select">{t('invest.profileLabel')}</label>
           <select id="inv-profile-select" value={profile} onChange={(e) => switchProfile(e.target.value)}>
             <option value="main">{portfolioState.labels?.main || t('invest.profileMain')}</option>
@@ -1438,17 +1457,19 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
           <div className="card table-wrap">
             <table className="immo-compare invest-annual-table">
               <thead>
-                <tr>
-                  <th>Mois</th>
-                  <th>Mouvements</th>
-                  <th>Leçon / observation</th>
-                  <th>Focus suivant</th>
+                  <tr>
+                    <th>Mois</th>
+                    <th>Gain positions</th>
+                    <th>Mouvements</th>
+                    <th>Leçon / observation</th>
+                    <th>Focus suivant</th>
                 </tr>
               </thead>
               <tbody>
                 {annualRows.map((row) => (
                   <tr key={row.key}>
                     <td>{row.month}</td>
+                    <td className="num"><strong className={row.gain >= 0 ? 'pos' : 'neg'}>{formatEuro2(row.gain || 0)}</strong></td>
                     <td>{row.movements || <span className="hint">—</span>}</td>
                     <td>{row.lesson || <span className="hint">—</span>}</td>
                     <td>{row.next || <span className="hint">—</span>}</td>

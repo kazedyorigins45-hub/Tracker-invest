@@ -113,7 +113,7 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
               <div><label>Cible actifs ouverts (€)</label><input className="input-dark" type="text" value={data.targetActifs} onChange={(e) => update({ targetActifs: e.target.value })} placeholder="ex. 200000" /></div>
               <div><label>Cible revenu passif (€)</label><input className="input-dark" type="text" value={data.targetPassif} onChange={(e) => update({ targetPassif: e.target.value })} placeholder="ex. 80000" /></div>
             </div>
-            <div style={{ maxWidth: '50%' }}>
+            <div className="portfolio-single-field">
               <label>Cible fonds disponibles — ventes (€)</label>
               <input className="input-dark" type="text" value={data.targetDispo} onChange={(e) => update({ targetDispo: e.target.value })} placeholder="ex. 50000" />
             </div>

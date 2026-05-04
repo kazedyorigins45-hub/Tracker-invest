@@ -546,6 +546,9 @@ a { color: inherit; }
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1.15rem;
 }
+.portfolio-single-field { max-width: 28rem; }
+.portfolio-card .stat-box .l { overflow-wrap: anywhere; }
+.portfolio-card .progress-meta { align-items: center; }
 .portfolio-stats {
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
@@ -554,7 +557,7 @@ a { color: inherit; }
 .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .feature-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .faq-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.mini-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.mini-grid { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
 .pricing-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 
 .pillars { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 1.5rem; }
@@ -575,7 +578,7 @@ a { color: inherit; }
 .sub-card-bundle strong,
 .pricing-card h3,
 .app-card h3,
-.stat strong { color: var(--gold); }
+.stat strong { color: var(--gold); overflow-wrap: anywhere; word-break: normal; line-height: 1.25; }
 
 .pillar strong,
 .formation-callout h3,
@@ -936,6 +939,15 @@ a { color: inherit; }
 .sidebar-apps .app-link.is-current { color: var(--gold-bright); border-left-color: var(--gold); background: rgba(201, 169, 98, 0.1); pointer-events: none; }
 .sidebar-apps .app-link.is-locked { opacity: 0.45; }
 .sidebar-inner { flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+.sidebar-inner::before {
+  content: "Sous-menu";
+  display: block;
+  padding: 0.45rem 0.85rem 0.35rem;
+  color: var(--muted);
+  font-size: 0.58rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
 .nav-item {
   padding: 0.7rem 0.85rem;
   font-size: 0.75rem;
@@ -1452,7 +1464,7 @@ a { color: inherit; }
   margin-bottom: 0.65rem;
   font-size: 0.88rem;
 }
-.mindset-shell.tracker-hub .check-row input { width: auto; margin-top: 0.2rem; accent-color: var(--gold); }
+.mindset-shell.tracker-hub .check-row input { width: 16px !important; height: 16px !important; min-width: 16px !important; min-height: 16px !important; margin: 0.2rem 0.45rem 0 0; accent-color: var(--gold); flex: 0 0 auto; }
 .mindset-shell.tracker-hub table.data {
   width: 100%;
   border-collapse: collapse;
@@ -1570,12 +1582,14 @@ a { color: inherit; }
   border: 0;
   padding: 0;
   margin: 0;
-  color: rgba(255,255,255,0.28);
+  color: rgba(122, 91, 34, 0.55);
   font-size: 1.2rem;
   line-height: 1;
   cursor: pointer;
 }
+.star-btn:hover { color: var(--gold); }
 .star-btn.is-active { color: var(--gold-bright); }
+.profile-bar--hidden { display: none !important; }
 .tracker-quarter-input {
   height: 38px !important;
   min-height: 38px !important;
@@ -1990,6 +2004,7 @@ table.data td.num, table.split td.num, table.immo-compare td.num { text-align: r
   .home-hero { grid-template-columns: 1fr; }
   .mindset-home-hero { grid-template-columns: 1fr; }
   .portfolio-grid-2 { grid-template-columns: 1fr; }
+  .portfolio-single-field { max-width: 100%; }
   .portfolio-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .table-wrap {
     overflow-x: auto;

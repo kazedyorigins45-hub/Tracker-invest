@@ -355,11 +355,10 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
   const monthlyAutoMap = buildMonthlyAutoMap(weeklyTrades);
   const monthlyAutoSnapshot = monthlyAutoMap[selectedMonth] || { count: 0, net: 0, wins: 0, losses: 0 };
   const updateWeeklyTrade = (index, patch) => {
-    const shouldAutoResult = ['entry', 'exit', 'lots', 'direction'].some((key) => Object.prototype.hasOwnProperty.call(patch, key));
     const next = weeklyTrades.map((row, rowIndex) => {
       if (rowIndex !== index) return row;
       const merged = { ...row, ...patch };
-      return shouldAutoResult ? withAutoTradeResult(merged) : merged;
+      return merged;
     });
     update({ weeklyTrades: next });
   };
