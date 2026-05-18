@@ -827,87 +827,13 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
               <h2>{t('tracker.tradingPlanSessionsTitle')}</h2>
               <label>{t('tracker.tradingPlanSessions')}</label>
               <textarea className="input-dark tracker-mindset-textarea" rows="2" style={{ minHeight: '2.25rem', paddingTop: '0.45rem', paddingBottom: '0.45rem' }} value={data.tradingPlanSessions || ''} onChange={(e) => update({ tradingPlanSessions: e.target.value })} placeholder={t('tracker.tradingPlanSessionsPlaceholder')} />
-              <label>{t('tracker.tradingPlanTimeframes')}</label>
+              <label style={{ marginTop: '0.6rem' }}>{t('tracker.tradingPlanTimeframes')}</label>
               <textarea className="input-dark tracker-mindset-textarea" rows="2" style={{ minHeight: '2.25rem', paddingTop: '0.45rem', paddingBottom: '0.45rem' }} value={data.tradingPlanTimeframes || ''} onChange={(e) => update({ tradingPlanTimeframes: e.target.value })} placeholder={t('tracker.tradingPlanTimeframesPlaceholder')} />
-              <label>{t('tracker.tradingPlanInstruments')}</label>
-              <textarea className="input-dark tracker-mindset-textarea" rows="2" style={{ minHeight: '2.25rem', paddingTop: '0.45rem', paddingBottom: '0.45rem' }} value={data.tradingPlanInstruments || ''} onChange={(e) => update({ tradingPlanInstruments: e.target.value })} placeholder={t('tracker.tradingPlanInstrumentsPlaceholder')} />
             </div>
           </div>
 
-          <div className="card" style={{ marginTop: '1rem' }}>
-            <div className="section-head" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
-              <div>
-                <h2>Calculateur de taille de position</h2>
-                <p className="hint" style={{ marginTop: 0 }}>Choisis le mode adapté au marché : lots pour le Forex, montant de position pour les cryptos et actions.</p>
-              </div>
-              <div className="btn-row" role="group" aria-label="Mode de calcul" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: 0 }}>
-                <button type="button" className={`btn ${sizingResult.mode === 'forex' ? '' : 'btn-ghost'}`} onClick={() => update({ positionCalcMode: 'forex' })}>FOREX</button>
-                <button type="button" className={`btn ${sizingResult.mode === 'asset' ? '' : 'btn-ghost'}`} onClick={() => update({ positionCalcMode: 'asset' })}>CRYPTO &amp; ACTIONS</button>
-              </div>
-            </div>
-
-            <div className="grid-3 tracker-mindset-grid-3" style={{ marginTop: '1rem' }}>
-              <div className="field-block">
-                <label htmlFor="pos-capital">Capital du compte</label>
-                <input id="pos-capital" className="input-dark tracker-trading-input" type="text" inputMode="decimal" value={data.positionCapital || ''} onChange={(e) => update({ positionCapital: e.target.value })} placeholder="ex. 5000" />
-              </div>
-              <div className="field-block">
-                <label htmlFor="pos-risk">Risque par trade (%)</label>
-                <input id="pos-risk" className="input-dark tracker-trading-input" type="text" inputMode="decimal" value={data.positionRiskPercent || ''} onChange={(e) => update({ positionRiskPercent: e.target.value })} placeholder="ex. 1" />
-              </div>
-              <div className="field-block">
-                <label>Argent risqué</label>
-                <div className="stat-box" style={{ minHeight: '3rem' }}><div className="v">{sizingResult.riskAmount != null ? `${formatCalcNumber(sizingResult.riskAmount, numberLocale)} ${currencySymbol}` : '—'}</div></div>
-              </div>
-            </div>
-
-            {sizingResult.mode === 'forex' ? (
-              <>
-                <div className="grid-3 tracker-mindset-grid-3" style={{ marginTop: '1rem' }}>
-                  <div className="field-block">
-                    <label htmlFor="pos-sl-pips">Stop Loss en pips</label>
-                    <input id="pos-sl-pips" className="input-dark tracker-trading-input" type="text" inputMode="decimal" value={data.positionStopLossPips || ''} onChange={(e) => update({ positionStopLossPips: e.target.value })} placeholder="ex. 20" />
-                  </div>
-                  <div className="field-block">
-                    <label htmlFor="pos-pip-value">Valeur du pip</label>
-                    <input id="pos-pip-value" className="input-dark tracker-trading-input" type="text" inputMode="decimal" value={data.positionPipValue ?? '10'} onChange={(e) => update({ positionPipValue: e.target.value })} placeholder="10" />
-                  </div>
-                  <div className="field-block">
-                    <label>Résultat</label>
-                    <div className="stat-box" style={{ minHeight: '3rem' }}><div className="v pos">{sizingResult.valid ? `${formatCalcNumber(sizingResult.lots, numberLocale, 4)} lot` : '—'}</div><div className="l">Taille recommandée</div></div>
-                  </div>
-                </div>
-                <p className="hint"><strong>Formule :</strong> capital × (risque % / 100) ÷ (Stop Loss pips × valeur du pip). Exemple : 5000 × 0,01 ÷ (20 × 10) = 0,25 lot.</p>
-              </>
-            ) : (
-              <>
-                <div className="grid-3 tracker-mindset-grid-3" style={{ marginTop: '1rem' }}>
-                  <div className="field-block">
-                    <label htmlFor="pos-entry">Prix d’entrée</label>
-                    <input id="pos-entry" className="input-dark tracker-trading-input" type="text" inputMode="decimal" value={data.positionEntryPrice || ''} onChange={(e) => update({ positionEntryPrice: e.target.value })} placeholder="ex. 60000" />
-                  </div>
-                  <div className="field-block">
-                    <label htmlFor="pos-stop-price">Prix du Stop Loss</label>
-                    <input id="pos-stop-price" className="input-dark tracker-trading-input" type="text" inputMode="decimal" value={data.positionStopLossPrice || ''} onChange={(e) => update({ positionStopLossPrice: e.target.value })} placeholder="ex. 57000" />
-                  </div>
-                  <div className="field-block">
-                    <label>Distance au stop</label>
-                    <div className="stat-box" style={{ minHeight: '3rem' }}><div className="v">{sizingResult.stopLossDistancePercent != null ? `${formatCalcNumber(sizingResult.stopLossDistancePercent * 100, numberLocale, 2)} %` : '—'}</div></div>
-                  </div>
-                </div>
-                <div className="stats-row" style={{ marginTop: '1rem' }}>
-                  <div className="stat-box"><div className="v pos">{sizingResult.valid ? `${formatCalcNumber(sizingResult.positionAmount, numberLocale, 2)} ${currencySymbol}` : '—'}</div><div className="l">Montant de position recommandé</div></div>
-                  <div className="stat-box"><div className="v">{sizingResult.riskAmount != null ? `${formatCalcNumber(sizingResult.riskAmount, numberLocale)} ${currencySymbol}` : '—'}</div><div className="l">Risque réel</div></div>
-                  <div className="stat-box"><div className="v">{sizingResult.stopLossDistancePercent != null ? `${formatCalcNumber(sizingResult.stopLossDistancePercent * 100, numberLocale, 2)} %` : '—'}</div><div className="l">Distance Stop Loss</div></div>
-                </div>
-                <p className="hint"><strong>Formule :</strong> risque € ÷ ((prix d’entrée − prix Stop Loss) ÷ prix d’entrée). Exemple : 50 ÷ 0,05 = 1000 {currencySymbol}.</p>
-              </>
-            )}
-            {!sizingResult.valid ? <p className="hint neg" style={{ marginBottom: 0 }}>{sizingResult.message || 'Renseigne les champs nécessaires pour calculer ta position.'}</p> : null}
-          </div>
-
-          <div className="card" style={{ marginTop: '1rem' }}>
-            <h2>{t('tracker.tradingPlanEntriesTitle')}</h2>
+          <div className="card" style={{ marginTop: ‘1rem’ }}>
+            <h2>{t(‘tracker.tradingPlanEntriesTitle’)}</h2>
             <label>{t('tracker.tradingPlanSetups')}</label>
             <textarea className="input-dark tracker-mindset-textarea" rows="3" value={data.tradingPlanSetups || ''} onChange={(e) => update({ tradingPlanSetups: e.target.value })} placeholder={t('tracker.tradingPlanSetupsPlaceholder')} />
             <label>{t('tracker.tradingPlanEntries')}</label>

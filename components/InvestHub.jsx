@@ -15,7 +15,6 @@ const NAV = [
   ['classes', 'classes'],
   ['holdings', 'holdings'],
   ['immo', 'immo'],
-  ['goals', 'goals'],
   ['monthly', 'monthly'],
   ['annual', 'annual'],
   ['project', 'project'],
@@ -1066,6 +1065,38 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
             </div>
             <p className="hint">Les % utilisent uniquement les positions <strong>non vendues</strong>. La colonne <strong>Synthèse</strong> classe chaque ligne ouverte pour les barres <em>Actifs</em> vs <em>Revenu passif</em>. Quand tu choisis <strong>Revenu passif</strong>, la colonne <strong>Revenu / mois</strong> devient renseignable pour noter le revenu mensuel généré. Une fois la <strong>date de vente</strong> renseignée, l'encaissement (prix de vente × qté) alimente les <em>fonds disponibles</em>. Cours via CoinGecko (gratuit, limite de fréquence).</p>
           </div>
+          {(() => {
+            const passiveRows = openHoldings.filter((r) => r.hubSegment === 'passif');
+            const immoPassiveRows = passiveRows.filter((r) => classLabel(r) === 'immo');
+            const totalMonthly = passiveRows.reduce((sum, r) => sum + parseAmount(r.monthlyPassiveIncome || 0), 0);
+            const immoMonthly = immoPassiveRows.reduce((sum, r) => sum + parseAmount(r.monthlyPassiveIncome || 0), 0);
+            if (passiveRows.length === 0) return null;
+            return (
+              <div className="card" style={{ marginTop: '1rem' }}>
+                <h2>Revenus passifs mensuels</h2>
+                <div className="stats-row" style={{ marginBottom: 0 }}>
+                  <div className="stat-box">
+                    <div className="v">{formatEuro(totalMonthly)}</div>
+                    <div className="l">Total / mois</div>
+                  </div>
+                  <div className="stat-box">
+                    <div className="v">{formatEuro(totalMonthly * 12)}</div>
+                    <div className="l">Total / an</div>
+                  </div>
+                  {immoPassiveRows.length > 0 && (
+                    <div className="stat-box">
+                      <div className="v">{formatEuro(immoMonthly)}</div>
+                      <div className="l">Immo / mois</div>
+                    </div>
+                  )}
+                  <div className="stat-box">
+                    <div className="v">{passiveRows.length}</div>
+                    <div className="l">Positions passives</div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
         </section>
 
         <section className={`page ${page === 'immo' ? 'active' : ''}`}>
@@ -1134,24 +1165,6 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                   <input type="checkbox" id="immo-stress-show" checked={!!immoGlobal.stress.show} onChange={(e) => setImmoGlobal('stress', 'show', e.target.checked)} style={{ width: 'auto', margin: 0 }} />
                   Afficher les lignes « stress » dans le tableau
                 </label>
-              </div>
-            </div>
-          </div>
-
-          <div className="card">
-            <h2>Alertes &amp; objectifs locatifs</h2>
-            <div className="grid-2">
-              <div>
-                <label htmlFor="immo-alert-cfmin">CF net minimum (€/an) — alerte si en dessous</label>
-                <input type="text" id="immo-alert-cfmin" className="input-dark" value={immoGlobal.alerts.cfmin || ''} onChange={(e) => setImmoGlobal('alerts', 'cfmin', e.target.value)} placeholder="ex. 0" />
-              </div>
-              <div>
-                <label htmlFor="immo-alert-rnet">Rendement net / apport minimum (%)</label>
-                <input type="text" id="immo-alert-rnet" className="input-dark" value={immoGlobal.alerts.rnet || ''} onChange={(e) => setImmoGlobal('alerts', 'rnet', e.target.value)} placeholder="ex. 3" />
-              </div>
-              <div>
-                <label htmlFor="immo-alert-mens">Mensualité max (% du loyer ref. loc. longue)</label>
-                <input type="text" id="immo-alert-mens" className="input-dark" value={immoGlobal.alerts.mens || ''} onChange={(e) => setImmoGlobal('alerts', 'mens', e.target.value)} placeholder="ex. 80 — 0 = ignorer" />
               </div>
             </div>
           </div>
@@ -1406,25 +1419,6 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                   ))}
                 </tbody>
               </table>
-            </div>
-          </div>
-        </section>
-
-        <section className={`page ${page === 'goals' ? 'active' : ''}`}>
-          <h1 className="page-title">{t('invest.goals')}</h1>
-          <p className="page-sub">Indépendamment du trading : retraite, patrimoine transmissible, indépendance…</p>
-          <div className="grid-2">
-            <div className="card">
-              <h2>Objectif patrimonial</h2>
-              <label htmlFor="inv-goal-target">Cible (€)</label>
-              <input type="text" id="inv-goal-target" className="input-dark" value={goalsState.target || ''} onChange={(e) => setGoalField('target', e.target.value)} placeholder="ex. 500 000" />
-              <label htmlFor="inv-goal-why">Pourquoi</label>
-              <textarea id="inv-goal-why" className="input-dark" rows="4" value={goalsState.why || ''} onChange={(e) => setGoalField('why', e.target.value)} />
-            </div>
-            <div className="card">
-              <h2>Échéances</h2>
-              <label htmlFor="inv-goal-steps">Jalons (texte libre)</label>
-              <textarea id="inv-goal-steps" className="input-dark" rows="6" value={goalsState.steps || ''} onChange={(e) => setGoalField('steps', e.target.value)} />
             </div>
           </div>
         </section>

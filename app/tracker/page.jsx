@@ -6,8 +6,9 @@ import { getSessionContext } from '@/lib/subscription';
 export const metadata = { title: 'Trading', robots: { index: false, follow: false } };
 
 export default async function TrackerPage() {
-  const { user, planCode, subscription } = await getSessionContext();
+  const { user, planCode, subscription, trialExpired } = await getSessionContext();
   if (!user) redirect('/login?redirect=/tracker');
+  if (trialExpired) redirect('/pricing');
   if (!canAccess(planCode, 'tracker')) redirect('/upgrade?feature=tracker');
 
   return <TrackerHub userEmail={user.email} planCode={planCode} subscription={subscription} />;
