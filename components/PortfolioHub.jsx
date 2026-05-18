@@ -7,7 +7,7 @@ import { useAccountPayload } from '@/lib/use-account-payload';
 import { useLocale } from '@/lib/locale';
 import LogoMark from '@/components/LogoMark';
 import ThemeToggle from '@/components/ThemeToggle';
-import LanguageToggle from '@/components/LanguageToggle';
+import CurrencyToggle from '@/components/CurrencyToggle';
 
 export default function PortfolioHub({ userEmail = '', planCode = 'starter', subscription = null }) {
   const [data, setData] = useAccountPayload('portfolioHub_v1', {
@@ -92,7 +92,7 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
         <div className="mindset-topbar">
           <LogoMark />
           <ThemeToggle className="theme-toggle--app" />
-          <LanguageToggle className="theme-toggle--app" />
+          <CurrencyToggle className="theme-toggle--app" />
         </div>
         <h1 className="page-title">Vue consolidée</h1>
         <p className="page-sub">

@@ -7,12 +7,11 @@ import { useAccountPayload } from '@/lib/use-account-payload';
 import { useLocale } from '@/lib/locale';
 import LogoMark from '@/components/LogoMark';
 import ThemeToggle from '@/components/ThemeToggle';
-import LanguageToggle from '@/components/LanguageToggle';
+import CurrencyToggle from '@/components/CurrencyToggle';
 
 const NAV = [
   ['cover', 'cover'],
   ['overview', 'overview'],
-  ['classes', 'classes'],
   ['holdings', 'holdings'],
   ['immo', 'immo'],
   ['monthly', 'monthly'],
@@ -124,7 +123,7 @@ function defaultInvestState() {
       { className: 'crypto', hubSegment: 'actif', synth: 'Actifs', asset: 'BTC', geckoId: 'bitcoin', quantity: '0.82', avgPrice: '42 000€', sellPrice: '', sellDate: '', saleResult: '', notes: '', value: '34 400€' },
       { className: 'metaux', hubSegment: 'actif', synth: 'Actifs', asset: 'Or', geckoId: '', quantity: '150g', avgPrice: '63€', sellPrice: '', sellDate: '', saleResult: '', notes: '', value: '9 450€' },
     ],
-    purchasePrice: '300000',
+    purchasePrice: '',
     acquisitionFeesPct: '3',
     workCost: '0',
     downPaymentPct: '20',
@@ -132,10 +131,10 @@ function defaultInvestState() {
     loanYears: '30',
     annualCharges: '0',
     saleFeesPct: '0',
-    rentalIncome: '1200',
-    loanPayment: '780',
-    monthlyCashflow: '110',
-    profitability: '7.2',
+    rentalIncome: '',
+    loanPayment: '',
+    monthlyCashflow: '',
+    profitability: '',
     monthlyMonth: '',
     monthlyByMonth: {},
     monthlySummary: '',
@@ -927,7 +926,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
             <LogoMark />
           </div>
           <ThemeToggle className="theme-toggle--app" />
-          <LanguageToggle className="theme-toggle--app" />
+          <CurrencyToggle className="theme-toggle--app" />
         </div>
         {feedback ? <div className="ui-feedback" role="status" aria-live="polite">{feedback}</div> : null}
         <section className={`page ${page === 'cover' ? 'active' : ''}`}>
@@ -966,23 +965,6 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                 );
               })}
             </div>
-          </div>
-        </section>
-
-        <section className={`page ${page === 'classes' ? 'active' : ''}`}>
-          <h1 className="page-title">{t('invest.classes')}</h1>
-          <p className="page-sub">Rappel : une même classe peut contenir plusieurs lignes dans « Mes positions ».</p>
-          <div className="card">
-            <h2>Univers couverts</h2>
-            <ul style={{ margin: 0, paddingLeft: '1.2rem', lineHeight: 1.8, color: 'var(--muted)', fontSize: '0.9rem' }}>
-              <li><strong style={{ color: 'var(--gold-bright)' }}>Crypto</strong> — détention longue, staking, cold wallet…</li>
-              <li><strong style={{ color: 'var(--gold-bright)' }}>Métaux précieux</strong> — or, argent, lingots, pièces</li>
-              <li><strong style={{ color: 'var(--gold-bright)' }}>Matières premières</strong> — via ETF, contrats, ou produits dérivés <em>en prudence</em></li>
-              <li><strong style={{ color: 'var(--gold-bright)' }}>Immobilier</strong> — SCPI, pierre directe, crowdfunding</li>
-              <li><strong style={{ color: 'var(--gold-bright)' }}>Obligations / monétaire</strong> — fonds euros, obligations d'État</li>
-              <li><strong style={{ color: 'var(--gold-bright)' }}>Actions / ETF</strong> — buy &amp; hold hors spéculation court terme</li>
-              <li><strong style={{ color: 'var(--gold-bright)' }}>Autre</strong> — art, collectibles, private equity…</li>
-            </ul>
           </div>
         </section>
 
@@ -1119,56 +1101,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
             <p className="hint" style={{ marginTop: 0 }}>Chaque fiche mémorise ses propres champs et sa checklist. Change de fiche avant une autre simulation pour comparer ensuite dans le tableau multi-biens. Fiche active : <strong>{activeProperty.name}</strong>.</p>
           </div>
 
-          <div className="card">
-            <h2>Lier une position Elite Invest</h2>
-            <label htmlFor="immo-link-holding">Préremplir depuis « Mes positions » (classe Immobilier)</label>
-            <select
-              id="immo-link-holding"
-              className="input-dark"
-              value={immoGlobal.linkHolding || ''}
-              onChange={(e) => {
-                const selectedIndex = e.target.value;
-                updateImmoCalc((prev) => ({ ...prev, global: { ...defaultImmoCalcState().global, ...(prev.global || {}), linkHolding: selectedIndex } }));
-                if (!selectedIndex) return;
-                const selected = immoLinkedHoldings[Number(selectedIndex)];
-                setImmoField('immo-prix', String(Math.round(parseAmount(selected?.computedValue || selected?.value || 0))));
-              }}
-            >
-              <option value="">— Aucune liaison</option>
-              {immoLinkedHoldings.length ? immoLinkedHoldings.map((row, idx) => (
-                <option key={`${row.asset || 'immo'}-${idx}`} value={String(idx)}>
-                  {row.asset || `Bien ${idx + 1}`} — {row.synth || 'Immobilier'} — {row.computedValue || row.value || '0€'}
-                </option>
-              )) : <option value="" disabled>Aucune position Immobilier</option>}
-            </select>
-            <p className="hint">Utilise la <strong>valeur estimée</strong> de la ligne comme prix FAI indicatif. Tu peux ajuster après.</p>
-          </div>
-
           <div className="immo-section-label">Hypothèses globales</div>
-          <div className="card">
-            <h2>Stress-test (indicatif)</h2>
-            <div className="grid-2">
-              <div>
-                <label htmlFor="immo-stress-taux">Δ Taux crédit (points, ex. +0,5)</label>
-                <input type="text" id="immo-stress-taux" className="input-dark" value={immoGlobal.stress.taux || ''} onChange={(e) => setImmoGlobal('stress', 'taux', e.target.value)} placeholder="0" />
-              </div>
-              <div>
-                <label htmlFor="immo-stress-vac">Δ Vacance locative (points, ex. +5)</label>
-                <input type="text" id="immo-stress-vac" className="input-dark" value={immoGlobal.stress.vac || ''} onChange={(e) => setImmoGlobal('stress', 'vac', e.target.value)} placeholder="0" />
-              </div>
-              <div>
-                <label htmlFor="immo-stress-revente">Δ Prix de revente cumulé (%)</label>
-                <input type="text" id="immo-stress-revente" className="input-dark" value={immoGlobal.stress.revente || ''} onChange={(e) => setImmoGlobal('stress', 'revente', e.target.value)} placeholder="0 ex. -10" />
-              </div>
-              <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem', paddingBottom: '0.75rem' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
-                  <input type="checkbox" id="immo-stress-show" checked={!!immoGlobal.stress.show} onChange={(e) => setImmoGlobal('stress', 'show', e.target.checked)} style={{ width: 'auto', margin: 0 }} />
-                  Afficher les lignes « stress » dans le tableau
-                </label>
-              </div>
-            </div>
-          </div>
-
           <div className="card">
             <h2>Indexation des loyers (projection)</h2>
             <div className="grid-2">
@@ -1188,21 +1121,6 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
               </div>
             </div>
             <p className="hint" id="immo-idx-out">{indexationText}</p>
-          </div>
-
-          <div className="card">
-            <h2>Plus-value à la revente (très simplifié)</h2>
-            <p className="hint" style={{ marginTop: 0 }}>Base approximative : prix de revente <strong>hors frais de vente</strong> âˆ’ (prix d'achat + travaux initiaux). Aucun barème légal 22 ans, etc.</p>
-            <div className="grid-2">
-              <div>
-                <label htmlFor="immo-pv-taux">Prélèvements sur PV estimée (%)</label>
-                <input type="text" id="immo-pv-taux" className="input-dark" value={immoGlobal.pv.taux || ''} onChange={(e) => setImmoGlobal('pv', 'taux', e.target.value)} placeholder="0 = ignorer — ex. 36,2" />
-              </div>
-              <div>
-                <label htmlFor="immo-pv-abatt">Abattement forfaitaire sur la PV brute (%)</label>
-                <input type="text" id="immo-pv-abatt" className="input-dark" value={immoGlobal.pv.abatt || ''} onChange={(e) => setImmoGlobal('pv', 'abatt', e.target.value)} placeholder="ex. 0" />
-              </div>
-            </div>
           </div>
 
           <div className="immo-section-label">Export & dossier</div>
@@ -1430,6 +1348,19 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
             <label htmlFor="inv-mo-month" style={{ display: 'inline-block', marginRight: '0.5rem' }}>Mois</label>
             <input type="month" id="inv-mo-month" className="input-dark" style={{ maxWidth: '12rem', display: 'inline-block' }} value={selectedMonth} onChange={(e) => update({ monthlyMonth: e.target.value })} />
           </div>
+          {(() => {
+            const passiveRows = openHoldings.filter((r) => r.hubSegment === 'passif');
+            const monthPassiveTotal = passiveRows.reduce((sum, r) => sum + parseAmount(r.monthlyPassiveIncome || 0), 0);
+            const monthGain = annualGainsByMonth[selectedMonth] || 0;
+            if (passiveRows.length === 0 && monthGain === 0) return null;
+            return (
+              <div className="stats-row" style={{ marginBottom: '1rem' }}>
+                {monthPassiveTotal > 0 && <div className="stat-box"><div className="v pos">{formatEuro(monthPassiveTotal)}</div><div className="l">Revenus passifs / mois</div></div>}
+                {monthPassiveTotal > 0 && <div className="stat-box"><div className="v">{formatEuro(monthPassiveTotal * 12)}</div><div className="l">Revenus passifs / an</div></div>}
+                {monthGain > 0 && <div className="stat-box"><div className="v pos">{formatEuro(monthGain)}</div><div className="l">Gains positions ce mois</div></div>}
+              </div>
+            );
+          })()}
           <div className="card">
             <label htmlFor="inv-mo-sum">Mouvements du mois (apports, retraits, achats/ventes notables)</label>
             <textarea id="inv-mo-sum" rows="4" className="input-dark" value={monthlySnapshot.monthlySummary || ''} onChange={(e) => setMonthlyField('monthlySummary', e.target.value)} />

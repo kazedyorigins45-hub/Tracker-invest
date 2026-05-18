@@ -8,7 +8,7 @@ import { useLocale } from '@/lib/locale';
 import DashboardContent from '@/components/DashboardContent';
 import LogoMark from '@/components/LogoMark';
 import ThemeToggle from '@/components/ThemeToggle';
-import LanguageToggle from '@/components/LanguageToggle';
+import CurrencyToggle from '@/components/CurrencyToggle';
 
 const STORAGE_KEY = 'mindsetInvestHub_v1';
 
@@ -212,7 +212,7 @@ export default function MindsetHub({ userEmail = '', planCode = 'starter', subsc
             <LogoMark />
           </div>
           <ThemeToggle className="theme-toggle--app" />
-          <LanguageToggle className="theme-toggle--app" />
+          <CurrencyToggle className="theme-toggle--app" />
         </div>
         <section id="page-home" className={`page ${activePage === 'home' ? 'active' : ''}`}>
           <div className="mindset-home-hero">

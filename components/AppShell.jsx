@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { getSubscriptionLabel } from '@/lib/plans';
 import LogoMark from '@/components/LogoMark';
 import ThemeToggle from '@/components/ThemeToggle';
-import LanguageToggle from '@/components/LanguageToggle';
+import CurrencyToggle from '@/components/CurrencyToggle';
 import { useLocale } from '@/lib/locale';
 
 export default function AppShell({ planCode, subscription, current, title, subtitle, userEmail, children }) {
@@ -29,7 +29,7 @@ export default function AppShell({ planCode, subscription, current, title, subti
             <div className="app-topbar-controls">
               <LogoMark />
               <ThemeToggle className="theme-toggle--app" />
-              <LanguageToggle className="theme-toggle--app" />
+              <CurrencyToggle className="theme-toggle--app" />
             </div>
             <form action="/api/auth/logout" method="post">
               <button className="btn btn-dark" type="submit">{t('app.logout')}</button>

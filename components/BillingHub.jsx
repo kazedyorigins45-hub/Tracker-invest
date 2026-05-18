@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import LogoMark from '@/components/LogoMark';
 import ThemeToggle from '@/components/ThemeToggle';
-import LanguageToggle from '@/components/LanguageToggle';
+import CurrencyToggle from '@/components/CurrencyToggle';
 import { PLANS, getPlan } from '@/lib/plans';
 import { useLocale } from '@/lib/locale';
 
@@ -115,7 +115,7 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
         <div className="mindset-topbar">
           <LogoMark />
           <ThemeToggle className="theme-toggle--app" />
-          <LanguageToggle className="theme-toggle--app" />
+          <CurrencyToggle className="theme-toggle--app" />
         </div>
 
         <h1 className="page-title">{t('billing.title')}</h1>

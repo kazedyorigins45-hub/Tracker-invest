@@ -7,7 +7,7 @@ import { useAccountPayload } from '@/lib/use-account-payload';
 import { useLocale } from '@/lib/locale';
 import LogoMark from '@/components/LogoMark';
 import ThemeToggle from '@/components/ThemeToggle';
-import LanguageToggle from '@/components/LanguageToggle';
+import CurrencyToggle from '@/components/CurrencyToggle';
 
 const NAV = [
   ['cover', 'tracker.coverTitle'],
@@ -492,6 +492,29 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
     });
   }, [data.annualYear, data.monthlyByMonth, isEnglish, setData]);
 
+  useEffect(() => {
+    const el = document.getElementById('tv-chart-weekly');
+    if (!el || el.querySelector('iframe')) return;
+    const s = document.createElement('script');
+    s.src = 'https://s3.tradingview.com/tv.js';
+    s.async = true;
+    s.onload = () => {
+      if (window.TradingView && document.getElementById('tv-chart-weekly')) {
+        new window.TradingView.widget({
+          autosize: true,
+          height: 486,
+          symbol: 'FX:EURUSD',
+          theme: 'dark',
+          style: '1',
+          locale: 'fr',
+          watchlist: ['BITSTAMP:BTCUSD', 'COINBASE:ETHUSD', 'NASDAQ:NVDA', 'MCX:GOLD1!'],
+          container_id: 'tv-chart-weekly',
+        });
+      }
+    };
+    document.head.appendChild(s);
+  }, []);
+
   const normalizeS20Row = (row = {}) => ({
     date: row.date || '',
     symbol: row.symbol || '',
@@ -540,7 +563,6 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
   const weeklyProfitFactor = weeklyStats.grossLosses > 0 ? weeklyStats.grossWins / weeklyStats.grossLosses : null;
   const annualBaseRows = buildAnnualAutoRows(data.annualYear, data.monthlyByMonth, isEnglish);
   const annualRows = annualBaseRows.map((autoRow, index) => ({ ...(data.annualRows?.[index] || {}), ...autoRow }));
-  const sizingResult = computePositionSizing(data);
   const numberLocale = isEnglish ? 'en-US' : 'fr-FR';
   const seriesP1 = Array.isArray(data.seriesP1) ? data.seriesP1 : [];
   const seriesP2 = Array.isArray(data.seriesP2) ? data.seriesP2 : [];
@@ -587,18 +609,6 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
           {canAccess(planCode, 'portfolio') ? <Link href="/portfolio" className="app-link">Mes investissements</Link> : null}
         </nav>
 
-        <div className="profile-bar">
-          <label htmlFor="trk-profile">Profil</label>
-          <select id="trk-profile" value={profile} onChange={(e) => switchProfile(e.target.value)}>
-            <option value="default">{profileState.labels?.default || 'Compte principal'}</option>
-            <option value="alt">{profileState.labels?.alt || 'Compte secondaire'}</option>
-          </select>
-          <div className="btn-row">
-            <button type="button" className="btn btn-ghost" onClick={() => switchProfile(profile === 'default' ? 'alt' : 'default')}>+ Profil</button>
-            <button type="button" className="btn btn-ghost" onClick={renameCurrentProfile}>Renommer</button>
-          </div>
-        </div>
-
         <div className="sidebar-inner">
           {NAV.map(([key, label]) => (
             <button key={key} type="button" className={`nav-item ${page === key ? 'active' : ''}`} onClick={() => update({ page: key })}>
@@ -625,7 +635,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
             <LogoMark />
           </div>
           <ThemeToggle className="theme-toggle--app" />
-          <LanguageToggle className="theme-toggle--app" />
+          <CurrencyToggle className="theme-toggle--app" />
         </div>
         <section className={`page ${page === 'cover' ? 'active' : ''}`}>
           <span className="dec-arrow" aria-hidden="true">↗</span>
@@ -853,43 +863,6 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
           <h1 className="page-title">{t('tracker.weeklyTitle')}</h1>
           <p className="page-sub">{t('tracker.weeklySub')}</p>
 
-          <div className="card" style={{ marginBottom: '1rem' }}>
-            <div className="section-head" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
-              <div>
-                <h2>Calculateur de taille de position</h2>
-                <p className="hint" style={{ marginTop: 0 }}>Visible ici dans le suivi trading : utilise FOREX pour un résultat en lots, ou CRYPTO &amp; ACTIONS pour un montant de position.</p>
-              </div>
-              <div className="btn-row" role="group" aria-label="Mode de calcul" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: 0 }}>
-                <button type="button" className={`btn ${sizingResult.mode === 'forex' ? '' : 'btn-ghost'}`} onClick={() => update({ positionCalcMode: 'forex' })}>FOREX</button>
-                <button type="button" className={`btn ${sizingResult.mode === 'asset' ? '' : 'btn-ghost'}`} onClick={() => update({ positionCalcMode: 'asset' })}>CRYPTO &amp; ACTIONS</button>
-              </div>
-            </div>
-
-            <div className="grid-3 tracker-mindset-grid-3" style={{ marginTop: '1rem' }}>
-              <div className="field-block"><label htmlFor="w-pos-capital">Capital du compte</label><input id="w-pos-capital" className="input-dark tracker-trading-input" type="text" inputMode="decimal" value={data.positionCapital || ''} onChange={(e) => update({ positionCapital: e.target.value })} placeholder="ex. 5000" /></div>
-              <div className="field-block"><label htmlFor="w-pos-risk">Risque par trade (%)</label><input id="w-pos-risk" className="input-dark tracker-trading-input" type="text" inputMode="decimal" value={data.positionRiskPercent || ''} onChange={(e) => update({ positionRiskPercent: e.target.value })} placeholder="ex. 1" /></div>
-              <div className="field-block"><label>Argent risqué</label><div className="stat-box" style={{ minHeight: '3rem' }}><div className="v">{sizingResult.riskAmount != null ? `${formatCalcNumber(sizingResult.riskAmount, numberLocale)} ${currencySymbol}` : '—'}</div></div></div>
-            </div>
-
-            {sizingResult.mode === 'forex' ? (
-              <div className="grid-3 tracker-mindset-grid-3" style={{ marginTop: '1rem' }}>
-                <div className="field-block"><label htmlFor="w-pos-sl-pips">Stop Loss en pips</label><input id="w-pos-sl-pips" className="input-dark tracker-trading-input" type="text" inputMode="decimal" value={data.positionStopLossPips || ''} onChange={(e) => update({ positionStopLossPips: e.target.value })} placeholder="ex. 20" /></div>
-                <div className="field-block"><label htmlFor="w-pos-pip-value">Valeur du pip</label><input id="w-pos-pip-value" className="input-dark tracker-trading-input" type="text" inputMode="decimal" value={data.positionPipValue ?? '10'} onChange={(e) => update({ positionPipValue: e.target.value })} placeholder="10" /></div>
-                <div className="field-block"><label>Résultat</label><div className="stat-box" style={{ minHeight: '3rem' }}><div className="v pos">{sizingResult.valid ? `${formatCalcNumber(sizingResult.lots, numberLocale, 4)} lot` : '—'}</div><div className="l">Taille recommandée</div></div></div>
-              </div>
-            ) : (
-              <>
-                <div className="grid-3 tracker-mindset-grid-3" style={{ marginTop: '1rem' }}>
-                  <div className="field-block"><label htmlFor="w-pos-entry">Prix d’entrée</label><input id="w-pos-entry" className="input-dark tracker-trading-input" type="text" inputMode="decimal" value={data.positionEntryPrice || ''} onChange={(e) => update({ positionEntryPrice: e.target.value })} placeholder="ex. 60000" /></div>
-                  <div className="field-block"><label htmlFor="w-pos-stop-price">Prix du Stop Loss</label><input id="w-pos-stop-price" className="input-dark tracker-trading-input" type="text" inputMode="decimal" value={data.positionStopLossPrice || ''} onChange={(e) => update({ positionStopLossPrice: e.target.value })} placeholder="ex. 57000" /></div>
-                  <div className="field-block"><label>Distance au stop</label><div className="stat-box" style={{ minHeight: '3rem' }}><div className="v">{sizingResult.stopLossDistancePercent != null ? `${formatCalcNumber(sizingResult.stopLossDistancePercent * 100, numberLocale, 2)} %` : '—'}</div></div></div>
-                </div>
-                <div className="stats-row" style={{ marginTop: '1rem', marginBottom: 0 }}><div className="stat-box"><div className="v pos">{sizingResult.valid ? `${formatCalcNumber(sizingResult.positionAmount, numberLocale, 2)} ${currencySymbol}` : '—'}</div><div className="l">Montant de position recommandé</div></div></div>
-              </>
-            )}
-            {!sizingResult.valid ? <p className="hint neg" style={{ marginBottom: 0 }}>{sizingResult.message || 'Renseigne les champs nécessaires pour calculer ta position.'}</p> : null}
-          </div>
-
           <div className="toolbar">
             <div>
               <label htmlFor="w-month">{t('tracker.weeklyMonth')}</label>
@@ -913,6 +886,11 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
             <div className="stat-box"><div className="v">{weeklyProfitFactor == null ? '—' : weeklyProfitFactor.toFixed(2)}</div><div className="l">Facteur profit</div></div>
           </div>
 
+          <div className="card" style={{ marginTop: '1rem', padding: '1rem' }}>
+            <h2 style={{ marginBottom: '0.75rem' }}>Graphique TradingView</h2>
+            <div id="tv-chart-weekly" style={{ width: '100%', height: '486px' }} />
+          </div>
+
           <div className="card">
             <h2>{t('tracker.weeklyTradesTitle')}</h2>
             <div className="table-wrap">
@@ -922,13 +900,6 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
                     <th>{t('tracker.weeklyDate')}</th>
                     <th>{t('tracker.weeklyAsset')}</th>
                     <th>{t('tracker.weeklyDirection')}</th>
-                    <th>Mode calcul</th>
-                    <th>Capital</th>
-                    <th>Risque %</th>
-                    <th>SL pips</th>
-                    <th>Valeur pip</th>
-                    <th>Prix stop</th>
-                    <th>Taille recommandée</th>
                     <th>{isEnglish ? `Entry (${currencyUnit})` : `Entrée (${currencyUnit})`}</th>
                     <th>{isEnglish ? `Exit (${currencyUnit})` : `Sortie (${currencyUnit})`}</th>
                     <th>{t('tracker.weeklyRR')}</th>
@@ -941,7 +912,6 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
                 </thead>
                 <tbody>
                   {visibleWeeklyTrades.map(({ row, originalIndex }) => {
-                    const rowSizing = computeTradePositionSizing(row);
                     return (
                     <tr key={`${originalIndex}-${row.date || 'trade'}`}>
                       <td><input className="input-dark invest-holding-input tracker-date-input" type="date" value={row.date || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { date: e.target.value })} /></td>
@@ -952,18 +922,6 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
                           <option value="short">Short</option>
                         </select>
                       </td>
-                      <td>
-                        <select className="input-dark invest-holding-input" value={row.positionMode || 'forex'} onChange={(e) => updateWeeklyTrade(originalIndex, { positionMode: e.target.value })}>
-                          <option value="forex">FOREX</option>
-                          <option value="asset">Crypto/actions</option>
-                        </select>
-                      </td>
-                      <td><input className="input-dark invest-holding-input" type="text" inputMode="decimal" value={row.positionCapital || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { positionCapital: e.target.value })} placeholder="5000" /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" inputMode="decimal" value={row.positionRiskPercent || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { positionRiskPercent: e.target.value })} placeholder="1" /></td>
-                      <td>{(row.positionMode || 'forex') === 'forex' ? <input className="input-dark invest-holding-input" type="text" inputMode="decimal" value={row.stopLossPips || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { stopLossPips: e.target.value })} placeholder="20" /> : <span className="hint" style={{ margin: 0 }}>—</span>}</td>
-                      <td>{(row.positionMode || 'forex') === 'forex' ? <input className="input-dark invest-holding-input" type="text" inputMode="decimal" value={row.pipValue ?? '10'} onChange={(e) => updateWeeklyTrade(originalIndex, { pipValue: e.target.value })} placeholder="10" /> : <span className="hint" style={{ margin: 0 }}>—</span>}</td>
-                      <td>{(row.positionMode || 'forex') === 'asset' ? <input className="input-dark invest-holding-input" type="text" inputMode="decimal" value={toDisplayAmount(row.stopLossPrice, isEnglish)} onChange={(e) => updateWeeklyTrade(originalIndex, { stopLossPrice: toStoredAmount(e.target.value, isEnglish) })} placeholder="57000" /> : <span className="hint" style={{ margin: 0 }}>—</span>}</td>
-                      <td><strong>{rowSizing.valid ? (rowSizing.mode === 'forex' ? `${formatCalcNumber(rowSizing.lots, numberLocale, 4)} lot` : `${formatCalcNumber(rowSizing.positionAmount, numberLocale, 2)} ${currencySymbol}`) : '—'}</strong></td>
                       <td><input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.entry, isEnglish)} onChange={(e) => updateWeeklyTrade(originalIndex, { entry: toStoredAmount(e.target.value, isEnglish) })} /></td>
                       <td><input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.exit, isEnglish)} onChange={(e) => updateWeeklyTrade(originalIndex, { exit: toStoredAmount(e.target.value, isEnglish) })} /></td>
                       <td><input className="input-dark invest-holding-input" type="text" value={row.rr || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { rr: e.target.value })} /></td>

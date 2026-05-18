@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import LogoMark from '@/components/LogoMark';
 import ThemeToggle from '@/components/ThemeToggle';
-import LanguageToggle from '@/components/LanguageToggle';
+import CurrencyToggle from '@/components/CurrencyToggle';
 import { useLocale } from '@/lib/locale';
 
 export default function SiteHeaderClient({ user: serverUser, planCode: serverPlanCode, subscription: serverSubscription }) {
@@ -57,7 +57,7 @@ export default function SiteHeaderClient({ user: serverUser, planCode: serverPla
           <div className="site-header-controls">
             <LogoMark />
             <ThemeToggle className="theme-toggle--header" />
-            <LanguageToggle className="theme-toggle--header" />
+            <CurrencyToggle className="theme-toggle--header" />
           </div>
         </nav>
       </div>
