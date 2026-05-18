@@ -832,8 +832,8 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
             </div>
           </div>
 
-          <div className="card" style={{ marginTop: ‘1rem’ }}>
-            <h2>{t(‘tracker.tradingPlanEntriesTitle’)}</h2>
+          <div className="card" style={{ marginTop: '1rem' }}>
+            <h2>{t('tracker.tradingPlanEntriesTitle')}</h2>
             <label>{t('tracker.tradingPlanSetups')}</label>
             <textarea className="input-dark tracker-mindset-textarea" rows="3" value={data.tradingPlanSetups || ''} onChange={(e) => update({ tradingPlanSetups: e.target.value })} placeholder={t('tracker.tradingPlanSetupsPlaceholder')} />
             <label>{t('tracker.tradingPlanEntries')}</label>
