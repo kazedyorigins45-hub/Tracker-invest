@@ -480,7 +480,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   const projectAverage = projectScores.length ? Math.round((projectScores.reduce((sum, score) => sum + score, 0) / projectScores.length) * 10) / 10 : 0;
   const projectScore = projectAverage;
   const projectArchives = Array.isArray(data.projectArchives) ? data.projectArchives : [];
-  const projectVerdictLabel = projectAverage >= 7.5 ? 'Projet intéressant' : projectAverage >= 5 ? 'Projet à surveiller' : 'Projet risqué';
+  const projectVerdictLabel = projectAverage >= 7.5 ? t('invest.projectVerdictGood') : projectAverage >= 5 ? t('invest.projectVerdictWatch') : t('invest.projectVerdictRisky');
   const projectVerdictClass = projectAverage >= 7.5 ? 'pos' : projectAverage >= 5 ? '' : 'neg';
   const investMeta = { name: data.name || '', horizon: data.horizon || '', vision: data.vision || '', ...(data.meta || {}) };
   const selectedMonth = data.monthlyMonth || monthKey();
@@ -536,13 +536,13 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
 
   const overviewClasses = ['crypto', 'metaux', 'matieres', 'immo', 'obligations', 'actions', 'autre'];
   const overviewLabels = {
-    crypto: 'Crypto',
-    metaux: 'Métaux précieux',
-    matieres: 'Matières premières',
-    immo: 'Immobilier',
-    obligations: 'Obligations / monétaire',
-    actions: 'Actions / ETF',
-    autre: 'Autre',
+    crypto: t('invest.holdingsClassCrypto'),
+    metaux: t('invest.holdingsClassMetaux'),
+    matieres: t('invest.holdingsClassMatieres'),
+    immo: t('invest.holdingsClassImmo'),
+    obligations: t('invest.holdingsClassOblig'),
+    actions: t('invest.holdingsClassActions'),
+    autre: t('invest.holdingsClassAutre'),
   };
 
   const pvTaux = parseAmount(immoGlobal.pv.taux);
@@ -975,7 +975,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                 return (
                   <div key={key} className="overview-breakdown-row">
                     <span>{overviewLabels[key]}</span>
-                    <span>{Math.round(amt).toLocaleString('fr-FR')}€ <span style={{ color: 'var(--muted)' }}>({pct}%)</span></span>
+                    <span>{fmtC(amt)} <span style={{ color: 'var(--muted)' }}>({pct}%)</span></span>
                   </div>
                 );
               })}
