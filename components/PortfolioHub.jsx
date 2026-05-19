@@ -17,6 +17,8 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
     targetActifs: '',
     targetPassif: '',
     targetDispo: '',
+    positionsValue: '',
+    tradingNetValue: '',
   });
   const [saveStatus, setSaveStatus] = useState('');
 
@@ -24,8 +26,8 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
   const subscriptionLabel = getSubscriptionLabel(subscription, planCode);
   const { t } = useLocale();
 
-  const positionsValue = 125000;
-  const tradingNetValue = 4800;
+  const positionsValue = Number(String(data.positionsValue).replace(/[^\d.,-]/g, '').replace(',', '.')) || 0;
+  const tradingNetValue = Number(String(data.tradingNetValue).replace(/[^\d.,-]/g, '').replace(',', '.')) || 0;
   const totalValue = positionsValue + tradingNetValue;
   const targetValue = Number(String(data.target).replace(/[^\d.,-]/g, '').replace(',', '.'));
   const progressValue = targetValue > 0 ? Math.min(100, Math.round((totalValue / targetValue) * 100)) : 0;
@@ -107,6 +109,10 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
             <div className="grid-2 portfolio-grid-spaced">
               <div className="field-block"><label>Titre (optionnel)</label><input className="input-dark" type="text" value={data.title} onChange={(e) => update({ title: e.target.value })} placeholder="Ex. Liberté financière, retraite…" /></div>
               <div className="field-block"><label>Objectif global consolidé (€)</label><input className="input-dark" type="text" value={data.target} onChange={(e) => update({ target: e.target.value })} placeholder="500000" /></div>
+            </div>
+            <div className="grid-2" style={{ marginTop: '0.5rem' }}>
+              <div className="field-block"><label>Valeur patrimoine positions (€)</label><input className="input-dark" type="text" value={data.positionsValue} onChange={(e) => update({ positionsValue: e.target.value })} placeholder="ex. 125000" /></div>
+              <div className="field-block"><label>Résultat net trading (€)</label><input className="input-dark" type="text" value={data.tradingNetValue} onChange={(e) => update({ tradingNetValue: e.target.value })} placeholder="ex. 4800" /></div>
             </div>
             <p className="hint" style={{ marginTop: '0.25rem' }}>Objectifs <strong>optionnels</strong> pour les trois barres Elite Invest ci-dessous (actifs ouverts, revenu passif ouvert, encaissements des ventes).</p>
             <div className="grid-2" style={{ marginTop: '0.5rem' }}>
