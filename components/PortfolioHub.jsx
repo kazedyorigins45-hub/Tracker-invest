@@ -107,7 +107,7 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
           <div className="card portfolio-card portfolio-card--accent portfolio-card--large">
             <h2>{t('portfolio.objectiveSectionTitle')}</h2>
             <div className="grid-2 portfolio-grid-spaced">
-              <div className="field-block"><label>{t('portfolio.objectiveTitleLabel')}</label><input className="input-dark" type="text" value={data.title} onChange={(e) => update({ title: e.target.value })} placeholder="Ex. Liberté financière, retraite…" /></div>
+              <div className="field-block"><label>{t('portfolio.objectiveTitleLabel')}</label><input className="input-dark" type="text" value={data.title} onChange={(e) => update({ title: e.target.value })} placeholder={t('portfolio.objectiveTitlePlaceholder')} /></div>
               <div className="field-block"><label>{t('portfolio.objectiveGlobalLabel')}</label><input className="input-dark" type="text" value={data.target} onChange={(e) => update({ target: e.target.value })} placeholder="500000" /></div>
             </div>
             <div className="grid-2" style={{ marginTop: '0.5rem' }}>
@@ -124,7 +124,7 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
               <input className="input-dark" type="text" value={data.targetDispo} onChange={(e) => update({ targetDispo: e.target.value })} placeholder="ex. 50000" />
             </div>
             <label className="field-label">{t('portfolio.noteLabel')}</label>
-            <textarea className="input-dark portfolio-note" rows="2" value={data.note} onChange={(e) => update({ note: e.target.value })} placeholder="Rappel : ce que tu inclus ou exclus de ce chiffre…" />
+            <textarea className="input-dark portfolio-note" rows="2" value={data.note} onChange={(e) => update({ note: e.target.value })} placeholder={t('portfolio.notePlaceholder')} />
             <div className="toolbar">
               <button className="btn" type="button" onClick={handleSaveObjective} disabled={saveStatus === 'saving'}>{t('portfolio.saveBtn')}</button>
               <button className="btn btn-ghost" type="button" onClick={() => setSaveStatus('refreshed')}>{t('portfolio.refreshBtn')}</button>

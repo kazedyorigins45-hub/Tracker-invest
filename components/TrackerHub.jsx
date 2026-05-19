@@ -689,11 +689,11 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
             </div>
             <div className="card">
               <label htmlFor="mo-ratio-manual">{t('tracker.monthlyRatio')}</label>
-              <input type="text" id="mo-ratio-manual" className="input-dark tracker-monthly-single" value={monthlySnapshot.monthlyRatio || monthlyAutoSnapshot.monthlyRatio || ''} onChange={(e) => setMonthlyField('monthlyRatio', e.target.value)} placeholder="Auto affiché dans les stats ci-dessus" />
+              <input type="text" id="mo-ratio-manual" className="input-dark tracker-monthly-single" value={monthlySnapshot.monthlyRatio || monthlyAutoSnapshot.monthlyRatio || ''} onChange={(e) => setMonthlyField('monthlyRatio', e.target.value)} placeholder={t('tracker.monthlyRatioPlaceholder')} />
               <label htmlFor="mo-lesson">{t('tracker.monthlyLesson')}</label>
               <textarea id="mo-lesson" rows="3" className="input-dark portfolio-note" value={monthlySnapshot.monthlyLesson || ''} onChange={(e) => setMonthlyField('monthlyLesson', e.target.value)} />
               <label htmlFor="mo-result-manual">{t('tracker.monthlyResult')}</label>
-              <input type="text" id="mo-result-manual" className="input-dark tracker-monthly-single" value={monthlySnapshot.monthlyResult || formatMoney(monthlyAutoSnapshot.net || 0, isEnglish, fxRate) || ''} onChange={(e) => setMonthlyField('monthlyResult', e.target.value)} placeholder="Synthèse manuelle" />
+              <input type="text" id="mo-result-manual" className="input-dark tracker-monthly-single" value={monthlySnapshot.monthlyResult || formatMoney(monthlyAutoSnapshot.net || 0, isEnglish, fxRate) || ''} onChange={(e) => setMonthlyField('monthlyResult', e.target.value)} placeholder={t('tracker.monthlyResultPlaceholder')} />
             </div>
           </div>
 
@@ -866,11 +866,11 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
           <div className="toolbar">
             <div>
               <label htmlFor="w-month">{t('tracker.weeklyMonth')}</label>
-              <input type="month" id="w-month" className="input-dark tracker-date-input tracker-date-mini" title="Tous les trades de ce mois apparaissent dans le tableau" value={data.weeklyMonth || ''} onChange={(e) => setWeeklyMonth(e.target.value)} />
+              <input type="month" id="w-month" className="input-dark tracker-date-input tracker-date-mini" title={t('tracker.weeklyMonthTitle')} value={data.weeklyMonth || ''} onChange={(e) => setWeeklyMonth(e.target.value)} />
             </div>
             <div>
               <label htmlFor="w-week">{t('tracker.weeklyWeek')}</label>
-              <input type="week" id="w-week" className="input-dark tracker-date-input tracker-date-mini" title="Sert aux notes de semaine en bas de page" value={data.weeklyWeek || ''} onChange={(e) => update({ weeklyWeek: e.target.value })} />
+              <input type="week" id="w-week" className="input-dark tracker-date-input tracker-date-mini" title={t('tracker.weeklyWeekTitle')} value={data.weeklyWeek || ''} onChange={(e) => update({ weeklyWeek: e.target.value })} />
             </div>
             <div>
               <button type="button" className="btn" onClick={addWeeklyTrade}>{t('tracker.weeklyAddTrade')}</button>

@@ -178,8 +178,11 @@ function defaultPortfolioState() {
   };
 }
 
-function buildInvestAnnualRows(year, monthlyByMonth = {}) {
-  const labels = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+const MONTHS_FR = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+function buildInvestAnnualRows(year, monthlyByMonth = {}, locale = 'fr') {
+  const labels = locale === 'en' ? MONTHS_EN : MONTHS_FR;
   const selectedYear = year || String(new Date().getFullYear());
   return labels.map((label, index) => {
     const key = `${selectedYear}-${String(index + 1).padStart(2, '0')}`;
@@ -428,12 +431,12 @@ function bestImmoRow(rows) {
 export default function InvestHub({ userEmail = '', planCode = 'starter', subscription = null }) {
   const [portfolioState, setPortfolioState] = useAccountPayload('investHub_profiles_v1', defaultPortfolioState());
   const profile = portfolioState.current || 'main';
-  const profileLabel = portfolioState.labels?.[profile] || (profile === 'pea' ? 'PEA long terme' : profile === 'crypto' ? 'Crypto' : 'Patrimoine principal');
   const [data, setData] = useAccountPayload(`investHub_v2_${profile}`, defaultInvestState());
 
   const page = data.page || 'cover';
   const subscriptionLabel = getSubscriptionLabel(subscription, planCode);
   const { t, locale } = useLocale();
+  const profileLabel = portfolioState.labels?.[profile] || (profile === 'pea' ? t('invest.profilePea') : profile === 'crypto' ? t('invest.profileCrypto') : t('invest.profileMain'));
   const EUR_TO_USD = useFxRate();
   const fmtC = (value) => {
     if (!Number.isFinite(value)) return '';
@@ -498,7 +501,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   const openHoldings = holdings.filter((row) => !isHoldingSold(row));
   const immoLinkedHoldings = openHoldings.filter((row) => ['immobilier', 'immo'].includes(String(row.className || '').toLowerCase()));
   const annualGainsByMonth = buildInvestMonthlyGains(selectedAnnualYear, holdings);
-  const annualRows = buildInvestAnnualRows(selectedAnnualYear, annualMonthlySource).map((row) => ({ ...row, gain: annualGainsByMonth[row.key] || 0 }));
+  const annualRows = buildInvestAnnualRows(selectedAnnualYear, annualMonthlySource, locale).map((row) => ({ ...row, gain: annualGainsByMonth[row.key] || 0 }));
   const annualFilledMonths = annualRows.filter((row) => row.movements || row.lesson || row.next || row.gain).length;
 
   const switchProfile = (nextProfile) => {
@@ -1041,13 +1044,13 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                             const sale = parseAmount(nextSell);
                             const result = Number.isFinite(qty) && Number.isFinite(buy) && Number.isFinite(sale) ? ((sale - buy) * qty) : 0;
                             updateHolding(index, { sellPrice: nextSell, saleResult: String(Math.round(result * 100) / 100) });
-                          }} placeholder="Prix de vente" />
-                          <button type="button" className="btn-inv-sale-live" onClick={() => fetchLiveSellPrice(index)} disabled={classLabel(row) !== 'crypto'} title={classLabel(row) === 'crypto' ? "Remplir le prix de vente au cours CoinGecko actuel (€ par unité). Nécessite l'ID CoinGecko." : "Cours automatique disponible uniquement pour les cryptos via CoinGecko."}>Cours</button>
+                          }} placeholder={t('invest.holdingSellPlaceholder')} />
+                          <button type="button" className="btn-inv-sale-live" onClick={() => fetchLiveSellPrice(index)} disabled={classLabel(row) !== 'crypto'} title={classLabel(row) === 'crypto' ? t('invest.holdingCoursCryptoTitle') : t('invest.holdingCoursOnlyTitle')}>{t('invest.holdingCoursBtn')}</button>
                         </div>
                       </td>
                       <td><input className="input-dark invest-holding-input" type="date" value={row.sellDate || row.saleDate || ''} onChange={(e) => updateHolding(index, { sellDate: e.target.value, saleDate: e.target.value })} /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={row.saleResult || ''} onChange={(e) => updateHolding(index, { saleResult: e.target.value })} placeholder="Résultat" /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={row.notes || ''} onChange={(e) => updateHolding(index, { notes: e.target.value })} placeholder="Notes" /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={row.saleResult || ''} onChange={(e) => updateHolding(index, { saleResult: e.target.value })} placeholder={t('invest.holdingResultPlaceholder')} /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={row.notes || ''} onChange={(e) => updateHolding(index, { notes: e.target.value })} placeholder={t('invest.holdingsColNotes')} /></td>
                       <td><button type="button" className="link-del" onClick={() => removeHolding(index)}>×</button></td>
                     </tr>
                   ))}
@@ -1192,14 +1195,14 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
               </div>
               <div>
                 <label htmlFor="immo-tmi">{t('invest.immoTmi')}</label>
-                <input type="text" id="immo-tmi" className="input-dark immo-persist" value={immoField(activeFields, 'immo-tmi')} onChange={(e) => setImmoField('immo-tmi', e.target.value)} placeholder="ex. 30 — 0 pour ignorer" />
+                <input type="text" id="immo-tmi" className="input-dark immo-persist" value={immoField(activeFields, 'immo-tmi')} onChange={(e) => setImmoField('immo-tmi', e.target.value)} placeholder={t('invest.immoTmiPlaceholder')} />
               </div>
               <div>
                 <label htmlFor="immo-abatt">{t('invest.immoAbatt')}</label>
-                <input type="text" id="immo-abatt" className="input-dark immo-persist" value={immoField(activeFields, 'immo-abatt')} onChange={(e) => setImmoField('immo-abatt', e.target.value)} placeholder="ex. 30 (nu) ou 50 (meublé micro-BIC)" />
+                <input type="text" id="immo-abatt" className="input-dark immo-persist" value={immoField(activeFields, 'immo-abatt')} onChange={(e) => setImmoField('immo-abatt', e.target.value)} placeholder={t('invest.immoAbattPlaceholder')} />
               </div>
             </div>
-            <p className="hint" id="immo-base-recap">{immoBase.prix > 0 ? <>Budget total acquisition : <strong>{fmtC2(immoBase.totalProjet)}</strong> — apport <strong>{fmtC2(immoBase.apport)}</strong>, mensualité <strong>{fmtC2(immoBase.mens)}</strong>/mo (<strong>{fmtC2(immoBase.annCredit)}</strong>/an).</> : t('invest.immoBaseRecapEmpty')}</p>
+            <p className="hint" id="immo-base-recap">{immoBase.prix > 0 ? <>{t('invest.immoBaseRecapBudget')} : <strong>{fmtC2(immoBase.totalProjet)}</strong> — {t('invest.immoBaseRecapApport')} <strong>{fmtC2(immoBase.apport)}</strong>, {t('invest.immoBaseRecapMens')} <strong>{fmtC2(immoBase.mens)}</strong>/mo (<strong>{fmtC2(immoBase.annCredit)}</strong>/an).</> : t('invest.immoBaseRecapEmpty')}</p>
           </div>
 
           <div className="immo-section-label">{t('invest.immoScenariosLabel')}</div>
@@ -1249,7 +1252,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
               <label htmlFor="immo-s5-revalo">{t('invest.immoS5Revalo')}</label>
               <input type="text" id="immo-s5-revalo" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s5-revalo')} onChange={(e) => setImmoField('immo-s5-revalo', e.target.value)} placeholder="ex. 2" />
               <label htmlFor="immo-s5-loyer">{t('invest.immoS5Loyer')}</label>
-              <input type="text" id="immo-s5-loyer" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s5-loyer')} onChange={(e) => setImmoField('immo-s5-loyer', e.target.value)} placeholder="ex. 0 ou 900" />
+              <input type="text" id="immo-s5-loyer" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s5-loyer')} onChange={(e) => setImmoField('immo-s5-loyer', e.target.value)} placeholder={t('invest.immoS5LoyerPlaceholder')} />
               <label htmlFor="immo-s5-vac">{t('invest.immoS5Vac')}</label>
               <input type="text" id="immo-s5-vac" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s5-vac')} onChange={(e) => setImmoField('immo-s5-vac', e.target.value)} placeholder="ex. 5" />
               <div className="immo-scen-out" id="immo-out-s5"><div className="immo-mini-stats">{miniStat(t('invest.immoS5Gross'), fmtC2(immoResult.details.gross5))}{miniStat(t('invest.immoS5Cf'), fmtC2(immoResult.details.annualCf5), immoResult.details.annualCf5 >= 0 ? 'pos' : 'neg')}{miniStat(t('invest.immoS5SaleNet'), fmtC2(immoResult.details.saleNet5))}{miniStat(t('invest.immoS5Profit'), fmtC2(immoResult.details.profit5), immoResult.details.profit5 >= 0 ? 'pos' : 'neg')}</div><p className="hint">{t('invest.immoS5Eq')} : <strong>{fmtC2(immoResult.details.eq5)}</strong> — {t('invest.immoS5Crd')} : {fmtC2(immoResult.details.bal5)}.</p>{immoRentabilityBadge(immoResult.details.profit5, t('invest.immoGainLabel'))}</div>
@@ -1467,20 +1470,20 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
           <div className="card portfolio-card portfolio-card--large">
             <h2>{t('invest.financingOverview')}</h2>
             <div className="grid-2 portfolio-grid-spaced">
-              <div className="field-block"><label>Prix d'achat FAI (€)</label><input className="input-dark invest-finance-input" type="number" value={data.purchasePrice} onChange={(e) => update({ purchasePrice: e.target.value })} /></div>
-              <div className="field-block"><label>Frais d'acquisition (% du prix)</label><input className="input-dark invest-finance-input" type="number" value={data.acquisitionFeesPct} onChange={(e) => update({ acquisitionFeesPct: e.target.value })} /></div>
-              <div className="field-block"><label>Travaux initiaux (€)</label><input className="input-dark invest-finance-input" type="number" value={data.workCost} onChange={(e) => update({ workCost: e.target.value })} /></div>
-              <div className="field-block"><label>Financement : % emprunté sur total projet</label><input className="input-dark invest-finance-input" type="number" value={data.downPaymentPct} onChange={(e) => update({ downPaymentPct: e.target.value })} /></div>
-              <div className="field-block"><label>Taux crédit annuel nominal (%)</label><input className="input-dark invest-finance-input" type="number" value={data.loanRate} onChange={(e) => update({ loanRate: e.target.value })} /></div>
-              <div className="field-block"><label>Durée du prêt (ans)</label><input className="input-dark invest-finance-input" type="number" value={data.loanYears} onChange={(e) => update({ loanYears: e.target.value })} /></div>
-              <div className="field-block"><label>Charges annuelles (€)</label><input className="input-dark invest-finance-input" type="number" value={data.annualCharges} onChange={(e) => update({ annualCharges: e.target.value })} /></div>
-              <div className="field-block"><label>Prix de vente estimé (% du prix revente)</label><input className="input-dark invest-finance-input" type="number" value={data.saleFeesPct} onChange={(e) => update({ saleFeesPct: e.target.value })} /></div>
+              <div className="field-block"><label>{t('invest.immoPrice')}</label><input className="input-dark invest-finance-input" type="number" value={data.purchasePrice} onChange={(e) => update({ purchasePrice: e.target.value })} /></div>
+              <div className="field-block"><label>{t('invest.immoFeesPct')}</label><input className="input-dark invest-finance-input" type="number" value={data.acquisitionFeesPct} onChange={(e) => update({ acquisitionFeesPct: e.target.value })} /></div>
+              <div className="field-block"><label>{t('invest.immoWorks')}</label><input className="input-dark invest-finance-input" type="number" value={data.workCost} onChange={(e) => update({ workCost: e.target.value })} /></div>
+              <div className="field-block"><label>{t('invest.immoLtv')}</label><input className="input-dark invest-finance-input" type="number" value={data.downPaymentPct} onChange={(e) => update({ downPaymentPct: e.target.value })} /></div>
+              <div className="field-block"><label>{t('invest.immoRate')}</label><input className="input-dark invest-finance-input" type="number" value={data.loanRate} onChange={(e) => update({ loanRate: e.target.value })} /></div>
+              <div className="field-block"><label>{t('invest.immoDuration')}</label><input className="input-dark invest-finance-input" type="number" value={data.loanYears} onChange={(e) => update({ loanYears: e.target.value })} /></div>
+              <div className="field-block"><label>{t('invest.immoCharges')}</label><input className="input-dark invest-finance-input" type="number" value={data.annualCharges} onChange={(e) => update({ annualCharges: e.target.value })} /></div>
+              <div className="field-block"><label>{t('invest.immoSaleFees')}</label><input className="input-dark invest-finance-input" type="number" value={data.saleFeesPct} onChange={(e) => update({ saleFeesPct: e.target.value })} /></div>
             </div>
             <div className="stats-row" style={{ marginTop: '1rem' }}>
-              <div className="stat-box"><div className="v">{Math.round(financed).toLocaleString('fr-FR')}€</div><div className="l">Montant financé</div></div>
-              <div className="stat-box"><div className="v">{annualIncome.toLocaleString('fr-FR')}€</div><div className="l">{t('invest.financingIncome')}</div></div>
-              <div className="stat-box"><div className="v neg">-{annualPayment.toLocaleString('fr-FR')}€</div><div className="l">{t('invest.financingPayment')}</div></div>
-              <div className="stat-box"><div className="v pos">{annualCashflow.toLocaleString('fr-FR')}€</div><div className="l">{t('invest.financingCashflow')}</div></div>
+              <div className="stat-box"><div className="v">{fmtC(financed)}</div><div className="l">{t('invest.financingFinanced')}</div></div>
+              <div className="stat-box"><div className="v">{fmtC(annualIncome)}</div><div className="l">{t('invest.financingIncome')}</div></div>
+              <div className="stat-box"><div className="v neg">-{fmtC(annualPayment)}</div><div className="l">{t('invest.financingPayment')}</div></div>
+              <div className="stat-box"><div className="v pos">{fmtC(annualCashflow)}</div><div className="l">{t('invest.financingCashflow')}</div></div>
             </div>
           </div>
         </section>
@@ -1491,12 +1494,12 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
           <div className="card portfolio-card portfolio-card--large">
             <div className="grid-2 portfolio-grid-spaced">
               <div className="field-block"><label>{t('invest.projectName')}</label><input className="input-dark invest-project-input" type="text" value={data.projectName || ''} onChange={(e) => update({ projectName: e.target.value })} placeholder={t('invest.projectNamePlaceholder')} /></div>
-              <div className="field-block"><label>Moyenne du projet</label><input className="input-dark invest-project-input" type="text" value={`${projectAverage.toLocaleString('fr-FR')} / 10`} readOnly /></div>
+              <div className="field-block"><label>{t('invest.projectAvgLabel')}</label><input className="input-dark invest-project-input" type="text" value={`${projectAverage.toLocaleString(locale === 'en' ? 'en-US' : 'fr-FR')} / 10`} readOnly /></div>
             </div>
             <div className="stats-row" style={{ marginTop: '1rem' }}>
-              <div className="stat-box"><div className={`v ${projectVerdictClass}`}>{projectAverage.toLocaleString('fr-FR')} / 10</div><div className="l">Moyenne calculée</div></div>
-              <div className="stat-box"><div className={`v ${projectVerdictClass}`}>{projectVerdictLabel}</div><div className="l">Verdict automatique</div></div>
-              <div className="stat-box"><div className="v">{projectArchives.length}</div><div className="l">Projet(s) enregistré(s)</div></div>
+              <div className="stat-box"><div className={`v ${projectVerdictClass}`}>{projectAverage.toLocaleString(locale === 'en' ? 'en-US' : 'fr-FR')} / 10</div><div className="l">{t('invest.projectAvgCalc')}</div></div>
+              <div className="stat-box"><div className={`v ${projectVerdictClass}`}>{projectVerdictLabel}</div><div className="l">{t('invest.projectVerdictAuto')}</div></div>
+              <div className="stat-box"><div className="v">{projectArchives.length}</div><div className="l">{t('invest.projectCountLabel')}</div></div>
             </div>
             <div className="grid-2 portfolio-grid-spaced">
               <div className="field-block"><label>{t('invest.projectOpportunities')}</label><input className="input-dark invest-project-input" type="number" min="0" max="10" value={data.projectOpportunities} onChange={(e) => update({ projectOpportunities: e.target.value })} /></div>
@@ -1509,37 +1512,37 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
             <label>{t('invest.projectVerdict')}</label>
             <textarea className="input-dark portfolio-note invest-project-textarea" rows="4" value={data.projectVerdict || ''} onChange={(e) => update({ projectVerdict: e.target.value })} placeholder={t('invest.projectVerdictPlaceholder')} />
             <div className="toolbar" style={{ marginTop: '1rem' }}>
-              <button type="button" className="btn" onClick={saveProjectAnalysis}>Enregistrer ce projet</button>
-              <button type="button" className="btn btn-ghost" onClick={resetProjectAnalysis}>Nouveau projet</button>
+              <button type="button" className="btn" onClick={saveProjectAnalysis}>{t('invest.projectSaveBtn')}</button>
+              <button type="button" className="btn btn-ghost" onClick={resetProjectAnalysis}>{t('invest.projectNewBtn')}</button>
             </div>
-            <p className="hint"><strong>Calcul :</strong> moyenne automatique des 6 critères notés sur 10. Les archives restent enregistrées quand tu démarres un nouveau projet.</p>
+            <p className="hint">{t('invest.projectHint')}</p>
           </div>
 
           <div className="card portfolio-card portfolio-card--large" style={{ marginTop: '1rem' }}>
-            <h2>Projets enregistrés</h2>
+            <h2>{t('invest.projectArchivesTitle')}</h2>
             {projectArchives.length ? (
               <div className="table-wrap">
                 <table className="immo-compare invest-project-archive-table">
                   <thead>
                     <tr>
-                      <th>Projet</th>
-                      <th className="num">Moyenne</th>
-                      <th>Date</th>
-                      <th>Verdict</th>
-                      <th>Actions</th>
+                      <th>{t('invest.projectColProject')}</th>
+                      <th className="num">{t('invest.projectColAvg')}</th>
+                      <th>{t('invest.projectColDate')}</th>
+                      <th>{t('invest.projectColVerdict')}</th>
+                      <th>{t('invest.projectColActions')}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {projectArchives.map((project) => (
                       <tr key={project.id || `${project.name}-${project.savedAt}`}>
-                        <td>{project.name || 'Projet sans nom'}</td>
-                        <td className="num">{Number(project.average || 0).toLocaleString('fr-FR')} / 10</td>
-                        <td>{project.savedAt ? new Date(project.savedAt).toLocaleDateString('fr-FR') : '—'}</td>
+                        <td>{project.name || t('invest.projectNoName')}</td>
+                        <td className="num">{Number(project.average || 0).toLocaleString(locale === 'en' ? 'en-US' : 'fr-FR')} / 10</td>
+                        <td>{project.savedAt ? new Date(project.savedAt).toLocaleDateString(locale === 'en' ? 'en-US' : 'fr-FR') : '—'}</td>
                         <td>{project.verdict || <span className="hint">—</span>}</td>
                         <td>
                           <div className="btn-row" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                            <button type="button" className="btn btn-ghost" onClick={() => loadProjectAnalysis(project)}>Recharger</button>
-                            <button type="button" className="btn btn-ghost" onClick={() => deleteProjectAnalysis(project.id)}>Supprimer</button>
+                            <button type="button" className="btn btn-ghost" onClick={() => loadProjectAnalysis(project)}>{t('invest.projectReload')}</button>
+                            <button type="button" className="btn btn-ghost" onClick={() => deleteProjectAnalysis(project.id)}>{t('invest.projectDelete')}</button>
                           </div>
                         </td>
                       </tr>
@@ -1547,7 +1550,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                   </tbody>
                 </table>
               </div>
-            ) : <p className="hint">Aucun projet enregistré pour l'instant.</p>}
+            ) : <p className="hint">{t('invest.projectArchivesEmpty')}</p>}
           </div>
         </section>
       </main>
