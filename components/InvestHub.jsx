@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { canAccess, getSubscriptionLabel } from '@/lib/plans';
 import { useAccountPayload } from '@/lib/use-account-payload';
 import { useLocale } from '@/lib/locale';
+import { useFxRate } from '@/lib/fx';
 import LogoMark from '@/components/LogoMark';
 import ThemeToggle from '@/components/ThemeToggle';
 import CurrencyToggle from '@/components/CurrencyToggle';
@@ -433,7 +434,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   const page = data.page || 'cover';
   const subscriptionLabel = getSubscriptionLabel(subscription, planCode);
   const { t, locale } = useLocale();
-  const EUR_TO_USD = 1.08;
+  const EUR_TO_USD = useFxRate();
   const fmtC = (value) => {
     if (!Number.isFinite(value)) return '';
     if (locale === 'en') return `$${Math.round(value * EUR_TO_USD).toLocaleString('en-US')}`;

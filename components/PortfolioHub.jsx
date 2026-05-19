@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { canAccess, getSubscriptionLabel } from '@/lib/plans';
 import { useAccountPayload } from '@/lib/use-account-payload';
 import { useLocale } from '@/lib/locale';
+import { useFxRate } from '@/lib/fx';
 import LogoMark from '@/components/LogoMark';
 import ThemeToggle from '@/components/ThemeToggle';
 import CurrencyToggle from '@/components/CurrencyToggle';
@@ -32,7 +33,7 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
   const targetValue = Number(String(data.target).replace(/[^\d.,-]/g, '').replace(',', '.'));
   const progressValue = targetValue > 0 ? Math.min(100, Math.round((totalValue / targetValue) * 100)) : 0;
 
-  const EUR_TO_USD = 1.08;
+  const EUR_TO_USD = useFxRate();
   const formatEuro = (value) => {
     const v = Number.isFinite(value) ? value : 0;
     if (locale === 'en') return `$${Math.round(v * EUR_TO_USD).toLocaleString('en-US')}`;

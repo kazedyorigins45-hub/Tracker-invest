@@ -5,6 +5,7 @@ import React, { useEffect } from 'react';
 import { canAccess, getSubscriptionLabel } from '@/lib/plans';
 import { useAccountPayload } from '@/lib/use-account-payload';
 import { useLocale } from '@/lib/locale';
+import { useFxRate, FX_FALLBACK_EUR_USD } from '@/lib/fx';
 import LogoMark from '@/components/LogoMark';
 import ThemeToggle from '@/components/ThemeToggle';
 import CurrencyToggle from '@/components/CurrencyToggle';
@@ -27,8 +28,6 @@ const MORNING_ITEMS_FR = ['Revue rapide du plan', 'Respiration / recentrage', 'L
 const MORNING_ITEMS_EN = ['Quick review of the plan', 'Breathing / reset', 'Read key levels', 'No impulsive trade'];
 const COMMITMENT_ITEMS_FR = ['Je respecte ma discipline', 'Je coupe vite les pertes', 'Je n’ajoute pas sous émotion', 'Je stoppe si je ne suis pas concentré'];
 const COMMITMENT_ITEMS_EN = ['I keep my discipline', 'I cut losses quickly', 'I do not add under emotion', 'I stop if I am not focused'];
-const FX_EUR_USD = 1.1;
-
 function monthKey() {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
@@ -65,24 +64,24 @@ function isoWeekKey(dateString) {
   return `${utc.getUTCFullYear()}-W${String(week).padStart(2, '0')}`;
 }
 
-function toStoredAmount(value, isEnglish) {
+function toStoredAmount(value, isEnglish, fxRate = FX_FALLBACK_EUR_USD) {
   if (!isEnglish) return value;
   const n = parseAmount(value);
   if (n == null) return value;
-  return String(n / FX_EUR_USD);
+  return String(n / fxRate);
 }
 
-function toDisplayAmount(value, isEnglish) {
+function toDisplayAmount(value, isEnglish, fxRate = FX_FALLBACK_EUR_USD) {
   if (!isEnglish) return value || '';
   const n = parseAmount(value);
   if (n == null) return value || '';
-  return String(Number((n * FX_EUR_USD).toFixed(2)));
+  return String(Number((n * fxRate).toFixed(2)));
 }
 
-function formatMoney(value, isEnglish) {
+function formatMoney(value, isEnglish, fxRate = FX_FALLBACK_EUR_USD) {
   const n = parseAmount(value);
   if (n == null) return value || '0.00';
-  return Number((n * (isEnglish ? FX_EUR_USD : 1)).toFixed(2)).toLocaleString(isEnglish ? 'en-US' : 'fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return Number((n * (isEnglish ? fxRate : 1)).toFixed(2)).toLocaleString(isEnglish ? 'en-US' : 'fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function formatCalcNumber(value, locale = 'fr-FR', maximumFractionDigits = 2) {
@@ -293,6 +292,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
   const page = data.page === 'tradingPlan' ? 'plan' : (data.page || 'cover');
   const subscriptionLabel = getSubscriptionLabel(subscription, planCode);
   const { t, locale } = useLocale();
+  const fxRate = useFxRate();
   const isEnglish = locale === 'en';
   const currencySymbol = isEnglish ? '$' : '€';
   const currencyUnit = `${currencySymbol}/u`;
@@ -673,7 +673,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
 
           <div className="stats-row" id="mo-stats">
             <div className="stat-box"><div className="v">{monthlyAutoSnapshot.count || 0}</div><div className="l">{t('tracker.monthlyTradesTotal')}</div></div>
-            <div className="stat-box"><div className={`v ${(monthlyAutoSnapshot.net || 0) >= 0 ? 'pos' : 'neg'}`}>{formatMoney(monthlyAutoSnapshot.net || 0, isEnglish)} {currencySymbol}</div><div className="l">{t('tracker.monthlyGlobalResult')}</div></div>
+            <div className="stat-box"><div className={`v ${(monthlyAutoSnapshot.net || 0) >= 0 ? 'pos' : 'neg'}`}>{formatMoney(monthlyAutoSnapshot.net || 0, isEnglish, fxRate)} {currencySymbol}</div><div className="l">{t('tracker.monthlyGlobalResult')}</div></div>
             <div className="stat-box"><div className="v">{monthlyAutoSnapshot.count ? Math.round((monthlyAutoSnapshot.wins / monthlyAutoSnapshot.count) * 100) : 0}%</div><div className="l">{t('tracker.monthlyWinrate')}</div></div>
             <div className="stat-box"><div className="v">{monthlyAutoSnapshot.wins || 0} / {monthlyAutoSnapshot.losses || 0}</div><div className="l">{t('tracker.monthlyWinnersLosers')}</div></div>
           </div>
@@ -693,7 +693,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
               <label htmlFor="mo-lesson">{t('tracker.monthlyLesson')}</label>
               <textarea id="mo-lesson" rows="3" className="input-dark portfolio-note" value={monthlySnapshot.monthlyLesson || ''} onChange={(e) => setMonthlyField('monthlyLesson', e.target.value)} />
               <label htmlFor="mo-result-manual">{t('tracker.monthlyResult')}</label>
-              <input type="text" id="mo-result-manual" className="input-dark tracker-monthly-single" value={monthlySnapshot.monthlyResult || formatMoney(monthlyAutoSnapshot.net || 0, isEnglish) || ''} onChange={(e) => setMonthlyField('monthlyResult', e.target.value)} placeholder="Synthèse manuelle" />
+              <input type="text" id="mo-result-manual" className="input-dark tracker-monthly-single" value={monthlySnapshot.monthlyResult || formatMoney(monthlyAutoSnapshot.net || 0, isEnglish, fxRate) || ''} onChange={(e) => setMonthlyField('monthlyResult', e.target.value)} placeholder="Synthèse manuelle" />
             </div>
           </div>
 
@@ -879,7 +879,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
 
           <div className="stats-row" id="w-stats">
             <div className="stat-box"><div className="v">{weeklyStats.count}</div><div className="l">{t('tracker.weeklyTradesCount')}</div></div>
-            <div className="stat-box"><div className={`v ${weeklyStats.net >= 0 ? 'pos' : 'neg'}`}>{formatMoney(weeklyStats.net, isEnglish)} {currencySymbol}</div><div className="l">{t('tracker.weeklyNet')}</div></div>
+            <div className="stat-box"><div className={`v ${weeklyStats.net >= 0 ? 'pos' : 'neg'}`}>{formatMoney(weeklyStats.net, isEnglish, fxRate)} {currencySymbol}</div><div className="l">{t('tracker.weeklyNet')}</div></div>
             <div className="stat-box"><div className="v">{weeklyWinrate.toFixed(1)} %</div><div className="l">{t('tracker.weeklyWinrate')}</div></div>
             <div className="stat-box"><div className="v">{weeklyStats.wins} / {weeklyStats.losses}</div><div className="l">{t('tracker.weeklyWinLose')}</div></div>
             <div className="stat-box"><div className="v">{weeklyStats.count ? (weeklyStats.net / weeklyStats.count).toLocaleString(isEnglish ? 'en-US' : 'fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : (isEnglish ? '0.00' : '0,00')} {currencySymbol}</div><div className="l">{t('tracker.weeklyAvgPerTrade')}</div></div>
@@ -922,10 +922,10 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
                           <option value="short">Short</option>
                         </select>
                       </td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.entry, isEnglish)} onChange={(e) => updateWeeklyTrade(originalIndex, { entry: toStoredAmount(e.target.value, isEnglish) })} /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.exit, isEnglish)} onChange={(e) => updateWeeklyTrade(originalIndex, { exit: toStoredAmount(e.target.value, isEnglish) })} /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.entry, isEnglish, fxRate)} onChange={(e) => updateWeeklyTrade(originalIndex, { entry: toStoredAmount(e.target.value, isEnglish, fxRate) })} /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.exit, isEnglish, fxRate)} onChange={(e) => updateWeeklyTrade(originalIndex, { exit: toStoredAmount(e.target.value, isEnglish, fxRate) })} /></td>
                       <td><input className="input-dark invest-holding-input" type="text" value={row.rr || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { rr: e.target.value })} /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.result, isEnglish)} onChange={(e) => updateWeeklyTrade(originalIndex, { result: toStoredAmount(e.target.value, isEnglish) })} /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.result, isEnglish, fxRate)} onChange={(e) => updateWeeklyTrade(originalIndex, { result: toStoredAmount(e.target.value, isEnglish, fxRate) })} /></td>
                       <td><input className="input-dark invest-holding-input" type="text" value={row.emotion || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { emotion: e.target.value })} /></td>
                       <td><input className="input-dark invest-holding-input" type="text" value={row.comment || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { comment: e.target.value })} /></td>
                       <td>
