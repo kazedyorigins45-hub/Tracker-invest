@@ -21,13 +21,13 @@ const NAV = [
 ];
 
 const MANDATORY_DOCS = [
-  'Diagnostics obligatoires',
-  'DPE / audit énergétique',
-  'Assurance PNO / loyers impayés',
-  'Bail, état des lieux, inventaire',
-  'Règlement de copro & PV AG',
-  'Urbanisme / autorisation location',
-  'Offre de prêt signée & assurance emprunteur',
+  'invest.immoCheckDiag',
+  'invest.immoCheckDpe',
+  'invest.immoCheckAss',
+  'invest.immoCheckBail',
+  'invest.immoCheckCopro',
+  'invest.immoCheckUrban',
+  'invest.immoCheckFinance',
 ];
 
 const HUB_SEGMENTS = [
@@ -75,13 +75,13 @@ const IMMO_DEFAULTS = {
 };
 
 const IMMO_CHECKS = [
-  { k: 'diag', l: 'Diagnostics obligatoires (amiante, plomb, termites, gaz, élec…)' },
-  { k: 'dpe', l: 'DPE / audit énergétique' },
-  { k: 'ass', l: 'Assurance PNO / loyers impayés' },
-  { k: 'bail', l: 'Bail, état des lieux, inventaire' },
-  { k: 'copro', l: 'Règlement de copro & PV AG' },
-  { k: 'urban', l: 'Urbanisme / autorisation location / taxe séjour' },
-  { k: 'finance', l: 'Offre de prêt signée & assurance emprunteur' },
+  { k: 'diag', tKey: 'invest.immoCheckDiag' },
+  { k: 'dpe', tKey: 'invest.immoCheckDpe' },
+  { k: 'ass', tKey: 'invest.immoCheckAss' },
+  { k: 'bail', tKey: 'invest.immoCheckBail' },
+  { k: 'copro', tKey: 'invest.immoCheckCopro' },
+  { k: 'urban', tKey: 'invest.immoCheckUrban' },
+  { k: 'finance', tKey: 'invest.immoCheckFinance' },
 ];
 
 function emptyImmoFields() {
@@ -1151,7 +1151,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
             <h2>{t('invest.immoMemoTitle')}</h2>
             <div className="immo-check-grid">
               {IMMO_CHECKS.map((doc) => (
-                <label key={doc.k} className="memo-check"><input type="checkbox" checked={!!activeProperty.checklist?.[doc.k]} onChange={(e) => setImmoChecklist(doc.k, e.target.checked)} /><span>{doc.l}</span></label>
+                <label key={doc.k} className="memo-check"><input type="checkbox" checked={!!activeProperty.checklist?.[doc.k]} onChange={(e) => setImmoChecklist(doc.k, e.target.checked)} /><span>{t(doc.tKey)}</span></label>
               ))}
             </div>
             <p className="hint">{t('invest.immoMemoHint')}</p>
@@ -1454,10 +1454,10 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
           <p className="page-sub">{t('invest.memoSub')}</p>
           <div className="card">
             <div className="grid-2 portfolio-grid-spaced">
-              {MANDATORY_DOCS.map((doc) => (
-                <label key={doc} className="memo-check">
-                  <input type="checkbox" checked={!!data.memoDocs?.[doc]} onChange={() => toggleDoc(doc)} />
-                  <span>{doc}</span>
+              {MANDATORY_DOCS.map((tKey) => (
+                <label key={tKey} className="memo-check">
+                  <input type="checkbox" checked={!!data.memoDocs?.[tKey]} onChange={() => toggleDoc(tKey)} />
+                  <span>{t(tKey)}</span>
                 </label>
               ))}
             </div>
