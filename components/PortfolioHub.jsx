@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -105,47 +105,47 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
 
         <div className="portfolio-stack">
           <div className="card portfolio-card portfolio-card--accent portfolio-card--large">
-            <h2>{t(‘portfolio.objectiveSectionTitle’)}</h2>
+            <h2>{t('portfolio.objectiveSectionTitle')}</h2>
             <div className="grid-2 portfolio-grid-spaced">
-              <div className="field-block"><label>{t(‘portfolio.objectiveTitleLabel’)}</label><input className="input-dark" type="text" value={data.title} onChange={(e) => update({ title: e.target.value })} placeholder="Ex. Liberté financière, retraite…" /></div>
-              <div className="field-block"><label>{t(‘portfolio.objectiveGlobalLabel’)}</label><input className="input-dark" type="text" value={data.target} onChange={(e) => update({ target: e.target.value })} placeholder="500000" /></div>
+              <div className="field-block"><label>{t('portfolio.objectiveTitleLabel')}</label><input className="input-dark" type="text" value={data.title} onChange={(e) => update({ title: e.target.value })} placeholder="Ex. Liberté financière, retraite…" /></div>
+              <div className="field-block"><label>{t('portfolio.objectiveGlobalLabel')}</label><input className="input-dark" type="text" value={data.target} onChange={(e) => update({ target: e.target.value })} placeholder="500000" /></div>
             </div>
-            <div className="grid-2" style={{ marginTop: ‘0.5rem’ }}>
-              <div className="field-block"><label>{t(‘portfolio.positionsValueLabel’)}</label><input className="input-dark" type="text" value={data.positionsValue} onChange={(e) => update({ positionsValue: e.target.value })} placeholder="ex. 125000" /></div>
-              <div className="field-block"><label>{t(‘portfolio.tradingNetLabel’)}</label><input className="input-dark" type="text" value={data.tradingNetValue} onChange={(e) => update({ tradingNetValue: e.target.value })} placeholder="ex. 4800" /></div>
+            <div className="grid-2" style={{ marginTop: '0.5rem' }}>
+              <div className="field-block"><label>{t('portfolio.positionsValueLabel')}</label><input className="input-dark" type="text" value={data.positionsValue} onChange={(e) => update({ positionsValue: e.target.value })} placeholder="ex. 125000" /></div>
+              <div className="field-block"><label>{t('portfolio.tradingNetLabel')}</label><input className="input-dark" type="text" value={data.tradingNetValue} onChange={(e) => update({ tradingNetValue: e.target.value })} placeholder="ex. 4800" /></div>
             </div>
-            <p className="hint" style={{ marginTop: ‘0.25rem’ }}>{t(‘portfolio.optionalTargetsHint’)}</p>
-            <div className="grid-2" style={{ marginTop: ‘0.5rem’ }}>
-              <div><label>{t(‘portfolio.targetActifsLabel’)}</label><input className="input-dark" type="text" value={data.targetActifs} onChange={(e) => update({ targetActifs: e.target.value })} placeholder="ex. 200000" /></div>
-              <div><label>{t(‘portfolio.targetPassifLabel’)}</label><input className="input-dark" type="text" value={data.targetPassif} onChange={(e) => update({ targetPassif: e.target.value })} placeholder="ex. 80000" /></div>
+            <p className="hint" style={{ marginTop: '0.25rem' }}>{t('portfolio.optionalTargetsHint')}</p>
+            <div className="grid-2" style={{ marginTop: '0.5rem' }}>
+              <div><label>{t('portfolio.targetActifsLabel')}</label><input className="input-dark" type="text" value={data.targetActifs} onChange={(e) => update({ targetActifs: e.target.value })} placeholder="ex. 200000" /></div>
+              <div><label>{t('portfolio.targetPassifLabel')}</label><input className="input-dark" type="text" value={data.targetPassif} onChange={(e) => update({ targetPassif: e.target.value })} placeholder="ex. 80000" /></div>
             </div>
             <div className="portfolio-single-field">
-              <label>{t(‘portfolio.targetDispoLabel’)}</label>
+              <label>{t('portfolio.targetDispoLabel')}</label>
               <input className="input-dark" type="text" value={data.targetDispo} onChange={(e) => update({ targetDispo: e.target.value })} placeholder="ex. 50000" />
             </div>
-            <label className="field-label">{t(‘portfolio.noteLabel’)}</label>
+            <label className="field-label">{t('portfolio.noteLabel')}</label>
             <textarea className="input-dark portfolio-note" rows="2" value={data.note} onChange={(e) => update({ note: e.target.value })} placeholder="Rappel : ce que tu inclus ou exclus de ce chiffre…" />
             <div className="toolbar">
-              <button className="btn" type="button" onClick={handleSaveObjective} disabled={saveStatus === ‘saving’}>{t(‘portfolio.saveBtn’)}</button>
-              <button className="btn btn-ghost" type="button" onClick={() => setSaveStatus(‘refreshed’)}>{t(‘portfolio.refreshBtn’)}</button>
+              <button className="btn" type="button" onClick={handleSaveObjective} disabled={saveStatus === 'saving'}>{t('portfolio.saveBtn')}</button>
+              <button className="btn btn-ghost" type="button" onClick={() => setSaveStatus('refreshed')}>{t('portfolio.refreshBtn')}</button>
             </div>
-            {saveStatus ? <p className="form-message">{saveStatus === ‘saving’ ? t(‘portfolio.statusSaving’) : saveStatus === ‘saved’ ? t(‘portfolio.statusSaved’) : saveStatus === ‘refreshed’ ? t(‘portfolio.statusRefreshed’) : t(‘portfolio.statusError’)}</p> : null}
+            {saveStatus ? <p className="form-message">{saveStatus === 'saving' ? t('portfolio.statusSaving') : saveStatus === 'saved' ? t('portfolio.statusSaved') : saveStatus === 'refreshed' ? t('portfolio.statusRefreshed') : t('portfolio.statusError')}</p> : null}
           </div>
 
           <div className="card portfolio-card">
-            <h2>{t(‘portfolio.progressTitle’)}</h2>
+            <h2>{t('portfolio.progressTitle')}</h2>
             <div className="stats-row portfolio-stats">
-              <div className="stat-box"><div className="v">{formatEuro(positionsValue)}</div><div className="l">{t(‘portfolio.statPositions’)}</div></div>
-              <div className="stat-box"><div className="v pos">+{formatEuro(tradingNetValue)}</div><div className="l">{t(‘portfolio.statTradingNet’)}</div></div>
-              <div className="stat-box"><div className="v">{formatEuro(totalValue)}</div><div className="l">{t(‘portfolio.statTotal’)}</div></div>
-              <div className="stat-box"><div className="v">{progressValue}%</div><div className="l">{t(‘portfolio.statPercent’)}</div></div>
+              <div className="stat-box"><div className="v">{formatEuro(positionsValue)}</div><div className="l">{t('portfolio.statPositions')}</div></div>
+              <div className="stat-box"><div className="v pos">+{formatEuro(tradingNetValue)}</div><div className="l">{t('portfolio.statTradingNet')}</div></div>
+              <div className="stat-box"><div className="v">{formatEuro(totalValue)}</div><div className="l">{t('portfolio.statTotal')}</div></div>
+              <div className="stat-box"><div className="v">{progressValue}%</div><div className="l">{t('portfolio.statPercent')}</div></div>
             </div>
             <div className="progress-wrap">
               <div className="progress-bar"><div className="fill" style={{ width: `${progressValue}%` }} /></div>
-              <div className="progress-meta"><span>{t(‘portfolio.progressBarHint’)}</span><span><strong>{progressValue}%</strong></span></div>
+              <div className="progress-meta"><span>{t('portfolio.progressBarHint')}</span><span><strong>{progressValue}%</strong></span></div>
             </div>
-            <h3 style={{ fontFamily: ‘Cinzel, serif’, fontSize: ‘0.72rem’, letterSpacing: ‘0.1em’, color: ‘var(--gold)’, textTransform: ‘uppercase’, margin: ‘1.75rem 0 0.85rem’ }}>{t(‘portfolio.axesTitle’)}</h3>
-            <p className="hint" style={{ marginBottom: ‘1.1rem’ }}>{t(‘portfolio.axesHint’)}</p>
+            <h3 style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', letterSpacing: '0.1em', color: 'var(--gold)', textTransform: 'uppercase', margin: '1.75rem 0 0.85rem' }}>{t('portfolio.axesTitle')}</h3>
+            <p className="hint" style={{ marginBottom: '1.1rem' }}>{t('portfolio.axesHint')}</p>
             {axes.map((axis) => (
               <div key={axis.key} className="hub-axis">
                 <div className="hub-axis-head">
@@ -157,31 +157,31 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
                 </div>
               </div>
             ))}
-            <p className="hint">{t(‘portfolio.dataSourceHint’)}</p>
+            <p className="hint">{t('portfolio.dataSourceHint')}</p>
           </div>
 
           <div className="card portfolio-card">
-            <h2>{t(‘portfolio.lastSimTitle’)}</h2>
-            <p className="hint" style={{ marginTop: 0 }}>{t(‘portfolio.lastSimHint’)}</p>
-            <a href="/invest" style={{ color: ‘var(--gold-bright)’, fontSize: ‘0.85rem’, fontWeight: 600 }}>{t(‘portfolio.lastSimLink’)}</a>
+            <h2>{t('portfolio.lastSimTitle')}</h2>
+            <p className="hint" style={{ marginTop: 0 }}>{t('portfolio.lastSimHint')}</p>
+            <a href="/invest" style={{ color: 'var(--gold-bright)', fontSize: '0.85rem', fontWeight: 600 }}>{t('portfolio.lastSimLink')}</a>
           </div>
 
           <div className="grid-2">
             <div className="card portfolio-card">
-              <h2>{t(‘portfolio.tradingCardTitle’)}</h2>
+              <h2>{t('portfolio.tradingCardTitle')}</h2>
               <div className="stats-row">
-                <div className="stat-box"><div className="v pos">+{formatEuro(tradingNetValue)}</div><div className="l">{t(‘portfolio.tradingCardGains’)}</div></div>
-                <div className="stat-box"><div className="v neg">—</div><div className="l">{t(‘portfolio.tradingCardLosses’)}</div></div>
-                <div className="stat-box"><div className="v">—</div><div className="l">{t(‘portfolio.tradingCardTrades’)}</div></div>
+                <div className="stat-box"><div className="v pos">+{formatEuro(tradingNetValue)}</div><div className="l">{t('portfolio.tradingCardGains')}</div></div>
+                <div className="stat-box"><div className="v neg">—</div><div className="l">{t('portfolio.tradingCardLosses')}</div></div>
+                <div className="stat-box"><div className="v">—</div><div className="l">{t('portfolio.tradingCardTrades')}</div></div>
               </div>
-              <p className="hint"><a href="/tracker" style={{ color: ‘var(--gold-bright)’ }}>{t(‘portfolio.tradingCardLink’)}</a></p>
+              <p className="hint"><a href="/tracker" style={{ color: 'var(--gold-bright)' }}>{t('portfolio.tradingCardLink')}</a></p>
             </div>
             <div className="card portfolio-card">
-              <h2>{t(‘portfolio.investCardTitle’)}</h2>
+              <h2>{t('portfolio.investCardTitle')}</h2>
               <div className="stats-row">
-                <div className="stat-box"><div className="v">{formatEuro(positionsValue)}</div><div className="l">{t(‘portfolio.investCardPositions’)}</div></div>
+                <div className="stat-box"><div className="v">{formatEuro(positionsValue)}</div><div className="l">{t('portfolio.investCardPositions')}</div></div>
               </div>
-              <p className="hint"><a href="/invest" style={{ color: ‘var(--gold-bright)’ }}>{t(‘portfolio.investCardLink’)}</a></p>
+              <p className="hint"><a href="/invest" style={{ color: 'var(--gold-bright)' }}>{t('portfolio.investCardLink')}</a></p>
             </div>
           </div>
         </div>
