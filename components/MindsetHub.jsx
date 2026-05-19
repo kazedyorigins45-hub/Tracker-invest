@@ -339,7 +339,7 @@ export default function MindsetHub({ userEmail = '', planCode = 'starter', subsc
           <div className="routine-stack">
             <div className="card">
               <h2>{t('mindset.routinesTitle')}</h2>
-              <p className="hint">4 routines modifiables, à cocher chaque jour.</p>
+              <p className="hint">{t('mindset.routinesEditHint')}</p>
               <div className="routine-fields">
                 {state.routineLabels.map((label, index) => (
                   <div key={index} className="routine-field">

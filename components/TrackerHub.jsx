@@ -592,21 +592,21 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
   return (
     <div className="mindset-shell tracker-hub">
       <aside className={`sidebar${sidebarOpen ? ' sidebar--open' : ''}`}>
-        <div className="sidebar-close" onClick={closeSidebar} aria-label="Fermer le menu">✕</div>
+        <div className="sidebar-close" onClick={closeSidebar} aria-label={t('tracker.sidebarClose')}>✕</div>
         <div className="brand">
           <div className="tag">ELITE TRACKER</div>
           <Link href="/dashboard" className="brand-link"><h1>Elite Tracker</h1></Link>
-          <p className="tracker-quote">Carnet &amp; discipline</p>
-          <p className="app-plan">Abonnement : {subscriptionLabel}</p>
+          <p className="tracker-quote">{t('tracker.sidebarBrand')}</p>
+          <p className="app-plan">{t('tracker.sidebarSubscription')} : {subscriptionLabel}</p>
         </div>
 
         <nav className="sidebar-apps" aria-label="Navigation site">
-          <div className="sidebar-apps-label">Espaces</div>
-          <Link href="/" className="app-link">Accueil &amp; abonnements</Link>
-          <Link href="/tracker" className="app-link is-current">Trading — Elite Tracker</Link>
-          <Link href="/mindset" className="app-link">Mindset Invest</Link>
-          {canAccess(planCode, 'invest') ? <Link href="/invest" className="app-link">Investissement — Elite Invest</Link> : null}
-          {canAccess(planCode, 'portfolio') ? <Link href="/portfolio" className="app-link">Mes investissements</Link> : null}
+          <div className="sidebar-apps-label">{t('mindset.spaces')}</div>
+          <Link href="/" className="app-link">{t('app.dashboardLink')}</Link>
+          <Link href="/tracker" className="app-link is-current">{t('app.trading')}</Link>
+          <Link href="/mindset" className="app-link">{t('app.mindset')}</Link>
+          {canAccess(planCode, 'invest') ? <Link href="/invest" className="app-link">{t('app.invest')}</Link> : null}
+          {canAccess(planCode, 'portfolio') ? <Link href="/portfolio" className="app-link">{t('app.portfolio')}</Link> : null}
         </nav>
 
         <div className="sidebar-inner">
@@ -621,7 +621,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
           <p className="app-plan">{profileLabel}</p>
           <span style={{ wordBreak: 'break-all' }}>{userEmail}</span>
           <form action="/api/auth/logout" method="post">
-            <button type="submit" className="sidebar-logout">Déconnexion</button>
+            <button type="submit" className="sidebar-logout">{t('site.logout')}</button>
           </form>
         </div>
       </aside>
@@ -639,25 +639,25 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
         </div>
         <section className={`page ${page === 'cover' ? 'active' : ''}`}>
           <span className="dec-arrow" aria-hidden="true">↗</span>
-          <h1 className="page-title">Du mental au profit</h1>
-          <p className="page-hero">Tout commence par ton mindset. Ce carnet t’accompagne vers la rigueur, la clarté et la croissance — pour ce profil d’investissement.</p>
+          <h1 className="page-title">{t(‘tracker.coverHeroTitle’)}</h1>
+          <p className="page-hero">{t(‘tracker.coverHeroText’)}</p>
           <div className="card">
-            <h2>Journal de trading &amp; développement personnel</h2>
-            <div className="grid-3 tracker-cover-grid" style={{ marginTop: '1rem' }}>
+            <h2>{t(‘tracker.coverCardTitle’)}</h2>
+            <div className="grid-3 tracker-cover-grid" style={{ marginTop: ‘1rem’ }}>
               <div className="field-block">
-                <label>Nom</label>
-                <input className="input-dark tracker-cover-input" type="text" value={journalMeta.name || ''} onChange={(e) => setJournalMeta('name', e.target.value)} placeholder="Ton nom" />
+                <label>{t(‘tracker.coverLabelName’)}</label>
+                <input className="input-dark tracker-cover-input" type="text" value={journalMeta.name || ‘’} onChange={(e) => setJournalMeta(‘name’, e.target.value)} placeholder={t(‘tracker.coverName’)} />
               </div>
               <div className="field-block">
-                <label>Période</label>
-                <input className="input-dark tracker-cover-input" type="text" value={journalMeta.period || ''} onChange={(e) => setJournalMeta('period', e.target.value)} placeholder="ex. 2026 — T1" />
+                <label>{t(‘tracker.coverLabelPeriod’)}</label>
+                <input className="input-dark tracker-cover-input" type="text" value={journalMeta.period || ‘’} onChange={(e) => setJournalMeta(‘period’, e.target.value)} placeholder={t(‘tracker.coverPeriodPlaceholder’)} />
               </div>
               <div className="field-block">
-                <label>Objectif principal</label>
-                <input className="input-dark tracker-cover-input" type="text" value={journalMeta.mainGoal || ''} onChange={(e) => setJournalMeta('mainGoal', e.target.value)} placeholder="Objectif clé" />
+                <label>{t(‘tracker.coverLabelObjective’)}</label>
+                <input className="input-dark tracker-cover-input" type="text" value={journalMeta.mainGoal || ‘’} onChange={(e) => setJournalMeta(‘mainGoal’, e.target.value)} placeholder={t(‘tracker.coverObjectivePlaceholder’)} />
               </div>
             </div>
-            <p className="quote-footer">« Au milieu de chaque difficulté se trouve une opportunité. » — Albert Einstein</p>
+            <p className="quote-footer">{t(‘tracker.coverQuote’)}</p>
           </div>
         </section>
 
@@ -718,10 +718,10 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
             <h2>{t('tracker.monthlyNextTitle')}</h2>
             <textarea id="mo-next" rows="3" className="input-dark portfolio-note" value={monthlySnapshot.monthlyNext || ''} onChange={(e) => setMonthlyField('monthlyNext', e.target.value)} />
           </div>
-          <p className="quote-footer">« Ce que tu fais chaque jour t’amène là où tu seras demain. »</p>
+          <p className="quote-footer">{t(‘tracker.monthlyQuote’)}</p>
         </section>
 
-        <section className={`page ${page === 'mindset' ? 'active' : ''}`}>
+        <section className={`page ${page === ‘mindset’ ? ‘active’ : ‘’}`}>
           <h1 className="page-title">{t('tracker.mindsetTitle')}</h1>
           <p className="page-sub">{t('tracker.mindsetSub')}</p>
           <div className="grid-2 tracker-mindset-grid">
@@ -750,7 +750,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
               <textarea className="input-dark tracker-mindset-textarea" rows="4" value={data.mindsetMantras || ''} onChange={(e) => update({ mindsetMantras: e.target.value })} placeholder={t('tracker.mindsetMantrasPlaceholder')} />
             </article>
             <article className="card tracker-mindset-card">
-              <h2>État cible &amp; pièges</h2>
+              <h2>{t('tracker.mindsetTargetAndTraps')}</h2>
               <label className="field-label">{t('tracker.mindsetTargetState')}</label>
               <textarea className="input-dark tracker-mindset-textarea" rows="4" value={data.mindsetTargetState || ''} onChange={(e) => update({ mindsetTargetState: e.target.value })} placeholder={t('tracker.mindsetTargetStatePlaceholder')} />
               <label className="field-label">{t('tracker.mindsetPitfalls')}</label>
@@ -796,8 +796,8 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
         </section>
 
         <section className={`page ${page === 'plan' ? 'active' : ''}`}>
-          <h1 className="page-title">Plan de trading</h1>
-          <p className="page-hero">« Un plan de trading clarifie tes objectifs, structure ta méthode et réduit les erreurs émotionnelles. »</p>
+          <h1 className="page-title">{t('tracker.planTitle')}</h1>
+          <p className="page-hero">{t('tracker.planHero')}</p>
 
           <div className="card">
             <h2>{t('tracker.tradingPlanVisionTitle')}</h2>
@@ -882,12 +882,12 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
             <div className="stat-box"><div className={`v ${weeklyStats.net >= 0 ? 'pos' : 'neg'}`}>{formatMoney(weeklyStats.net, isEnglish)} {currencySymbol}</div><div className="l">{t('tracker.weeklyNet')}</div></div>
             <div className="stat-box"><div className="v">{weeklyWinrate.toFixed(1)} %</div><div className="l">{t('tracker.weeklyWinrate')}</div></div>
             <div className="stat-box"><div className="v">{weeklyStats.wins} / {weeklyStats.losses}</div><div className="l">{t('tracker.weeklyWinLose')}</div></div>
-            <div className="stat-box"><div className="v">{weeklyStats.count ? (weeklyStats.net / weeklyStats.count).toLocaleString(isEnglish ? 'en-US' : 'fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : (isEnglish ? '0.00' : '0,00')} {currencySymbol}</div><div className="l">Moyenne / trade</div></div>
-            <div className="stat-box"><div className="v">{weeklyProfitFactor == null ? '—' : weeklyProfitFactor.toFixed(2)}</div><div className="l">Facteur profit</div></div>
+            <div className="stat-box"><div className="v">{weeklyStats.count ? (weeklyStats.net / weeklyStats.count).toLocaleString(isEnglish ? 'en-US' : 'fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : (isEnglish ? '0.00' : '0,00')} {currencySymbol}</div><div className="l">{t('tracker.weeklyAvgPerTrade')}</div></div>
+            <div className="stat-box"><div className="v">{weeklyProfitFactor == null ? '—' : weeklyProfitFactor.toFixed(2)}</div><div className="l">{t('tracker.weeklyProfitFactor')}</div></div>
           </div>
 
           <div className="card" style={{ marginTop: '1rem', padding: '1rem' }}>
-            <h2 style={{ marginBottom: '0.75rem' }}>Graphique TradingView</h2>
+            <h2 style={{ marginBottom: '0.75rem' }}>{t('tracker.weeklyChartTitle')}</h2>
             <div id="tv-chart-weekly" style={{ width: '100%', height: '486px' }} />
           </div>
 
@@ -932,13 +932,13 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
                         <div className="s20-tv-stack">
                           <input className="input-dark invest-holding-input" type="url" value={row.tvUrl || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { tvUrl: e.target.value })} placeholder="tradingview.com/x/…" />
                           <button type="button" className="btn-ghost btn-compact s20-tv-open" onClick={() => {
-                            const u = String(row.tvUrl || '').trim();
-                            if (!u) return alert('Colle d’abord le lien TradingView.');
-                            window.open(u.startsWith('http') ? u : `https://${u}`, '_blank', 'noopener,noreferrer');
-                          }}>Ouvrir</button>
+                            const u = String(row.tvUrl || ‘’).trim();
+                            if (!u) return alert(t(‘tracker.weeklyOpenLink’));
+                            window.open(u.startsWith(‘http’) ? u : `https://${u}`, ‘_blank’, ‘noopener,noreferrer’);
+                          }}>{t(‘tracker.weeklyOpenLink’)}</button>
                         </div>
                       </td>
-                      <td><button type="button" className="btn btn-ghost" aria-label="Supprimer ce trade" onClick={() => removeWeeklyTrade(originalIndex)}>✕</button></td>
+                      <td><button type="button" className="btn btn-ghost" aria-label={t(‘tracker.weeklyDeleteTrade’)} onClick={() => removeWeeklyTrade(originalIndex)}>✕</button></td>
                     </tr>
                     );
                   })}
@@ -959,20 +959,20 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
               });
             }} />
           </div>
-          <p className="quote-footer">« La régularité bat le talent quand le talent n’est pas régulier. »</p>
+          <p className="quote-footer">{t(‘tracker.weeklyQuote’)}</p>
         </section>
 
         <section className={`page ${page === 'quarter' ? 'active' : ''}`}>
-          <h1 className="page-title">Réflexion trimestrielle</h1>
-          <p className="page-sub">Grille type carnet : réussites, émotions, axes d’amélioration, objectifs.</p>
+          <h1 className="page-title">{t(‘tracker.quarterTitle’)}</h1>
+          <p className="page-sub">{t(‘tracker.quarterSub2’)}</p>
           <div className="toolbar">
             <div>
-              <label htmlFor="q-year">Année</label>
-              <input type="number" id="q-year" className="input-dark tracker-quarter-input" min="2020" max="2100" step="1" value={data.quarterYear || ''} onChange={(e) => update({ quarterYear: e.target.value })} />
+              <label htmlFor="q-year">{t(‘tracker.quarterYearLabel’)}</label>
+              <input type="number" id="q-year" className="input-dark tracker-quarter-input" min="2020" max="2100" step="1" value={data.quarterYear || ‘’} onChange={(e) => update({ quarterYear: e.target.value })} />
             </div>
             <div>
-              <label htmlFor="q-n">Trimestre</label>
-              <select id="q-n" className="input-dark tracker-quarter-input" value={data.quarterNumber || '1'} onChange={(e) => update({ quarterNumber: e.target.value })}>
+              <label htmlFor="q-n">{t(‘tracker.quarterNumberLabel’)}</label>
+              <select id="q-n" className="input-dark tracker-quarter-input" value={data.quarterNumber || ‘1’} onChange={(e) => update({ quarterNumber: e.target.value })}>
                 <option value="1">T1</option>
                 <option value="2">T2</option>
                 <option value="3">T3</option>
@@ -981,74 +981,74 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
             </div>
           </div>
 
-          <div className="grid-2 tracker-mindset-grid" style={{ marginTop: '1rem' }}>
+          <div className="grid-2 tracker-mindset-grid" style={{ marginTop: ‘1rem’ }}>
             <div className="card card-q">
-              <h2>Mes réussites (3 derniers mois)</h2>
-              <label>Qu’ai-je bien fait ? De quoi suis-je fier ?</label>
-              <textarea className="input-dark portfolio-note" rows="5" value={quarterSnapshot.quarterSuccesses || ''} onChange={(e) => setQuarterField('quarterSuccesses', e.target.value)} />
+              <h2>{t(‘tracker.quarterSuccessesTitle’)}</h2>
+              <label>{t(‘tracker.quarterSuccessesLabel2’)}</label>
+              <textarea className="input-dark portfolio-note" rows="5" value={quarterSnapshot.quarterSuccesses || ‘’} onChange={(e) => setQuarterField(‘quarterSuccesses’, e.target.value)} />
             </div>
             <div className="card card-q">
-              <h2>Bilan émotionnel</h2>
-              <label>Respect du plan (ressenti)</label>
+              <h2>{t(‘tracker.quarterEmotionTitle’)}</h2>
+              <label>{t(‘tracker.quarterRespectLabel’)}</label>
               <div className="stars" id="q-stars" role="group" aria-label="Note sur 5">
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
                     key={star}
                     type="button"
-                    className={`star-btn ${Number(quarterSnapshot.quarterEmotionScore || 0) >= star ? 'is-active' : ''}`}
-                    onClick={() => setQuarterField('quarterEmotionScore', star)}
-                    aria-label={`${star} étoile${star > 1 ? 's' : ''}`}
+                    className={`star-btn ${Number(quarterSnapshot.quarterEmotionScore || 0) >= star ? ‘is-active’ : ‘’}`}
+                    onClick={() => setQuarterField(‘quarterEmotionScore’, star)}
+                    aria-label={`${star} étoile${star > 1 ? ‘s’ : ‘’}`}
                   >
                     ★
                   </button>
                 ))}
               </div>
-              <label>Quelle émotion a dominé ? Pourquoi ?</label>
-              <textarea className="input-dark portfolio-note" rows="4" value={quarterSnapshot.quarterEmotionReason || ''} onChange={(e) => setQuarterField('quarterEmotionReason', e.target.value)} />
+              <label>{t(‘tracker.quarterEmotionLabel2’)}</label>
+              <textarea className="input-dark portfolio-note" rows="4" value={quarterSnapshot.quarterEmotionReason || ‘’} onChange={(e) => setQuarterField(‘quarterEmotionReason’, e.target.value)} />
             </div>
             <div className="card card-q">
-              <h2>Points à améliorer</h2>
-              <label>Freins, erreurs récurrentes…</label>
-              <textarea className="input-dark portfolio-note" rows="5" value={quarterSnapshot.quarterImprove || ''} onChange={(e) => setQuarterField('quarterImprove', e.target.value)} />
+              <h2>{t(‘tracker.quarterImproveTitle’)}</h2>
+              <label>{t(‘tracker.quarterImproveLabel2’)}</label>
+              <textarea className="input-dark portfolio-note" rows="5" value={quarterSnapshot.quarterImprove || ‘’} onChange={(e) => setQuarterField(‘quarterImprove’, e.target.value)} />
             </div>
             <div className="card card-q">
-              <h2>Réévaluation des objectifs</h2>
-              <label>Ajuster mes objectifs ? Mes moyens sont-ils cohérents ?</label>
-              <textarea className="input-dark portfolio-note" rows="5" value={quarterSnapshot.quarterGoalsReeval || ''} onChange={(e) => setQuarterField('quarterGoalsReeval', e.target.value)} />
+              <h2>{t(‘tracker.quarterGoalsReevalTitle’)}</h2>
+              <label>{t(‘tracker.quarterGoalsReevalLabel2’)}</label>
+              <textarea className="input-dark portfolio-note" rows="5" value={quarterSnapshot.quarterGoalsReeval || ‘’} onChange={(e) => setQuarterField(‘quarterGoalsReeval’, e.target.value)} />
             </div>
             <div className="card card-q">
-              <h2>Objectifs court terme atteints ?</h2>
-              <div className="check-row"><input type="radio" name="q-obj" id="q-obj-y" value="oui" checked={quarterSnapshot.quarterShortTerm === 'oui'} onChange={() => setQuarterField('quarterShortTerm', 'oui')} /><label htmlFor="q-obj-y" style={{ display: 'inline' }}>Oui</label></div>
-              <div className="check-row"><input type="radio" name="q-obj" id="q-obj-n" value="non" checked={quarterSnapshot.quarterShortTerm === 'non'} onChange={() => setQuarterField('quarterShortTerm', 'non')} /><label htmlFor="q-obj-n" style={{ display: 'inline' }}>Non</label></div>
-              <div className="check-row"><input type="radio" name="q-obj" id="q-obj-p" value="cours" checked={quarterSnapshot.quarterShortTerm === 'cours'} onChange={() => setQuarterField('quarterShortTerm', 'cours')} /><label htmlFor="q-obj-p" style={{ display: 'inline' }}>En cours</label></div>
-              <label>Précisions</label>
-              <textarea className="input-dark portfolio-note" rows="3" value={quarterSnapshot.quarterShortPrecision || ''} onChange={(e) => setQuarterField('quarterShortPrecision', e.target.value)} />
+              <h2>{t(‘tracker.quarterShortTermTitle’)}</h2>
+              <div className="check-row"><input type="radio" name="q-obj" id="q-obj-y" value="oui" checked={quarterSnapshot.quarterShortTerm === ‘oui’} onChange={() => setQuarterField(‘quarterShortTerm’, ‘oui’)} /><label htmlFor="q-obj-y" style={{ display: ‘inline’ }}>{t(‘tracker.quarterShortTermYes’)}</label></div>
+              <div className="check-row"><input type="radio" name="q-obj" id="q-obj-n" value="non" checked={quarterSnapshot.quarterShortTerm === ‘non’} onChange={() => setQuarterField(‘quarterShortTerm’, ‘non’)} /><label htmlFor="q-obj-n" style={{ display: ‘inline’ }}>{t(‘tracker.quarterShortTermNo’)}</label></div>
+              <div className="check-row"><input type="radio" name="q-obj" id="q-obj-p" value="cours" checked={quarterSnapshot.quarterShortTerm === ‘cours’} onChange={() => setQuarterField(‘quarterShortTerm’, ‘cours’)} /><label htmlFor="q-obj-p" style={{ display: ‘inline’ }}>{t(‘tracker.quarterShortTermInProgress’)}</label></div>
+              <label>{t(‘tracker.quarterShortPrecisionLabel’)}</label>
+              <textarea className="input-dark portfolio-note" rows="3" value={quarterSnapshot.quarterShortPrecision || ‘’} onChange={(e) => setQuarterField(‘quarterShortPrecision’, e.target.value)} />
             </div>
             <div className="card card-q">
-              <h2>Engagement pour le trimestre suivant</h2>
-              <label>Ce que je m’engage à faire</label>
-              <textarea className="input-dark portfolio-note" rows="5" value={quarterSnapshot.quarterCommitment || ''} onChange={(e) => setQuarterField('quarterCommitment', e.target.value)} />
+              <h2>{t(‘tracker.quarterCommitmentTitle’)}</h2>
+              <label>{t(‘tracker.quarterCommitmentLabel2’)}</label>
+              <textarea className="input-dark portfolio-note" rows="5" value={quarterSnapshot.quarterCommitment || ‘’} onChange={(e) => setQuarterField(‘quarterCommitment’, e.target.value)} />
             </div>
           </div>
 
-          <div className="card" style={{ marginTop: '1rem' }}>
-            <h2>Synthèse &amp; stratégie</h2>
-            <label>Bilan chiffré / ressenti global</label>
-            <textarea className="input-dark portfolio-note" rows="3" value={quarterSnapshot.quarterSummary || ''} onChange={(e) => setQuarterField('quarterSummary', e.target.value)} />
-            <label>Principales leçons</label>
-            <textarea className="input-dark portfolio-note" rows="3" value={quarterSnapshot.quarterLessons || ''} onChange={(e) => setQuarterField('quarterLessons', e.target.value)} />
-            <label>Évolution du plan</label>
-            <textarea className="input-dark portfolio-note" rows="3" value={quarterSnapshot.quarterStrategy || ''} onChange={(e) => setQuarterField('quarterStrategy', e.target.value)} />
-            <label>Intentions prochain trimestre</label>
-            <textarea className="input-dark portfolio-note" rows="3" value={quarterSnapshot.quarterForward || ''} onChange={(e) => setQuarterField('quarterForward', e.target.value)} />
+          <div className="card" style={{ marginTop: ‘1rem’ }}>
+            <h2>{t(‘tracker.quarterSummaryTitle’)}</h2>
+            <label>{t(‘tracker.quarterSummaryLabel2’)}</label>
+            <textarea className="input-dark portfolio-note" rows="3" value={quarterSnapshot.quarterSummary || ‘’} onChange={(e) => setQuarterField(‘quarterSummary’, e.target.value)} />
+            <label>{t(‘tracker.quarterLessonsLabel’)}</label>
+            <textarea className="input-dark portfolio-note" rows="3" value={quarterSnapshot.quarterLessons || ‘’} onChange={(e) => setQuarterField(‘quarterLessons’, e.target.value)} />
+            <label>{t(‘tracker.quarterStrategyLabel’)}</label>
+            <textarea className="input-dark portfolio-note" rows="3" value={quarterSnapshot.quarterStrategy || ‘’} onChange={(e) => setQuarterField(‘quarterStrategy’, e.target.value)} />
+            <label>{t(‘tracker.quarterForwardLabel’)}</label>
+            <textarea className="input-dark portfolio-note" rows="3" value={quarterSnapshot.quarterForward || ‘’} onChange={(e) => setQuarterField(‘quarterForward’, e.target.value)} />
           </div>
-          <p className="quote-footer">« Ce que tu fais chaque jour t’amène là où tu seras demain. »</p>
+          <p className="quote-footer">{t(‘tracker.monthlyQuote’)}</p>
         </section>
 
         <section className={`page ${page === 'year' ? 'active' : ''}`}>
           <span className="dec-arrow" aria-hidden="true">↗</span>
-          <h1 className="page-title">Bilan annuel</h1>
-          <p className="page-sub">Une ligne par mois — complète les stats et leçons (les totaux de trades peuvent être repris à la main ou depuis ton suivi).</p>
+          <h1 className="page-title">{t('tracker.yearTitle2')}</h1>
+          <p className="page-sub">{t('tracker.yearSub2')}</p>
           <div className="toolbar">
             <div>
               <label htmlFor="an-year">{t('tracker.annualYear')}</label>
@@ -1089,42 +1089,42 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
 
         <section className={`page ${page === 'series20' ? 'active' : ''}`}>
           <span className="dec-arrow" aria-hidden="true">↗</span>
-          <h1 className="page-title">Série de 20 trades</h1>
-          <p className="page-sub">Deux parties de 10 + bilan G20 calculé automatiquement. Colle pour chaque ligne le <strong>lien snapshot TradingView</strong> (menu graphique → Partager → copier le lien) pour rouvrir le trade en un clic. <strong>Archive</strong> une série terminée pour comparer tes stats d’une série à l’autre.</p>
+          <h1 className="page-title">{t(‘tracker.seriesTitle’)}</h1>
+          <p className="page-sub">{t(‘tracker.seriesSub2’)}</p>
 
           <div className="card">
-            <h2>Historique des séries enregistrées</h2>
-            <p className="hint" style={{ marginTop: 0 }}>Chaque archive conserve les 20 lignes, le bilan et les indicateurs au moment de l’enregistrement. Utilise <strong>Restaurer</strong> pour recharger une série dans l’éditeur (remplace la série actuelle).</p>
+            <h2>{t(‘tracker.seriesHistoryTitle’)}</h2>
+            <p className="hint" style={{ marginTop: 0 }}>{t(‘tracker.seriesHistoryHint’)}</p>
             <div className="table-wrap">
               <table className="data">
                 <thead>
-                  <tr><th>Date</th><th>Libellé</th><th>% réussite</th><th>G / P</th><th>Ratio</th><th></th></tr>
+                  <tr><th>{t(‘tracker.seriesHistoryDateLabel’)}</th><th>{t(‘tracker.seriesHistoryLabelCol’)}</th><th>{t(‘tracker.seriesHistoryRateCol’)}</th><th>{t(‘tracker.seriesHistoryGPCol’)}</th><th>{t(‘tracker.seriesHistoryRatioCol’)}</th><th></th></tr>
                 </thead>
                 <tbody>
                   {seriesHistory.length ? seriesHistory.map((item, index) => (
                     <tr key={item.id || index}>
-                      <td>{item.savedAt ? new Date(item.savedAt).toLocaleString('fr-FR') : '—'}</td>
-                      <td>{item.label || '—'}</td>
-                      <td>{typeof item.stats?.winrate === 'number' ? `${item.stats.winrate.toFixed(0)} %` : '—'}</td>
-                      <td>{typeof item.stats?.wins === 'number' ? `${item.stats.wins} / ${item.stats.losses ?? '—'}` : '—'}</td>
-                      <td>{typeof item.stats?.ratio === 'number' ? item.stats.ratio.toFixed(2) : '—'}</td>
+                      <td>{item.savedAt ? new Date(item.savedAt).toLocaleString(‘fr-FR’) : ‘—‘}</td>
+                      <td>{item.label || ‘—‘}</td>
+                      <td>{typeof item.stats?.winrate === ‘number’ ? `${item.stats.winrate.toFixed(0)} %` : ‘—‘}</td>
+                      <td>{typeof item.stats?.wins === ‘number’ ? `${item.stats.wins} / ${item.stats.losses ?? ‘—‘}` : ‘—‘}</td>
+                      <td>{typeof item.stats?.ratio === ‘number’ ? item.stats.ratio.toFixed(2) : ‘—‘}</td>
                       <td>
-                        <button type="button" className="btn btn-ghost btn-compact" onClick={() => update({ seriesP1: item.part1 || [], seriesP2: item.part2 || [], seriesPlan: item.bilan?.plan || '', seriesEmotion: item.bilan?.emotion || '', seriesLesson: item.bilan?.lesson || '', seriesNext: item.bilan?.next || '' })}>Restaurer</button>
-                        <button type="button" className="btn btn-ghost btn-compact" aria-label={`Supprimer l’archive ${item.label || index + 1}`} style={{ marginLeft: '0.35rem', color: 'var(--danger)', borderColor: 'rgba(196,92,92,0.4)' }} onClick={() => update({ seriesHistory: seriesHistory.filter((_, i) => i !== index) })}>Suppr</button>
+                        <button type="button" className="btn btn-ghost btn-compact" onClick={() => update({ seriesP1: item.part1 || [], seriesP2: item.part2 || [], seriesPlan: item.bilan?.plan || ‘’, seriesEmotion: item.bilan?.emotion || ‘’, seriesLesson: item.bilan?.lesson || ‘’, seriesNext: item.bilan?.next || ‘’ })}>{t(‘tracker.seriesHistoryRestore’)}</button>
+                        <button type="button" className="btn btn-ghost btn-compact" aria-label={`${t(‘tracker.seriesHistoryDelete’)} ${item.label || index + 1}`} style={{ marginLeft: ‘0.35rem’, color: ‘var(--danger)’, borderColor: ‘rgba(196,92,92,0.4)’ }} onClick={() => update({ seriesHistory: seriesHistory.filter((_, i) => i !== index) })}>{t(‘tracker.seriesHistoryDelete’)}</button>
                       </td>
                     </tr>
-                  )) : <tr><td colSpan="6" className="hint">Aucune archive pour l’instant.</td></tr>}
+                  )) : <tr><td colSpan="6" className="hint">{t(‘tracker.seriesHistoryEmpty’)}</td></tr>}
                 </tbody>
               </table>
             </div>
           </div>
 
           <div className="card">
-            <h2>Partie 1 (trades 1–10)</h2>
+            <h2>{t(‘tracker.seriesPart1Title’)}</h2>
             <div className="table-wrap">
               <table className="data">
                 <thead>
-                  <tr><th>N°</th><th>Date</th><th>Actif</th><th>Direction</th><th>Entrée</th><th>SL</th><th>TP</th><th>Résultat</th><th>Émotion</th><th>TradingView</th></tr>
+                  <tr><th>{t(‘tracker.seriesColNum’)}</th><th>{t(‘tracker.seriesColDate’)}</th><th>{t(‘tracker.seriesColAsset’)}</th><th>{t(‘tracker.seriesColDirection’)}</th><th>{t(‘tracker.seriesColEntry’)}</th><th>{t(‘tracker.seriesColSL’)}</th><th>{t(‘tracker.seriesColTP’)}</th><th>{t(‘tracker.seriesColResult’)}</th><th>{t(‘tracker.seriesColEmotion’)}</th><th>TradingView</th></tr>
                 </thead>
                 <tbody>
                   {series20Part1.map((row, index) => (
@@ -1142,10 +1142,10 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
                         <div className="s20-tv-stack">
                           <input type="url" className="input-dark tracker-series-input" value={row.tvUrl || ''} onChange={(e) => updateSeriesRow('seriesP1', index, 'tvUrl', e.target.value)} placeholder="tradingview.com/x/…" />
                           <button type="button" className="btn-ghost btn-compact s20-tv-open" onClick={() => {
-                            const u = String(row.tvUrl || '').trim();
-                            if (!u) return alert('Colle d’abord le lien TradingView.');
-                            window.open(u.startsWith('http') ? u : `https://${u}`, '_blank', 'noopener,noreferrer');
-                          }}>Ouvrir</button>
+                            const u = String(row.tvUrl || ‘’).trim();
+                            if (!u) return alert(t(‘tracker.weeklyOpenLink’));
+                            window.open(u.startsWith(‘http’) ? u : `https://${u}`, ‘_blank’, ‘noopener,noreferrer’);
+                          }}>{t(‘tracker.seriesOpenLink’)}</button>
                         </div>
                       </td>
                     </tr>
@@ -1156,11 +1156,11 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
           </div>
 
           <div className="card">
-            <h2>Partie 2 (trades 11–20)</h2>
+            <h2>{t(‘tracker.seriesPart2Title’)}</h2>
             <div className="table-wrap">
               <table className="data">
                 <thead>
-                  <tr><th>N°</th><th>Date</th><th>Actif</th><th>Direction</th><th>Entrée</th><th>SL</th><th>TP</th><th>Résultat</th><th>Émotion</th><th>TradingView</th></tr>
+                  <tr><th>{t(‘tracker.seriesColNum’)}</th><th>{t(‘tracker.seriesColDate’)}</th><th>{t(‘tracker.seriesColAsset’)}</th><th>{t(‘tracker.seriesColDirection’)}</th><th>{t(‘tracker.seriesColEntry’)}</th><th>{t(‘tracker.seriesColSL’)}</th><th>{t(‘tracker.seriesColTP’)}</th><th>{t(‘tracker.seriesColResult’)}</th><th>{t(‘tracker.seriesColEmotion’)}</th><th>TradingView</th></tr>
                 </thead>
                 <tbody>
                   {series20Part2.map((row, index) => (
@@ -1178,10 +1178,10 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
                         <div className="s20-tv-stack">
                           <input type="url" className="input-dark tracker-series-input" value={row.tvUrl || ''} onChange={(e) => updateSeriesRow('seriesP2', index, 'tvUrl', e.target.value)} placeholder="tradingview.com/x/…" />
                           <button type="button" className="btn-ghost btn-compact s20-tv-open" onClick={() => {
-                            const u = String(row.tvUrl || '').trim();
-                            if (!u) return alert('Colle d’abord le lien TradingView.');
-                            window.open(u.startsWith('http') ? u : `https://${u}`, '_blank', 'noopener,noreferrer');
-                          }}>Ouvrir</button>
+                            const u = String(row.tvUrl || ‘’).trim();
+                            if (!u) return alert(t(‘tracker.weeklyOpenLink’));
+                            window.open(u.startsWith(‘http’) ? u : `https://${u}`, ‘_blank’, ‘noopener,noreferrer’);
+                          }}>{t(‘tracker.seriesOpenLink’)}</button>
                         </div>
                       </td>
                     </tr>
@@ -1192,42 +1192,42 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
           </div>
 
           <div className="card">
-            <h2>Bilan G20</h2>
+            <h2>{t(‘tracker.seriesBilanTitle’)}</h2>
             <div className="stats-row">
-              <div className="stat-box"><div className="v">{seriesWinrate}%</div><div className="l">% réussite</div></div>
-              <div className="stat-box"><div className="v">{seriesStats.wins} / {seriesStats.losses}</div><div className="l">Gagnants / perdants</div></div>
-              <div className="stat-box"><div className={`v ${seriesStats.net >= 0 ? 'pos' : 'neg'}`}>{seriesStats.net.toFixed(2)}€</div><div className="l">Net</div></div>
+              <div className="stat-box"><div className="v">{seriesWinrate}%</div><div className="l">{t(‘tracker.seriesRateLabel’)}</div></div>
+              <div className="stat-box"><div className="v">{seriesStats.wins} / {seriesStats.losses}</div><div className="l">{t(‘tracker.seriesWinLoseLabel’)}</div></div>
+              <div className="stat-box"><div className={`v ${seriesStats.net >= 0 ? ‘pos’ : ‘neg’}`}>{seriesStats.net.toFixed(2)}€</div><div className="l">{t(‘tracker.seriesNetLabel’)}</div></div>
             </div>
             <div className="grid-2 s20-bilan-grid">
               <div>
-                <label>Respect du plan</label>
-                <textarea className="input-dark" rows="2" value={data.seriesPlan || ''} onChange={(e) => update({ seriesPlan: e.target.value })} />
+                <label>{t(‘tracker.seriesPlanLabel’)}</label>
+                <textarea className="input-dark" rows="2" value={data.seriesPlan || ‘’} onChange={(e) => update({ seriesPlan: e.target.value })} />
               </div>
               <div className="s20-emotion-row s20-emotion-row--stacked">
-                <label>Émotion dominante du bloc</label>
-                <input className="input-dark tracker-series-input" type="text" value={data.seriesEmotion || ''} onChange={(e) => update({ seriesEmotion: e.target.value })} />
+                <label>{t(‘tracker.seriesEmotionLabel’)}</label>
+                <input className="input-dark tracker-series-input" type="text" value={data.seriesEmotion || ‘’} onChange={(e) => update({ seriesEmotion: e.target.value })} />
               </div>
             </div>
-            <label>Leçon principale</label>
-            <textarea className="input-dark" rows="2" value={data.seriesLesson || ''} onChange={(e) => update({ seriesLesson: e.target.value })} />
-            <label>Objectif pour la prochaine série</label>
-            <textarea className="input-dark" rows="2" value={data.seriesNext || ''} onChange={(e) => update({ seriesNext: e.target.value })} />
-            <div style={{ marginTop: '1rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
+            <label>{t(‘tracker.seriesLessonLabel’)}</label>
+            <textarea className="input-dark" rows="2" value={data.seriesLesson || ‘’} onChange={(e) => update({ seriesLesson: e.target.value })} />
+            <label>{t(‘tracker.seriesNextLabel’)}</label>
+            <textarea className="input-dark" rows="2" value={data.seriesNext || ‘’} onChange={(e) => update({ seriesNext: e.target.value })} />
+            <div style={{ marginTop: ‘1rem’, display: ‘flex’, gap: ‘0.75rem’, flexWrap: ‘wrap’, alignItems: ‘center’ }}>
               <button type="button" className="btn" onClick={() => {
-                const label = window.prompt('Libellé pour cette série', data.seriesHistoryLabel || `Série du ${new Date().toLocaleDateString('fr-FR')}`);
+                const label = window.prompt(t(‘tracker.seriesHistoryLabelCol’), data.seriesHistoryLabel || `Série du ${new Date().toLocaleDateString(‘fr-FR’)}`);
                 if (label === null) return;
                 const entry = {
                   id: `s20-${Date.now()}`,
                   savedAt: new Date().toISOString(),
-                  label: label.trim() || `Série du ${new Date().toLocaleDateString('fr-FR')}`,
+                  label: label.trim() || `Série du ${new Date().toLocaleDateString(‘fr-FR’)}`,
                   part1: series20Part1,
                   part2: series20Part2,
-                  bilan: { plan: data.seriesPlan || '', emotion: data.seriesEmotion || '', lesson: data.seriesLesson || '', next: data.seriesNext || '' },
+                  bilan: { plan: data.seriesPlan || ‘’, emotion: data.seriesEmotion || ‘’, lesson: data.seriesLesson || ‘’, next: data.seriesNext || ‘’ },
                   stats: { winrate: seriesWinrate, wins: seriesStats.wins, losses: seriesStats.losses, ratio: seriesProfitFactor },
                 };
                 update({ seriesHistory: [entry, ...seriesHistory], seriesHistoryLabel: entry.label });
-              }}>Archiver cette série dans l’historique</button>
-              <span className="hint" style={{ margin: 0 }}>Crée une copie figée (20 trades + bilan + stats).</span>
+              }}>{t(‘tracker.seriesArchiveBtn’)}</button>
+              <span className="hint" style={{ margin: 0 }}>{t(‘tracker.seriesArchiveHint’)}</span>
             </div>
           </div>
         </section>

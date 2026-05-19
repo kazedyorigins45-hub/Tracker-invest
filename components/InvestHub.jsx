@@ -825,14 +825,14 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   });
 
   const miniStat = (label, value, cls = '') => <div><div className="k">{label}</div><div className={`v ${cls}`}>{value}</div></div>;
-  const immoRentabilityBadge = (score, label = 'Rentabilité') => {
+  const immoRentabilityBadge = (score, label = '') => {
     const rentable = Number(score) > 0;
     return (
       <div className={`immo-profit-badge ${rentable ? 'is-profitable' : 'is-not-profitable'}`}>
         <span className="immo-profit-dot" aria-hidden="true" />
         <div>
-          <strong>{rentable ? 'Rentable' : 'Non rentable'}</strong>
-          <span>{label} : {formatEuro2(Number.isFinite(Number(score)) ? Number(score) : 0)}</span>
+          <strong>{rentable ? t('invest.immoRentable') : t('invest.immoNotRentable')}</strong>
+          <span>{label || t('invest.immoCfAnnual')} : {formatEuro2(Number.isFinite(Number(score)) ? Number(score) : 0)}</span>
         </div>
       </div>
     );
@@ -840,12 +840,12 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   const rentalMini = (row) => (
     <>
       <div className="immo-mini-stats">
-        {miniStat('Revenu brut / an', formatEuro2(row.brut))}
-        {miniStat('Cash-flow net / an', formatEuro2(row.cf), row.cf >= 0 ? 'pos' : 'neg')}
-        {miniStat('Rendement brut', formatPct(row.rBrut))}
-        {miniStat('Rendement net / apport', row.apportForYield > 0 ? formatPct(row.rNet) : '—', row.apportForYield > 0 ? (row.cf >= 0 ? 'pos' : 'neg') : '')}
+        {miniStat(t('invest.immoMiniGross'), formatEuro2(row.brut))}
+        {miniStat(t('invest.immoMiniCf'), formatEuro2(row.cf), row.cf >= 0 ? 'pos' : 'neg')}
+        {miniStat(t('invest.immoMiniRBrut'), formatPct(row.rBrut))}
+        {miniStat(t('invest.immoMiniRNet'), row.apportForYield > 0 ? formatPct(row.rNet) : '—', row.apportForYield > 0 ? (row.cf >= 0 ? 'pos' : 'neg') : '')}
       </div>
-      {immoRentabilityBadge(row.cf, 'cash-flow annuel')}
+      {immoRentabilityBadge(row.cf, t('invest.immoCfAnnual'))}
     </>
   );
 
@@ -871,7 +871,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   return (
     <div className="mindset-shell invest-hub">
       <aside className={`sidebar${sidebarOpen ? ' sidebar--open' : ''}`}>
-        <div className="sidebar-close" onClick={closeSidebar} aria-label="Fermer le menu">✕</div>
+        <div className="sidebar-close" onClick={closeSidebar} aria-label={t('tracker.sidebarClose')}>✕</div>
         <div className="brand">
           <div className="tag">{t('app.invest')}</div>
           <Link href="/dashboard" className="brand-link"><h1>Elite Invest</h1></Link>
@@ -931,28 +931,28 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
         {feedback ? <div className="ui-feedback" role="status" aria-live="polite">{feedback}</div> : null}
         <section className={`page ${page === 'cover' ? 'active' : ''}`}>
           <h1 className="page-title">{t('invest.title')}</h1>
-          <p className="page-sub invest-quote">Ici tu suis les actifs <strong>long terme</strong> : crypto (hold), métaux, matières premières, immobilier, obligations, actions de fond de portefeuille… Ce n'est pas le journal de <em>trading</em> (court terme), qui est dans Elite Tracker.</p>
-          <div className="class-pills"><span>Crypto</span><span>Métaux précieux</span><span>Matières premières</span><span>Immobilier</span><span>Obligations / ETF</span><span>Autre</span></div>
+          <p className="page-sub invest-quote">{t('invest.coverSub')}</p>
+          <div className="class-pills">{t('invest.coverClassPills').split(' · ').map((pill) => <span key={pill}>{pill}</span>)}</div>
           <div className="card">
             <h2>{t('invest.identity')}</h2>
             <div className="grid-2">
-              <div className="field-block"><label>Nom / famille de portefeuille</label><input className="input-dark invest-short-input" type="text" value={investMeta.name || ''} onChange={(e) => setInvestMeta('name', e.target.value)} placeholder={`ex. ${profileLabel}`} /></div>
-              <div className="field-block"><label>Horizon principal</label><input className="input-dark invest-medium-input" type="text" value={investMeta.horizon || ''} onChange={(e) => setInvestMeta('horizon', e.target.value)} placeholder="ex. 5–15 ans" /></div>
+              <div className="field-block"><label>{t('invest.coverIdentityLabel')}</label><input className="input-dark invest-short-input" type="text" value={investMeta.name || ''} onChange={(e) => setInvestMeta('name', e.target.value)} placeholder={`ex. ${profileLabel}`} /></div>
+              <div className="field-block"><label>{t('invest.coverHorizonLabel')}</label><input className="input-dark invest-medium-input" type="text" value={investMeta.horizon || ''} onChange={(e) => setInvestMeta('horizon', e.target.value)} placeholder="ex. 5–15 ans" /></div>
             </div>
-            <label className="field-label">Vision &amp; règles (DCA, pas de levier, etc.)</label>
-            <textarea className="input-dark invest-vision-textarea" rows="4" value={investMeta.vision || ''} onChange={(e) => setInvestMeta('vision', e.target.value)} placeholder="Décris ton cadre d'investissement…" />
+            <label className="field-label">{t('invest.coverVisionLabel')}</label>
+            <textarea className="input-dark invest-vision-textarea" rows="4" value={investMeta.vision || ''} onChange={(e) => setInvestMeta('vision', e.target.value)} placeholder={t('invest.coverVisionPlaceholder')} />
           </div>
         </section>
 
         <section className={`page ${page === 'overview' ? 'active' : ''}`}>
           <h1 className="page-title">{t('invest.overview')}</h1>
-          <p className="page-sub">Répartition par classe d'actifs (valeurs estimées en €).</p>
+          <p className="page-sub">{t('invest.overviewSub')}</p>
           <div className="stats-row">
-            <div className="stat-box"><div className="v">{Math.round(totalOverviewValue).toLocaleString('fr-FR')}€</div><div className="l">Total estimé</div></div>
-            <div className="stat-box"><div className="v">{holdings.length}</div><div className="l">Positions</div></div>
+            <div className="stat-box"><div className="v">{Math.round(totalOverviewValue).toLocaleString('fr-FR')}€</div><div className="l">{t('invest.overviewTotal')}</div></div>
+            <div className="stat-box"><div className="v">{holdings.length}</div><div className="l">{t('invest.overviewPositions')}</div></div>
           </div>
           <div className="card">
-            <h2>Répartition</h2>
+            <h2>{t('invest.overviewBreakdown')}</h2>
             <div className="overview-breakdown">
               {overviewClasses.map((key) => {
                 const amt = classTotals[key] || 0;
@@ -970,15 +970,15 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
 
         <section className={`page ${page === 'holdings' ? 'active' : ''}`}>
           <h1 className="page-title">{t('invest.portfolio')}</h1>
-          <p className="page-sub">Une ligne par actif. <strong>Valeur estimée</strong> = position ouverte. Pour les <strong>cryptos</strong>, renseigne l'<strong>ID CoinGecko</strong> + la <strong>qté</strong> et ton <strong>prix d'achat €/u</strong> : au moment de la vente, clique <strong>Cours</strong> à côté du prix de vente pour <strong>remplir automatiquement le prix de vente</strong> au cours actuel, puis indique la <strong>date de vente</strong> pour clôturer la ligne. Le bouton <strong>Actualiser les cours</strong> met surtout à jour la colonne <strong>Valeur €</strong> des positions encore détenues.</p>
+          <p className="page-sub">{t('invest.holdingsSub')}</p>
           <datalist id="inv-gecko-presets">
             <option value="bitcoin" /><option value="ethereum" /><option value="solana" /><option value="cardano" />
             <option value="ripple" /><option value="dogecoin" /><option value="polkadot" /><option value="avalanche-2" />
             <option value="matic-network" /><option value="chainlink" /><option value="wrapped-bitcoin" />
           </datalist>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', marginBottom: '1rem' }}>
-            <button type="button" className="btn" onClick={addHolding} style={{ marginBottom: 0, fontSize: '0.85rem' }}>+ Ajouter une position</button>
-            <button type="button" className="btn btn-ghost" onClick={refreshLiveValues} disabled={isRefreshingLive} style={{ fontSize: '0.85rem' }}>{isRefreshingLive ? 'Actualisation…' : 'Actualiser les cours (CoinGecko)'}</button>
+            <button type="button" className="btn" onClick={addHolding} style={{ marginBottom: 0, fontSize: '0.85rem' }}>{t('invest.holdingsAddPosition')}</button>
+            <button type="button" className="btn btn-ghost" onClick={refreshLiveValues} disabled={isRefreshingLive} style={{ fontSize: '0.85rem' }}>{isRefreshingLive ? t('invest.holdingsRefreshing') : t('invest.holdingsRefreshLive')}</button>
             <span style={{ fontSize: '0.75rem', color: 'var(--muted)' }} />
           </div>
           {liveStatus ? <p className="hint" style={{ marginTop: 0 }}>{liveStatus}</p> : null}
@@ -987,7 +987,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
               <table className="data">
                 <thead>
                   <tr>
-                    <th>Classe</th><th>Synthèse « Mes invest. »</th><th>Revenu / mois</th><th>Libellé</th><th>ID CoinGecko</th><th>Valeur €</th><th>Qté</th><th>Prix achat €/u</th><th>Prix vente €/u</th><th>Date vente</th><th>Rés. vente €</th><th>Notes</th><th></th>
+                    <th>{t('invest.holdingsColClass')}</th><th>{t('invest.holdingsColSynth')}</th><th>{t('invest.holdingsColIncome')}</th><th>{t('invest.holdingsColLabel')}</th><th>{t('invest.holdingsColGecko')}</th><th>{t('invest.holdingsColValue')}</th><th>{t('invest.holdingsColQty')}</th><th>{t('invest.holdingsColBuyPrice')}</th><th>{t('invest.holdingsColSellPrice')}</th><th>{t('invest.holdingsColSellDate')}</th><th>{t('invest.holdingsColSaleResult')}</th><th>{t('invest.holdingsColNotes')}</th><th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -995,19 +995,19 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                     <tr key={`${row.asset || 'row'}-${index}`} className={isHoldingSold(row) ? 'row-sold' : ''}>
                       <td>
                         <select className="input-dark invest-holding-input" value={row.className === 'immobilier' ? 'immo' : row.className === 'oblig' ? 'obligations' : (row.className || 'autre')} onChange={(e) => updateHolding(index, { className: e.target.value })}>
-                          <option value="crypto">Crypto (hold)</option>
-                          <option value="metaux">Métaux précieux</option>
-                          <option value="matieres">Matières premières</option>
-                          <option value="immo">Immobilier</option>
-                          <option value="obligations">Obligations / monétaire</option>
-                          <option value="actions">Actions / ETF</option>
-                          <option value="autre">Autre</option>
+                          <option value="crypto">{t('invest.holdingsClassCrypto')}</option>
+                          <option value="metaux">{t('invest.holdingsClassMetaux')}</option>
+                          <option value="matieres">{t('invest.holdingsClassMatieres')}</option>
+                          <option value="immo">{t('invest.holdingsClassImmo')}</option>
+                          <option value="obligations">{t('invest.holdingsClassOblig')}</option>
+                          <option value="actions">{t('invest.holdingsClassActions')}</option>
+                          <option value="autre">{t('invest.holdingsClassAutre')}</option>
                         </select>
                       </td>
                       <td>
                         <select className="input-dark invest-holding-input" value={row.hubSegment || 'actif'} onChange={(e) => updateHolding(index, { hubSegment: e.target.value })}>
-                          <option value="actif">Actifs</option>
-                          <option value="passif">Revenu passif</option>
+                          <option value="actif">{t('invest.holdingsSegmentActif')}</option>
+                          <option value="passif">{t('invest.holdingsSegmentPassif')}</option>
                         </select>
                       </td>
                       <td>
@@ -1043,9 +1043,9 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
               </table>
             </div>
             <div className="toolbar" style={{ marginTop: '1rem' }}>
-              <button type="button" className="btn btn-gold" onClick={addHolding}>+ Ajouter une ligne</button>
+              <button type="button" className="btn btn-gold" onClick={addHolding}>{t('invest.holdingsAddLine')}</button>
             </div>
-            <p className="hint">Les % utilisent uniquement les positions <strong>non vendues</strong>. La colonne <strong>Synthèse</strong> classe chaque ligne ouverte pour les barres <em>Actifs</em> vs <em>Revenu passif</em>. Quand tu choisis <strong>Revenu passif</strong>, la colonne <strong>Revenu / mois</strong> devient renseignable pour noter le revenu mensuel généré. Une fois la <strong>date de vente</strong> renseignée, l'encaissement (prix de vente × qté) alimente les <em>fonds disponibles</em>. Cours via CoinGecko (gratuit, limite de fréquence).</p>
+            <p className="hint">{t('invest.holdingsHint')}</p>
           </div>
           {(() => {
             const passiveRows = openHoldings.filter((r) => r.hubSegment === 'passif');
@@ -1055,25 +1055,25 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
             if (passiveRows.length === 0) return null;
             return (
               <div className="card" style={{ marginTop: '1rem' }}>
-                <h2>Revenus passifs mensuels</h2>
+                <h2>{t('invest.passiveIncomeTitle')}</h2>
                 <div className="stats-row" style={{ marginBottom: 0 }}>
                   <div className="stat-box">
                     <div className="v">{formatEuro(totalMonthly)}</div>
-                    <div className="l">Total / mois</div>
+                    <div className="l">{t('invest.passiveIncomeMonthly')}</div>
                   </div>
                   <div className="stat-box">
                     <div className="v">{formatEuro(totalMonthly * 12)}</div>
-                    <div className="l">Total / an</div>
+                    <div className="l">{t('invest.passiveIncomeAnnual')}</div>
                   </div>
                   {immoPassiveRows.length > 0 && (
                     <div className="stat-box">
                       <div className="v">{formatEuro(immoMonthly)}</div>
-                      <div className="l">Immo / mois</div>
+                      <div className="l">{t('invest.passiveIncomeImmo')}</div>
                     </div>
                   )}
                   <div className="stat-box">
                     <div className="v">{passiveRows.length}</div>
-                    <div className="l">Positions passives</div>
+                    <div className="l">{t('invest.passiveIncomePositions')}</div>
                   </div>
                 </div>
               </div>
@@ -1083,218 +1083,218 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
 
         <section className={`page ${page === 'immo' ? 'active' : ''}`}>
           <h1 className="page-title">{t('invest.immo')}</h1>
-          <p className="page-sub">Outil de <strong>comparaison indicatif</strong> : plusieurs <strong>fiches bien</strong> (jusqu'à 3), liaison optionnelle avec une position <strong>Immobilier</strong>, stress-tests, indexation des loyers, seuils d'alerte, PV simplifiée, export et mémo projet. Rien de juridique ou fiscal certifié.</p>
-          <div className="immo-section-label">Fiche & liaison</div>
+          <p className="page-sub">{t('invest.immoSub')}</p>
+          <div className="immo-section-label">{t('invest.immoFicheLabel')}</div>
           <div className="card">
-            <h2>Fiches bien (max. 3)</h2>
+            <h2>{t('invest.immoFicheTitle')}</h2>
             <div className="immo-tool-row">
               <div style={{ flex: '1 1 18rem', minWidth: '18rem' }}>
-                <label htmlFor="immo-select-fiche">Fiche active</label>
+                <label htmlFor="immo-select-fiche">{t('invest.immoFicheActive')}</label>
                 <select id="immo-select-fiche" className="input-dark immo-active-select" value={activePropertyId} onChange={(e) => switchImmoProperty(e.target.value)}>
                   {(immoCalc.propertyOrder || ['p0']).map((pid) => <option key={pid} value={pid}>{immoProperties[pid]?.name || pid}</option>)}
                 </select>
               </div>
-              <button type="button" className="btn btn-ghost" onClick={renameImmoFiche}>Renommer</button>
-              <button type="button" className="btn btn-ghost" onClick={duplicateImmoProperty}>Dupliquer</button>
-              <button type="button" className="btn" onClick={addImmoProperty}>+ Fiche</button>
+              <button type="button" className="btn btn-ghost" onClick={renameImmoFiche}>{t('invest.immoFicheRename')}</button>
+              <button type="button" className="btn btn-ghost" onClick={duplicateImmoProperty}>{t('invest.immoFicheDuplicate')}</button>
+              <button type="button" className="btn" onClick={addImmoProperty}>{t('invest.immoFicheAdd')}</button>
             </div>
-            <p className="hint" style={{ marginTop: 0 }}>Chaque fiche mémorise ses propres champs et sa checklist. Change de fiche avant une autre simulation pour comparer ensuite dans le tableau multi-biens. Fiche active : <strong>{activeProperty.name}</strong>.</p>
+            <p className="hint" style={{ marginTop: 0 }}>{t('invest.immoFicheHint')} <strong>{activeProperty.name}</strong>.</p>
           </div>
 
-          <div className="immo-section-label">Hypothèses globales</div>
+          <div className="immo-section-label">{t('invest.immoGlobalLabel')}</div>
           <div className="card">
-            <h2>Indexation des loyers (projection)</h2>
+            <h2>{t('invest.immoIndexTitle')}</h2>
             <div className="grid-2">
               <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.5rem', paddingBottom: '0.75rem' }}>
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
                   <input type="checkbox" id="immo-idx-on" checked={!!immoGlobal.indexation.on} onChange={(e) => setImmoGlobal('indexation', 'on', e.target.checked)} style={{ width: 'auto', margin: 0 }} />
-                  Activer la projection
+                  {t('invest.immoIndexActivate')}
                 </label>
               </div>
               <div>
-                <label htmlFor="immo-idx-pct">Hausse moyenne annuelle (% type IRL / ILAT)</label>
+                <label htmlFor="immo-idx-pct">{t('invest.immoIndexPct')}</label>
                 <input type="text" id="immo-idx-pct" className="input-dark" value={immoGlobal.indexation.pct || ''} onChange={(e) => setImmoGlobal('indexation', 'pct', e.target.value)} placeholder="ex. 1,5" />
               </div>
               <div>
-                <label htmlFor="immo-idx-years">Horizon (ans)</label>
+                <label htmlFor="immo-idx-years">{t('invest.immoIndexYears')}</label>
                 <input type="text" id="immo-idx-years" className="input-dark" value={immoGlobal.indexation.years || ''} onChange={(e) => setImmoGlobal('indexation', 'years', e.target.value)} placeholder="ex. 10" />
               </div>
             </div>
             <p className="hint" id="immo-idx-out">{indexationText}</p>
           </div>
 
-          <div className="immo-section-label">Export & dossier</div>
+          <div className="immo-section-label">{t('invest.immoExportLabel')}</div>
           <div className="card">
-            <h2>Export</h2>
+            <h2>{t('invest.immoExportTitle')}</h2>
             <div className="immo-tool-row">
-              <button type="button" className="btn" onClick={exportImmoTsv}>Copier le tableau (TSV)</button>
-              <button type="button" className="btn btn-ghost" onClick={downloadImmoCsv}>Télécharger CSV</button>
+              <button type="button" className="btn" onClick={exportImmoTsv}>{t('invest.immoExportTsv')}</button>
+              <button type="button" className="btn btn-ghost" onClick={downloadImmoCsv}>{t('invest.immoExportCsv')}</button>
             </div>
           </div>
 
           <div className="card">
-            <h2>Assistant dossier (mémo)</h2>
+            <h2>{t('invest.immoMemoTitle')}</h2>
             <div className="immo-check-grid">
               {IMMO_CHECKS.map((doc) => (
                 <label key={doc.k} className="memo-check"><input type="checkbox" checked={!!activeProperty.checklist?.[doc.k]} onChange={(e) => setImmoChecklist(doc.k, e.target.checked)} /><span>{doc.l}</span></label>
               ))}
             </div>
-            <p className="hint">à cocher selon ton projet ; sauvegardé avec la <strong>fiche</strong> active.</p>
+            <p className="hint">{t('invest.immoMemoHint')}</p>
           </div>
 
-          <div className="immo-section-label">Données bien & financement</div>
+          <div className="immo-section-label">{t(‘invest.immoDataLabel’)}</div>
           <div className="card">
-            <h2>Données du bien &amp; financement</h2>
+            <h2>{t(‘invest.immoDataTitle’)}</h2>
             <div className="grid-2">
               <div>
-                <label htmlFor="immo-prix">Prix d'achat FAI (€)</label>
-                <input type="text" id="immo-prix" className="input-dark immo-persist" value={immoField(activeFields, 'immo-prix')} onChange={(e) => setImmoField('immo-prix', e.target.value)} placeholder="ex. 280000" />
+                <label htmlFor="immo-prix">{t(‘invest.immoPrice’)}</label>
+                <input type="text" id="immo-prix" className="input-dark immo-persist" value={immoField(activeFields, ‘immo-prix’)} onChange={(e) => setImmoField(‘immo-prix’, e.target.value)} placeholder="ex. 280000" />
               </div>
               <div>
-                <label htmlFor="immo-frais-pct">Frais d'acquisition (% du prix)</label>
-                <input type="text" id="immo-frais-pct" className="input-dark immo-persist" value={immoField(activeFields, 'immo-frais-pct')} onChange={(e) => setImmoField('immo-frais-pct', e.target.value)} placeholder="ex. 8" />
+                <label htmlFor="immo-frais-pct">{t(‘invest.immoFeesPct’)}</label>
+                <input type="text" id="immo-frais-pct" className="input-dark immo-persist" value={immoField(activeFields, ‘immo-frais-pct’)} onChange={(e) => setImmoField(‘immo-frais-pct’, e.target.value)} placeholder="ex. 8" />
               </div>
               <div>
-                <label htmlFor="immo-travaux">Travaux initiaux (€)</label>
-                <input type="text" id="immo-travaux" className="input-dark immo-persist" value={immoField(activeFields, 'immo-travaux')} onChange={(e) => setImmoField('immo-travaux', e.target.value)} placeholder="ex. 15000" />
+                <label htmlFor="immo-travaux">{t(‘invest.immoWorks’)}</label>
+                <input type="text" id="immo-travaux" className="input-dark immo-persist" value={immoField(activeFields, ‘immo-travaux’)} onChange={(e) => setImmoField(‘immo-travaux’, e.target.value)} placeholder="ex. 15000" />
               </div>
               <div>
-                <label htmlFor="immo-ltv">Financement : % emprunté sur total projet</label>
-                <input type="text" id="immo-ltv" className="input-dark immo-persist" value={immoField(activeFields, 'immo-ltv')} onChange={(e) => setImmoField('immo-ltv', e.target.value)} placeholder="ex. 80 — 0 = tout comptant" />
+                <label htmlFor="immo-ltv">{t(‘invest.immoLtv’)}</label>
+                <input type="text" id="immo-ltv" className="input-dark immo-persist" value={immoField(activeFields, ‘immo-ltv’)} onChange={(e) => setImmoField(‘immo-ltv’, e.target.value)} placeholder="ex. 80 — 0 = tout comptant" />
               </div>
               <div>
-                <label htmlFor="immo-taux">Taux crédit annuel nominal (%)</label>
-                <input type="text" id="immo-taux" className="input-dark immo-persist" value={immoField(activeFields, 'immo-taux')} onChange={(e) => setImmoField('immo-taux', e.target.value)} placeholder="ex. 3,5" />
+                <label htmlFor="immo-taux">{t(‘invest.immoRate’)}</label>
+                <input type="text" id="immo-taux" className="input-dark immo-persist" value={immoField(activeFields, ‘immo-taux’)} onChange={(e) => setImmoField(‘immo-taux’, e.target.value)} placeholder="ex. 3,5" />
               </div>
               <div>
-                <label htmlFor="immo-duree">Durée du prêt (ans)</label>
-                <input type="text" id="immo-duree" className="input-dark immo-persist" value={immoField(activeFields, 'immo-duree')} onChange={(e) => setImmoField('immo-duree', e.target.value)} placeholder="ex. 20" />
+                <label htmlFor="immo-duree">{t(‘invest.immoDuration’)}</label>
+                <input type="text" id="immo-duree" className="input-dark immo-persist" value={immoField(activeFields, ‘immo-duree’)} onChange={(e) => setImmoField(‘immo-duree’, e.target.value)} placeholder="ex. 20" />
               </div>
               <div>
-                <label htmlFor="immo-charges">Charges annuelles (taxe foncière, copro, assurance bien…)</label>
-                <input type="text" id="immo-charges" className="input-dark immo-persist" value={immoField(activeFields, 'immo-charges')} onChange={(e) => setImmoField('immo-charges', e.target.value)} placeholder="ex. 2400" />
+                <label htmlFor="immo-charges">{t(‘invest.immoCharges’)}</label>
+                <input type="text" id="immo-charges" className="input-dark immo-persist" value={immoField(activeFields, ‘immo-charges’)} onChange={(e) => setImmoField(‘immo-charges’, e.target.value)} placeholder="ex. 2400" />
               </div>
               <div>
-                <label htmlFor="immo-frais-vente">Frais de vente estimés (% du prix revente)</label>
-                <input type="text" id="immo-frais-vente" className="input-dark immo-persist" value={immoField(activeFields, 'immo-frais-vente')} onChange={(e) => setImmoField('immo-frais-vente', e.target.value)} placeholder="ex. 7" />
+                <label htmlFor="immo-frais-vente">{t(‘invest.immoSaleFees’)}</label>
+                <input type="text" id="immo-frais-vente" className="input-dark immo-persist" value={immoField(activeFields, ‘immo-frais-vente’)} onChange={(e) => setImmoField(‘immo-frais-vente’, e.target.value)} placeholder="ex. 7" />
               </div>
               <div>
-                <label htmlFor="immo-tmi">TMI indicative (%) — impôt sur revenus locatifs</label>
-                <input type="text" id="immo-tmi" className="input-dark immo-persist" value={immoField(activeFields, 'immo-tmi')} onChange={(e) => setImmoField('immo-tmi', e.target.value)} placeholder="ex. 30 — 0 pour ignorer" />
+                <label htmlFor="immo-tmi">{t(‘invest.immoTmi’)}</label>
+                <input type="text" id="immo-tmi" className="input-dark immo-persist" value={immoField(activeFields, ‘immo-tmi’)} onChange={(e) => setImmoField(‘immo-tmi’, e.target.value)} placeholder="ex. 30 — 0 pour ignorer" />
               </div>
               <div>
-                <label htmlFor="immo-abatt">Abattement forfaitaire (%) pour base imposable simplifiée</label>
-                <input type="text" id="immo-abatt" className="input-dark immo-persist" value={immoField(activeFields, 'immo-abatt')} onChange={(e) => setImmoField('immo-abatt', e.target.value)} placeholder="ex. 30 (nu) ou 50 (meublé micro-BIC)" />
+                <label htmlFor="immo-abatt">{t(‘invest.immoAbatt’)}</label>
+                <input type="text" id="immo-abatt" className="input-dark immo-persist" value={immoField(activeFields, ‘immo-abatt’)} onChange={(e) => setImmoField(‘immo-abatt’, e.target.value)} placeholder="ex. 30 (nu) ou 50 (meublé micro-BIC)" />
               </div>
             </div>
-            <p className="hint" id="immo-base-recap">{immoBase.prix > 0 ? <>Budget total acquisition : <strong>{formatEuro2(immoBase.totalProjet)}</strong> — apport <strong>{formatEuro2(immoBase.apport)}</strong>, mensualité <strong>{formatEuro2(immoBase.mens)}</strong>/mo (<strong>{formatEuro2(immoBase.annCredit)}</strong>/an).</> : 'Indique un prix d’achat pour lancer les calculs.'}</p>
+            <p className="hint" id="immo-base-recap">{immoBase.prix > 0 ? <>Budget total acquisition : <strong>{formatEuro2(immoBase.totalProjet)}</strong> — apport <strong>{formatEuro2(immoBase.apport)}</strong>, mensualité <strong>{formatEuro2(immoBase.mens)}</strong>/mo (<strong>{formatEuro2(immoBase.annCredit)}</strong>/an).</> : t(‘invest.immoBaseRecapEmpty’)}</p>
           </div>
 
-          <div className="immo-section-label">Scénarios</div>
+          <div className="immo-section-label">{t('invest.immoScenariosLabel')}</div>
           <div className="grid-2 immo-scenario-grid">
             <div className="card immo-scen">
-              <h3>Location longue durée</h3>
-              <label htmlFor="immo-s1-loyer">Loyer mensuel encaissé (€)</label>
+              <h3>{t('invest.immoS1Title')}</h3>
+              <label htmlFor="immo-s1-loyer">{t('invest.immoS1Loyer')}</label>
               <input type="text" id="immo-s1-loyer" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s1-loyer')} onChange={(e) => setImmoField('immo-s1-loyer', e.target.value)} placeholder="ex. 950" />
-              <label htmlFor="immo-s1-vac">Vacance locative (% du temps)</label>
+              <label htmlFor="immo-s1-vac">{t('invest.immoS1Vac')}</label>
               <input type="text" id="immo-s1-vac" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s1-vac')} onChange={(e) => setImmoField('immo-s1-vac', e.target.value)} placeholder="ex. 8" />
               <div className="immo-scen-out" id="immo-out-s1">{rentalMini(immoResult.details.row1)}</div>
             </div>
             <div className="card immo-scen">
-              <h3>Colocation</h3>
-              <label htmlFor="immo-s2-nb">Nombre de chambres louées</label>
+              <h3>{t('invest.immoS2Title')}</h3>
+              <label htmlFor="immo-s2-nb">{t('invest.immoS2Nb')}</label>
               <input type="text" id="immo-s2-nb" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s2-nb')} onChange={(e) => setImmoField('immo-s2-nb', e.target.value)} placeholder="ex. 3" />
-              <label htmlFor="immo-s2-loyer">Loyer par chambre / mois (€)</label>
+              <label htmlFor="immo-s2-loyer">{t('invest.immoS2Loyer')}</label>
               <input type="text" id="immo-s2-loyer" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s2-loyer')} onChange={(e) => setImmoField('immo-s2-loyer', e.target.value)} placeholder="ex. 420" />
-              <label htmlFor="immo-s2-vac">Vacance (%)</label>
+              <label htmlFor="immo-s2-vac">{t('invest.immoS2Vac')}</label>
               <input type="text" id="immo-s2-vac" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s2-vac')} onChange={(e) => setImmoField('immo-s2-vac', e.target.value)} placeholder="ex. 10" />
               <div className="immo-scen-out" id="immo-out-s2">{rentalMini(immoResult.details.row2)}</div>
             </div>
             <div className="card immo-scen">
-              <h3>Location à la nuitée (courte durée)</h3>
-              <label htmlFor="immo-s3-nuits">Nuitées louées en moyenne / mois</label>
+              <h3>{t('invest.immoS3Title')}</h3>
+              <label htmlFor="immo-s3-nuits">{t('invest.immoS3Nuits')}</label>
               <input type="text" id="immo-s3-nuits" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s3-nuits')} onChange={(e) => setImmoField('immo-s3-nuits', e.target.value)} placeholder="ex. 18" />
-              <label htmlFor="immo-s3-prix">Prix moyen / nuit (€)</label>
+              <label htmlFor="immo-s3-prix">{t('invest.immoS3Prix')}</label>
               <input type="text" id="immo-s3-prix" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s3-prix')} onChange={(e) => setImmoField('immo-s3-prix', e.target.value)} placeholder="ex. 85" />
-              <label htmlFor="immo-s3-com">Commissions plateforme &amp; ménage (% du CA)</label>
+              <label htmlFor="immo-s3-com">{t('invest.immoS3Com')}</label>
               <input type="text" id="immo-s3-com" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s3-com')} onChange={(e) => setImmoField('immo-s3-com', e.target.value)} placeholder="ex. 35" />
               <div className="immo-scen-out" id="immo-out-s3">{rentalMini(immoResult.details.row3)}</div>
-              <p className="hint">à rapprocher des seuils et règles locales (autorisations, résidence principale, Meublé tourisme…).</p>
+              <p className="hint">{t('invest.immoS3Hint')}</p>
             </div>
             <div className="card immo-scen">
-              <h3>Sous-location</h3>
-              <label htmlFor="immo-s4-pay">Loyer payé au bailleur / mois (€)</label>
+              <h3>{t('invest.immoS4Title')}</h3>
+              <label htmlFor="immo-s4-pay">{t('invest.immoS4Pay')}</label>
               <input type="text" id="immo-s4-pay" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s4-pay')} onChange={(e) => setImmoField('immo-s4-pay', e.target.value)} placeholder="ex. 800" />
-              <label htmlFor="immo-s4-rec">Loyer encaissé / mois (€)</label>
+              <label htmlFor="immo-s4-rec">{t('invest.immoS4Rec')}</label>
               <input type="text" id="immo-s4-rec" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s4-rec')} onChange={(e) => setImmoField('immo-s4-rec', e.target.value)} placeholder="ex. 1200" />
               <div className="immo-scen-out" id="immo-out-s4">{rentalMini(immoResult.details.row4)}</div>
-              <p className="hint">Souvent soumis au <strong>consentement du bailleur</strong> et au droit au bail — usage à vérifier.</p>
+              <p className="hint">{t('invest.immoS4Hint')}</p>
             </div>
             <div className="card immo-scen">
-              <h3>Achat → revente (patrimonial)</h3>
-              <label htmlFor="immo-s5-ans">Détention (ans) avant revente</label>
+              <h3>{t('invest.immoS5Title')}</h3>
+              <label htmlFor="immo-s5-ans">{t('invest.immoS5Ans')}</label>
               <input type="text" id="immo-s5-ans" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s5-ans')} onChange={(e) => setImmoField('immo-s5-ans', e.target.value)} placeholder="ex. 7" />
-              <label htmlFor="immo-s5-revalo">Revalorisation annuelle du bien (%)</label>
+              <label htmlFor="immo-s5-revalo">{t('invest.immoS5Revalo')}</label>
               <input type="text" id="immo-s5-revalo" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s5-revalo')} onChange={(e) => setImmoField('immo-s5-revalo', e.target.value)} placeholder="ex. 2" />
-              <label htmlFor="immo-s5-loyer">Loyer mensuel (€) — 0 si bien vide</label>
+              <label htmlFor="immo-s5-loyer">{t('invest.immoS5Loyer')}</label>
               <input type="text" id="immo-s5-loyer" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s5-loyer')} onChange={(e) => setImmoField('immo-s5-loyer', e.target.value)} placeholder="ex. 0 ou 900" />
-              <label htmlFor="immo-s5-vac">Vacance (%)</label>
+              <label htmlFor="immo-s5-vac">{t('invest.immoS5Vac')}</label>
               <input type="text" id="immo-s5-vac" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s5-vac')} onChange={(e) => setImmoField('immo-s5-vac', e.target.value)} placeholder="ex. 5" />
-              <div className="immo-scen-out" id="immo-out-s5"><div className="immo-mini-stats">{miniStat('Revenu locatif brut / an', formatEuro2(immoResult.details.gross5))}{miniStat('Cash-flow locatif / an', formatEuro2(immoResult.details.annualCf5), immoResult.details.annualCf5 >= 0 ? 'pos' : 'neg')}{miniStat('Prix revente net visé', formatEuro2(immoResult.details.saleNet5))}{miniStat('Gain total estimé', formatEuro2(immoResult.details.profit5), immoResult.details.profit5 >= 0 ? 'pos' : 'neg')}</div><p className="hint">Équiv. / an : <strong>{formatEuro2(immoResult.details.eq5)}</strong> — CRD : {formatEuro2(immoResult.details.bal5)}.</p>{immoRentabilityBadge(immoResult.details.profit5, 'gain total estimé')}</div>
+              <div className="immo-scen-out" id="immo-out-s5"><div className="immo-mini-stats">{miniStat(t('invest.immoS5Gross'), formatEuro2(immoResult.details.gross5))}{miniStat(t('invest.immoS5Cf'), formatEuro2(immoResult.details.annualCf5), immoResult.details.annualCf5 >= 0 ? 'pos' : 'neg')}{miniStat(t('invest.immoS5SaleNet'), formatEuro2(immoResult.details.saleNet5))}{miniStat(t('invest.immoS5Profit'), formatEuro2(immoResult.details.profit5), immoResult.details.profit5 >= 0 ? 'pos' : 'neg')}</div><p className="hint">{t('invest.immoS5Eq')} : <strong>{formatEuro2(immoResult.details.eq5)}</strong> — {t('invest.immoS5Crd')} : {formatEuro2(immoResult.details.bal5)}.</p>{immoRentabilityBadge(immoResult.details.profit5, t('invest.immoGainLabel'))}</div>
             </div>
             <div className="card immo-scen">
-              <h3>Revente rapide (« flip »)</h3>
-              <label htmlFor="immo-s6-mois">Durée avant vente (mois)</label>
+              <h3>{t('invest.immoS6Title')}</h3>
+              <label htmlFor="immo-s6-mois">{t('invest.immoS6Mois')}</label>
               <input type="text" id="immo-s6-mois" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s6-mois')} onChange={(e) => setImmoField('immo-s6-mois', e.target.value)} placeholder="ex. 14" />
-              <label htmlFor="immo-s6-plus">Plus-value à la revente (% sur prix d'achat)</label>
+              <label htmlFor="immo-s6-plus">{t('invest.immoS6Plus')}</label>
               <input type="text" id="immo-s6-plus" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s6-plus')} onChange={(e) => setImmoField('immo-s6-plus', e.target.value)} placeholder="ex. 12" />
-              <div className="immo-scen-out" id="immo-out-s6"><div className="immo-mini-stats">{miniStat('Sortie nette (revente)', formatEuro2(immoResult.details.saleNet6))}{miniStat('Charges + crédit période', formatEuro2(-immoResult.details.cumCf6), 'neg')}{miniStat('Gain total estimé', formatEuro2(immoResult.details.profit6), immoResult.details.profit6 >= 0 ? 'pos' : 'neg')}{miniStat('Équiv. / an', formatEuro2(immoResult.details.eq6), immoResult.details.eq6 >= 0 ? 'pos' : 'neg')}</div>{immoRentabilityBadge(immoResult.details.profit6, 'gain total estimé')}</div>
-              <p className="hint">Sans loyer pendant la période : charges et crédit restent dus.</p>
+              <div className="immo-scen-out" id="immo-out-s6"><div className="immo-mini-stats">{miniStat(t('invest.immoS6SaleNet'), formatEuro2(immoResult.details.saleNet6))}{miniStat(t('invest.immoS6Charges'), formatEuro2(-immoResult.details.cumCf6), 'neg')}{miniStat(t('invest.immoS6Profit'), formatEuro2(immoResult.details.profit6), immoResult.details.profit6 >= 0 ? 'pos' : 'neg')}{miniStat(t('invest.immoS6Eq'), formatEuro2(immoResult.details.eq6), immoResult.details.eq6 >= 0 ? 'pos' : 'neg')}</div>{immoRentabilityBadge(immoResult.details.profit6, t('invest.immoGainLabel'))}</div>
+              <p className="hint">{t('invest.immoS6Hint')}</p>
             </div>
             <div className="card immo-scen">
-              <h3>Achat → division / lots → revente</h3>
-              <label htmlFor="immo-s7-travaux">Travaux de découp / lotissement (€)</label>
+              <h3>{t('invest.immoS7Title')}</h3>
+              <label htmlFor="immo-s7-travaux">{t('invest.immoS7Travaux')}</label>
               <input type="text" id="immo-s7-travaux" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s7-travaux')} onChange={(e) => setImmoField('immo-s7-travaux', e.target.value)} placeholder="ex. 45000" />
-              <label htmlFor="immo-s7-lots">Nombre de lots vendus</label>
+              <label htmlFor="immo-s7-lots">{t('invest.immoS7Lots')}</label>
               <input type="text" id="immo-s7-lots" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s7-lots')} onChange={(e) => setImmoField('immo-s7-lots', e.target.value)} placeholder="ex. 2" />
-              <label htmlFor="immo-s7-prixlot">Prix de vente par lot (€)</label>
+              <label htmlFor="immo-s7-prixlot">{t('invest.immoS7Prixlot')}</label>
               <input type="text" id="immo-s7-prixlot" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s7-prixlot')} onChange={(e) => setImmoField('immo-s7-prixlot', e.target.value)} placeholder="ex. 195000" />
-              <label htmlFor="immo-s7-delai">Délai avant vente (mois)</label>
+              <label htmlFor="immo-s7-delai">{t('invest.immoS7Delai')}</label>
               <input type="text" id="immo-s7-delai" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s7-delai')} onChange={(e) => setImmoField('immo-s7-delai', e.target.value)} placeholder="ex. 24" />
-              <div className="immo-scen-out" id="immo-out-s7"><div className="immo-mini-stats">{miniStat('Projet total', formatEuro2(immoResult.details.total7))}{miniStat('Apport requis', formatEuro2(immoResult.details.apport7))}{miniStat('Recettes nettes lots', formatEuro2(immoResult.details.saleNet7))}{miniStat('Gain total estimé', formatEuro2(immoResult.details.profit7), immoResult.details.profit7 >= 0 ? 'pos' : 'neg')}</div><p className="hint">Équiv. / an : <strong>{formatEuro2(immoResult.details.eq7)}</strong> — mens. : {formatEuro2(immoResult.details.mens7)}/mo.</p>{immoRentabilityBadge(immoResult.details.profit7, 'gain total estimé')}</div>
-              <p className="hint">Option, permis de diviser, copro : à modéliser en prolongeant le délai et les travaux.</p>
+              <div className="immo-scen-out" id="immo-out-s7"><div className="immo-mini-stats">{miniStat(t('invest.immoS7Total'), formatEuro2(immoResult.details.total7))}{miniStat(t('invest.immoS7Apport'), formatEuro2(immoResult.details.apport7))}{miniStat(t('invest.immoS7SaleNet'), formatEuro2(immoResult.details.saleNet7))}{miniStat(t('invest.immoS7Profit'), formatEuro2(immoResult.details.profit7), immoResult.details.profit7 >= 0 ? 'pos' : 'neg')}</div><p className="hint">{t('invest.immoS7Eq')} : <strong>{formatEuro2(immoResult.details.eq7)}</strong> — {t('invest.immoS7Mens')} : {formatEuro2(immoResult.details.mens7)}/mo.</p>{immoRentabilityBadge(immoResult.details.profit7, t('invest.immoGainLabel'))}</div>
+              <p className="hint">{t('invest.immoS7Hint')}</p>
             </div>
             <div className="card immo-scen">
-              <h3>Promesse / positionnement (cession future)</h3>
-              <label htmlFor="immo-s8-prime">Indemnité ou dépôt de garantie versé (€)</label>
+              <h3>{t('invest.immoS8Title')}</h3>
+              <label htmlFor="immo-s8-prime">{t('invest.immoS8Prime')}</label>
               <input type="text" id="immo-s8-prime" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s8-prime')} onChange={(e) => setImmoField('immo-s8-prime', e.target.value)} placeholder="ex. 5000" />
-              <label htmlFor="immo-s8-prix">Prix d'exercice / cession envisagé (€)</label>
+              <label htmlFor="immo-s8-prix">{t('invest.immoS8Prix')}</label>
               <input type="text" id="immo-s8-prix" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s8-prix')} onChange={(e) => setImmoField('immo-s8-prix', e.target.value)} placeholder="ex. 260000" />
-              <label htmlFor="immo-s8-mois">Durée avant décision (mois)</label>
+              <label htmlFor="immo-s8-mois">{t('invest.immoS8Mois')}</label>
               <input type="text" id="immo-s8-mois" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s8-mois')} onChange={(e) => setImmoField('immo-s8-mois', e.target.value)} placeholder="ex. 6" />
-              <div className="immo-scen-out" id="immo-out-s8"><div className="immo-mini-stats">{miniStat('Engagement', formatEuro2(immoResult.details.prime8))}{miniStat('Durée (mois)', String(Math.round(immoResult.details.mois8)))}{miniStat('Coût / mois bloqué', formatEuro2(immoResult.details.prime8 / immoResult.details.mois8), 'neg')}{miniStat('Prix cible', immoResult.details.prix8 > 0 ? formatEuro2(immoResult.details.prix8) : '—')}</div>{immoRentabilityBadge(immoResult.details.prix8 - immoBase.totalProjet - immoResult.details.prime8, 'écart prix cible')}</div>
-              <p className="hint">Vue <strong>très simplifiée</strong> : compare le coût d'immobilisation du cash au rendement locatif ailleurs (pas de valorisation d'option réelle).</p>
+              <div className="immo-scen-out" id="immo-out-s8"><div className="immo-mini-stats">{miniStat(t('invest.immoS8Engagement'), formatEuro2(immoResult.details.prime8))}{miniStat(t('invest.immoS8Duration'), String(Math.round(immoResult.details.mois8)))}{miniStat(t('invest.immoS8CostPerMonth'), formatEuro2(immoResult.details.prime8 / immoResult.details.mois8), 'neg')}{miniStat(t('invest.immoS8Target'), immoResult.details.prix8 > 0 ? formatEuro2(immoResult.details.prix8) : '—')}</div>{immoRentabilityBadge(immoResult.details.prix8 - immoBase.totalProjet - immoResult.details.prime8, t('invest.immoEcartLabel'))}</div>
+              <p className="hint">{t('invest.immoS8Hint')}</p>
             </div>
           </div>
 
-          <div className="immo-section-label">Comparaison</div>
+          <div className="immo-section-label">{t(‘invest.immoCompareLabel’)}</div>
           <div className="card">
-            <h2>Tableau comparatif</h2>
-            <p className="hint" style={{ marginTop: 0 }}>Classement indicatif selon le <strong>cash-flow annuel net</strong> (locations) ou le <strong>profit / an</strong> moyen (revente / division). La ligne surlignée = meilleur revenu annuel retenu.</p>
-            <div style={{ overflowX: 'auto' }}>
+            <h2>{t(‘invest.immoCompareTitle’)}</h2>
+            <p className="hint" style={{ marginTop: 0 }}>{t(‘invest.immoCompareHint’)}</p>
+            <div style={{ overflowX: ‘auto’ }}>
               <table className="immo-compare">
                 <thead>
                   <tr>
-                    <th>Scénario</th>
-                    <th className="num">Brut / an</th>
-                    <th className="num">CF net / an</th>
-                    <th className="num">R. brut</th>
-                    <th className="num">R. net / apport</th>
-                    <th>Remarque</th>
+                    <th>{t(‘invest.immoCompareColScenario’)}</th>
+                    <th className="num">{t(‘invest.immoCompareColBrut’)}</th>
+                    <th className="num">{t(‘invest.immoCompareColCf’)}</th>
+                    <th className="num">{t(‘invest.immoCompareColRBrut’)}</th>
+                    <th className="num">{t(‘invest.immoCompareColRNet’)}</th>
+                    <th>{t(‘invest.immoCompareColNote’)}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {immoBase.prix <= 0 ? <tr><td colSpan="6" className="hint">Saisis un prix d’achat.</td></tr> : immoCompareRows.map((row, index) => (
+                  {immoBase.prix <= 0 ? <tr><td colSpan="6" className="hint">{t(‘invest.immoCompareEmpty’)}</td></tr> : immoCompareRows.map((row, index) => (
                     <tr key={`${row.label}-${index}`} className={`${row.stress ? 'stress-row' : ''} ${!row.stress && immoBest && row.label === immoBest.label ? 'best' : ''}`}>
                       <td>{row.label}</td>
                       <td className="num">{formatEuro2(row.brut)}</td>
@@ -1310,22 +1310,22 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
           </div>
 
           <div className="card">
-            <h2>Vue multi-fiches</h2>
-            <p className="hint" style={{ marginTop: 0 }}>Synthèse du <strong>meilleur scénario</strong> (score) pour chaque fiche enregistrée — utile pour comparer plusieurs biens sans les confondre.</p>
+            <h2>{t('invest.immoMultiTitle')}</h2>
+            <p className="hint" style={{ marginTop: 0 }}>{t('invest.immoMultiHint')}</p>
             <div style={{ overflowX: 'auto' }}>
               <table className="immo-compare immo-multi">
                 <thead>
                   <tr>
-                    <th>Fiche</th>
-                    <th className="num">Prix ref.</th>
-                    <th>Meilleur scénario</th>
-                    <th className="num">Indic. / an</th>
-                    <th className="num">R. net / apport</th>
+                    <th>{t('invest.immoMultiColFiche')}</th>
+                    <th className="num">{t('invest.immoMultiColPrix')}</th>
+                    <th>{t('invest.immoMultiColBest')}</th>
+                    <th className="num">{t('invest.immoMultiColIndic')}</th>
+                    <th className="num">{t('invest.immoMultiColRNet')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {immoMultiRows.map((row) => row.empty ? (
-                    <tr key={row.pid}><td>{row.name}</td><td className="num">—</td><td colSpan="3" className="hint">Prix non renseigné</td></tr>
+                    <tr key={row.pid}><td>{row.name}</td><td className="num">—</td><td colSpan="3" className="hint">{t('invest.immoMultiEmpty')}</td></tr>
                   ) : (
                     <tr key={row.pid}>
                       <td>{row.name}</td>
@@ -1342,10 +1342,10 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
         </section>
 
         <section className={`page ${page === 'monthly' ? 'active' : ''}`}>
-          <h1 className="page-title">Bilan mensuel (investissement)</h1>
-          <p className="page-sub">Synthèse qualitative — pas les trades intraday.</p>
+          <h1 className="page-title">{t('invest.monthlyTitle')}</h1>
+          <p className="page-sub">{t('invest.monthlySub2')}</p>
           <div className="toolbar" style={{ marginBottom: '1rem' }}>
-            <label htmlFor="inv-mo-month" style={{ display: 'inline-block', marginRight: '0.5rem' }}>Mois</label>
+            <label htmlFor="inv-mo-month" style={{ display: 'inline-block', marginRight: '0.5rem' }}>{t('invest.monthlyMonthLabel')}</label>
             <input type="month" id="inv-mo-month" className="input-dark" style={{ maxWidth: '12rem', display: 'inline-block' }} value={selectedMonth} onChange={(e) => update({ monthlyMonth: e.target.value })} />
           </div>
           {(() => {
@@ -1355,39 +1355,39 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
             if (passiveRows.length === 0 && monthGain === 0) return null;
             return (
               <div className="stats-row" style={{ marginBottom: '1rem' }}>
-                {monthPassiveTotal > 0 && <div className="stat-box"><div className="v pos">{formatEuro(monthPassiveTotal)}</div><div className="l">Revenus passifs / mois</div></div>}
-                {monthPassiveTotal > 0 && <div className="stat-box"><div className="v">{formatEuro(monthPassiveTotal * 12)}</div><div className="l">Revenus passifs / an</div></div>}
-                {monthGain > 0 && <div className="stat-box"><div className="v pos">{formatEuro(monthGain)}</div><div className="l">Gains positions ce mois</div></div>}
+                {monthPassiveTotal > 0 && <div className="stat-box"><div className="v pos">{formatEuro(monthPassiveTotal)}</div><div className="l">{t('invest.monthlyPassiveLabel')}</div></div>}
+                {monthPassiveTotal > 0 && <div className="stat-box"><div className="v">{formatEuro(monthPassiveTotal * 12)}</div><div className="l">{t('invest.monthlyPassiveAnnualLabel')}</div></div>}
+                {monthGain > 0 && <div className="stat-box"><div className="v pos">{formatEuro(monthGain)}</div><div className="l">{t('invest.monthlyGainLabel')}</div></div>}
               </div>
             );
           })()}
           <div className="card">
-            <label htmlFor="inv-mo-sum">Mouvements du mois (apports, retraits, achats/ventes notables)</label>
+            <label htmlFor="inv-mo-sum">{t('invest.monthlySumLabel')}</label>
             <textarea id="inv-mo-sum" rows="4" className="input-dark" value={monthlySnapshot.monthlySummary || ''} onChange={(e) => setMonthlyField('monthlySummary', e.target.value)} />
-            <label htmlFor="inv-mo-lesson">Leçon ou observation</label>
+            <label htmlFor="inv-mo-lesson">{t('invest.monthlyLessonLabel')}</label>
             <textarea id="inv-mo-lesson" rows="3" className="input-dark" value={monthlySnapshot.monthlyLesson || ''} onChange={(e) => setMonthlyField('monthlyLesson', e.target.value)} />
-            <label htmlFor="inv-mo-next">Focus mois suivant</label>
+            <label htmlFor="inv-mo-next">{t('invest.monthlyNextLabel')}</label>
             <textarea id="inv-mo-next" rows="3" className="input-dark" value={monthlySnapshot.monthlyNext || ''} onChange={(e) => setMonthlyField('monthlyNext', e.target.value)} />
           </div>
         </section>
 
-        <section className={`page ${page === 'annual' ? 'active' : ''}`}>
-          <h1 className="page-title">Bilan annuel (investissement)</h1>
-          <p className="page-sub">Rétrospection de l’année écoulée. Le tableau se complète automatiquement depuis les bilans mensuels.</p>
-          <div className="toolbar" style={{ marginBottom: '1rem' }}>
-            <label htmlFor="inv-annual-year" style={{ display: 'inline-block', marginRight: '0.5rem' }}>Année</label>
-            <input type="number" id="inv-annual-year" className="input-dark" min="2020" max="2100" step="1" style={{ maxWidth: '10rem', display: 'inline-block' }} value={selectedAnnualYear} onChange={(e) => update({ annualYear: e.target.value })} />
-            <span className="hint" style={{ margin: 0 }}>{annualFilledMonths}/12 mois renseignés</span>
+        <section className={`page ${page === ‘annual’ ? ‘active’ : ‘’}`}>
+          <h1 className="page-title">{t(‘invest.annualTitle’)}</h1>
+          <p className="page-sub">{t(‘invest.annualSub2’)}</p>
+          <div className="toolbar" style={{ marginBottom: ‘1rem’ }}>
+            <label htmlFor="inv-annual-year" style={{ display: ‘inline-block’, marginRight: ‘0.5rem’ }}>{t(‘invest.annualYearLabel’)}</label>
+            <input type="number" id="inv-annual-year" className="input-dark" min="2020" max="2100" step="1" style={{ maxWidth: ‘10rem’, display: ‘inline-block’ }} value={selectedAnnualYear} onChange={(e) => update({ annualYear: e.target.value })} />
+            <span className="hint" style={{ margin: 0 }}>{annualFilledMonths}/12 {t(‘invest.annualMonthsFilled’)}</span>
           </div>
           <div className="card table-wrap">
             <table className="immo-compare invest-annual-table">
               <thead>
                   <tr>
-                    <th>Mois</th>
-                    <th>Gain positions</th>
-                    <th>Mouvements</th>
-                    <th>Leçon / observation</th>
-                    <th>Focus suivant</th>
+                    <th>{t(‘invest.annualColMonth’)}</th>
+                    <th>{t(‘invest.annualColGain’)}</th>
+                    <th>{t(‘invest.annualColMovements’)}</th>
+                    <th>{t(‘invest.annualColLesson’)}</th>
+                    <th>{t(‘invest.annualColNext’)}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1403,22 +1403,22 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
               </tbody>
             </table>
           </div>
-          <div className="grid-2" style={{ marginTop: '1rem' }}>
+          <div className="grid-2" style={{ marginTop: ‘1rem’ }}>
             <div className="card">
-              <h2>Ce dont je suis fier</h2>
-              <textarea className="input-dark" rows="4" value={data.annualPride || ''} onChange={(e) => update({ annualPride: e.target.value })} placeholder="Décisions, patience, discipline, allocations réussies…" />
+              <h2>{t(‘invest.annualPrideTitle’)}</h2>
+              <textarea className="input-dark" rows="4" value={data.annualPride || ‘’} onChange={(e) => update({ annualPride: e.target.value })} placeholder={t(‘invest.annualPridePlaceholder’)} />
             </div>
             <div className="card">
-              <h2>Leçons principales</h2>
-              <textarea className="input-dark" rows="4" value={data.annualLessons || ''} onChange={(e) => update({ annualLessons: e.target.value })} placeholder="Ce que l’année t’a appris sur ton comportement investisseur…" />
+              <h2>{t(‘invest.annualLessonsTitle’)}</h2>
+              <textarea className="input-dark" rows="4" value={data.annualLessons || ‘’} onChange={(e) => update({ annualLessons: e.target.value })} placeholder={t(‘invest.annualLessonsPlaceholder’)} />
             </div>
             <div className="card">
-              <h2>Ajustements de stratégie</h2>
-              <textarea className="input-dark" rows="4" value={data.annualAdjustments || ''} onChange={(e) => update({ annualAdjustments: e.target.value })} placeholder="Allocation, rythme d’achat, gestion du risque, classes à renforcer/réduire…" />
+              <h2>{t(‘invest.annualAdjustmentsTitle’)}</h2>
+              <textarea className="input-dark" rows="4" value={data.annualAdjustments || ‘’} onChange={(e) => update({ annualAdjustments: e.target.value })} placeholder={t(‘invest.annualAdjustmentsPlaceholder’)} />
             </div>
             <div className="card">
-              <h2>Cap pour l’année suivante</h2>
-              <textarea className="input-dark" rows="4" value={data.annualNextFocus || ''} onChange={(e) => update({ annualNextFocus: e.target.value })} placeholder="Priorités et règles pour la prochaine année…" />
+              <h2>{t(‘invest.annualNextFocusTitle’)}</h2>
+              <textarea className="input-dark" rows="4" value={data.annualNextFocus || ‘’} onChange={(e) => update({ annualNextFocus: e.target.value })} placeholder={t(‘invest.annualNextFocusPlaceholder’)} />
             </div>
           </div>
         </section>
