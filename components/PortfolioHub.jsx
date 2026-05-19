@@ -24,7 +24,7 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
 
   const update = (patch) => setData((prev) => ({ ...prev, ...patch }));
   const subscriptionLabel = getSubscriptionLabel(subscription, planCode);
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
 
   const positionsValue = Number(String(data.positionsValue).replace(/[^\d.,-]/g, '').replace(',', '.')) || 0;
   const tradingNetValue = Number(String(data.tradingNetValue).replace(/[^\d.,-]/g, '').replace(',', '.')) || 0;
@@ -32,9 +32,12 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
   const targetValue = Number(String(data.target).replace(/[^\d.,-]/g, '').replace(',', '.'));
   const progressValue = targetValue > 0 ? Math.min(100, Math.round((totalValue / targetValue) * 100)) : 0;
 
-  const formatEuro = (value) => new Intl.NumberFormat('fr-FR', {
-    maximumFractionDigits: 0,
-  }).format(value) + '€';
+  const EUR_TO_USD = 1.08;
+  const formatEuro = (value) => {
+    const v = Number.isFinite(value) ? value : 0;
+    if (locale === 'en') return `$${Math.round(v * EUR_TO_USD).toLocaleString('en-US')}`;
+    return `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(v)}€`;
+  };
 
   const axes = [
     { key: 'positions', title: t('portfolio.axisPositions'), value: positionsValue, target: Number(String(data.targetActifs).replace(/[^\d.,-]/g, '').replace(',', '.')) || 0 },

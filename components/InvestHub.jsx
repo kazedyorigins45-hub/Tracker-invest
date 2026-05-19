@@ -432,7 +432,18 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
 
   const page = data.page || 'cover';
   const subscriptionLabel = getSubscriptionLabel(subscription, planCode);
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const EUR_TO_USD = 1.08;
+  const fmtC = (value) => {
+    if (!Number.isFinite(value)) return '';
+    if (locale === 'en') return `$${Math.round(value * EUR_TO_USD).toLocaleString('en-US')}`;
+    return `${Math.round(value).toLocaleString('fr-FR')}€`;
+  };
+  const fmtC2 = (value) => {
+    const safe = Number.isFinite(Number(value)) ? Number(value) : 0;
+    if (locale === 'en') return `$${(safe * EUR_TO_USD).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `${safe.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+  };
   const update = (patch) => setData((prev) => ({ ...prev, ...patch }));
   const setInvestMeta = (key, value) => setData((prev) => ({
     ...prev,
@@ -545,7 +556,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
     const gross0 = parseAmount(immoField(activeFields, 'immo-s1-loyer')) * 12 * (1 - capVac(parseAmount(immoField(activeFields, 'immo-s1-vac'))) / 100);
     const years = Math.max(1, Math.floor(parseAmount(immoGlobal.indexation.years)));
     const grossN = gross0 * Math.pow(1 + parseAmount(immoGlobal.indexation.pct) / 100, Math.max(0, years - 1));
-    return `Projection loc. longue (réf.) : brut an 1 ≈ ${formatEuro2(gross0)}, brut terminal (an ${years}) ≈ ${formatEuro2(grossN)} — CF net terminal indicatif ≈ ${formatEuro2(cfAnnualFromGross(immoBase, grossN))}.`;
+    return `Projection loc. longue (réf.) : brut an 1 ≈ ${fmtC2(gross0)}, brut terminal (an ${years}) ≈ ${fmtC2(grossN)} — CF net terminal indicatif ≈ ${fmtC2(cfAnnualFromGross(immoBase, grossN))}.`;
   })();
 
   const toggleDoc = (doc) => update({ memoDocs: { ...(data.memoDocs || {}), [doc]: !data.memoDocs?.[doc] } });
@@ -832,7 +843,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
         <span className="immo-profit-dot" aria-hidden="true" />
         <div>
           <strong>{rentable ? t('invest.immoRentable') : t('invest.immoNotRentable')}</strong>
-          <span>{label || t('invest.immoCfAnnual')} : {formatEuro2(Number.isFinite(Number(score)) ? Number(score) : 0)}</span>
+          <span>{label || t('invest.immoCfAnnual')} : {fmtC2(Number.isFinite(Number(score)) ? Number(score) : 0)}</span>
         </div>
       </div>
     );
@@ -840,8 +851,8 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   const rentalMini = (row) => (
     <>
       <div className="immo-mini-stats">
-        {miniStat(t('invest.immoMiniGross'), formatEuro2(row.brut))}
-        {miniStat(t('invest.immoMiniCf'), formatEuro2(row.cf), row.cf >= 0 ? 'pos' : 'neg')}
+        {miniStat(t('invest.immoMiniGross'), fmtC2(row.brut))}
+        {miniStat(t('invest.immoMiniCf'), fmtC2(row.cf), row.cf >= 0 ? 'pos' : 'neg')}
         {miniStat(t('invest.immoMiniRBrut'), formatPct(row.rBrut))}
         {miniStat(t('invest.immoMiniRNet'), row.apportForYield > 0 ? formatPct(row.rNet) : '—', row.apportForYield > 0 ? (row.cf >= 0 ? 'pos' : 'neg') : '')}
       </div>
@@ -850,13 +861,13 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   );
 
   const exportImmoTsv = async () => {
-    const rows = [['Scénario', 'Brut / an', 'CF net / an', 'R. brut', 'R. net / apport', 'Remarque'], ...immoCompareRows.map((row) => [row.label, formatEuro2(row.brut), row.score != null ? formatEuro2(row.cf) : '—', formatPct(row.rBrut), row.apportForYield > 0 ? formatPct(row.rNet) : '—', row.remark])];
+    const rows = [['Scénario', 'Brut / an', 'CF net / an', 'R. brut', 'R. net / apport', 'Remarque'], ...immoCompareRows.map((row) => [row.label, fmtC2(row.brut), row.score != null ? fmtC2(row.cf) : '—', formatPct(row.rBrut), row.apportForYield > 0 ? formatPct(row.rNet) : '—', row.remark])];
     const text = rows.map((row) => row.map(safeExportCell).join('\t')).join('\n');
     try { await navigator.clipboard.writeText(text); notify('Tableau immo copié (TSV).'); } catch {}
   };
 
   const downloadImmoCsv = () => {
-    const rows = [['Scenario', 'Brut', 'CF', 'RBrut', 'RNet', 'Note'], ...immoCompareRows.map((row) => [row.label, formatEuro2(row.brut), row.score != null ? formatEuro2(row.cf) : '—', formatPct(row.rBrut), row.apportForYield > 0 ? formatPct(row.rNet) : '—', row.remark])];
+    const rows = [['Scenario', 'Brut', 'CF', 'RBrut', 'RNet', 'Note'], ...immoCompareRows.map((row) => [row.label, fmtC2(row.brut), row.score != null ? fmtC2(row.cf) : '—', formatPct(row.rBrut), row.apportForYield > 0 ? formatPct(row.rNet) : '—', row.remark])];
     const csv = '\uFEFF' + rows.map((row) => row.map((cell) => `"${safeExportCell(cell).replace(/"/g, '""')}"`).join(';')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -948,7 +959,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
           <h1 className="page-title">{t('invest.overview')}</h1>
           <p className="page-sub">{t('invest.overviewSub')}</p>
           <div className="stats-row">
-            <div className="stat-box"><div className="v">{Math.round(totalOverviewValue).toLocaleString('fr-FR')}€</div><div className="l">{t('invest.overviewTotal')}</div></div>
+            <div className="stat-box"><div className="v">{fmtC(totalOverviewValue)}</div><div className="l">{t('invest.overviewTotal')}</div></div>
             <div className="stat-box"><div className="v">{holdings.length}</div><div className="l">{t('invest.overviewPositions')}</div></div>
           </div>
           <div className="card">
@@ -1017,7 +1028,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                       </td>
                       <td><input className="input-dark invest-holding-input" type="text" value={row.asset} onChange={(e) => updateHolding(index, { asset: e.target.value })} placeholder="Ex. BTC" /></td>
                       <td><input className="input-dark invest-holding-input" list="inv-gecko-presets" type="text" value={row.geckoId || ''} onInput={(e) => updateHoldingGeckoId(index, e.currentTarget.value)} onChange={(e) => updateHoldingGeckoId(index, e.currentTarget.value)} placeholder="bitcoin" autoComplete="off" /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={row.computedValue} readOnly placeholder="Ex. 34 400€" /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={fmtC(parseAmount(row.computedValue || '0'))} readOnly placeholder="Ex. 34 400€" /></td>
                       <td><input className="input-dark invest-holding-input" type="text" value={row.quantity} onChange={(e) => updateHolding(index, { quantity: e.target.value, value: '' })} placeholder="Ex. 0.82" /></td>
                       <td><input className="input-dark invest-holding-input" type="text" value={row.avgPrice} onChange={(e) => updateHolding(index, { avgPrice: e.target.value, value: '' })} placeholder="Ex. 42 000€" /></td>
                       <td>
@@ -1058,16 +1069,16 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                 <h2>{t('invest.passiveIncomeTitle')}</h2>
                 <div className="stats-row" style={{ marginBottom: 0 }}>
                   <div className="stat-box">
-                    <div className="v">{formatEuro(totalMonthly)}</div>
+                    <div className="v">{fmtC(totalMonthly)}</div>
                     <div className="l">{t('invest.passiveIncomeMonthly')}</div>
                   </div>
                   <div className="stat-box">
-                    <div className="v">{formatEuro(totalMonthly * 12)}</div>
+                    <div className="v">{fmtC(totalMonthly * 12)}</div>
                     <div className="l">{t('invest.passiveIncomeAnnual')}</div>
                   </div>
                   {immoPassiveRows.length > 0 && (
                     <div className="stat-box">
-                      <div className="v">{formatEuro(immoMonthly)}</div>
+                      <div className="v">{fmtC(immoMonthly)}</div>
                       <div className="l">{t('invest.passiveIncomeImmo')}</div>
                     </div>
                   )}
@@ -1187,7 +1198,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                 <input type="text" id="immo-abatt" className="input-dark immo-persist" value={immoField(activeFields, ‘immo-abatt’)} onChange={(e) => setImmoField(‘immo-abatt’, e.target.value)} placeholder="ex. 30 (nu) ou 50 (meublé micro-BIC)" />
               </div>
             </div>
-            <p className="hint" id="immo-base-recap">{immoBase.prix > 0 ? <>Budget total acquisition : <strong>{formatEuro2(immoBase.totalProjet)}</strong> — apport <strong>{formatEuro2(immoBase.apport)}</strong>, mensualité <strong>{formatEuro2(immoBase.mens)}</strong>/mo (<strong>{formatEuro2(immoBase.annCredit)}</strong>/an).</> : t(‘invest.immoBaseRecapEmpty’)}</p>
+            <p className="hint" id="immo-base-recap">{immoBase.prix > 0 ? <>Budget total acquisition : <strong>{fmtC2(immoBase.totalProjet)}</strong> — apport <strong>{fmtC2(immoBase.apport)}</strong>, mensualité <strong>{fmtC2(immoBase.mens)}</strong>/mo (<strong>{fmtC2(immoBase.annCredit)}</strong>/an).</> : t(‘invest.immoBaseRecapEmpty’)}</p>
           </div>
 
           <div className="immo-section-label">{t('invest.immoScenariosLabel')}</div>
@@ -1240,7 +1251,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
               <input type="text" id="immo-s5-loyer" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s5-loyer')} onChange={(e) => setImmoField('immo-s5-loyer', e.target.value)} placeholder="ex. 0 ou 900" />
               <label htmlFor="immo-s5-vac">{t('invest.immoS5Vac')}</label>
               <input type="text" id="immo-s5-vac" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s5-vac')} onChange={(e) => setImmoField('immo-s5-vac', e.target.value)} placeholder="ex. 5" />
-              <div className="immo-scen-out" id="immo-out-s5"><div className="immo-mini-stats">{miniStat(t('invest.immoS5Gross'), formatEuro2(immoResult.details.gross5))}{miniStat(t('invest.immoS5Cf'), formatEuro2(immoResult.details.annualCf5), immoResult.details.annualCf5 >= 0 ? 'pos' : 'neg')}{miniStat(t('invest.immoS5SaleNet'), formatEuro2(immoResult.details.saleNet5))}{miniStat(t('invest.immoS5Profit'), formatEuro2(immoResult.details.profit5), immoResult.details.profit5 >= 0 ? 'pos' : 'neg')}</div><p className="hint">{t('invest.immoS5Eq')} : <strong>{formatEuro2(immoResult.details.eq5)}</strong> — {t('invest.immoS5Crd')} : {formatEuro2(immoResult.details.bal5)}.</p>{immoRentabilityBadge(immoResult.details.profit5, t('invest.immoGainLabel'))}</div>
+              <div className="immo-scen-out" id="immo-out-s5"><div className="immo-mini-stats">{miniStat(t('invest.immoS5Gross'), fmtC2(immoResult.details.gross5))}{miniStat(t('invest.immoS5Cf'), fmtC2(immoResult.details.annualCf5), immoResult.details.annualCf5 >= 0 ? 'pos' : 'neg')}{miniStat(t('invest.immoS5SaleNet'), fmtC2(immoResult.details.saleNet5))}{miniStat(t('invest.immoS5Profit'), fmtC2(immoResult.details.profit5), immoResult.details.profit5 >= 0 ? 'pos' : 'neg')}</div><p className="hint">{t('invest.immoS5Eq')} : <strong>{fmtC2(immoResult.details.eq5)}</strong> — {t('invest.immoS5Crd')} : {fmtC2(immoResult.details.bal5)}.</p>{immoRentabilityBadge(immoResult.details.profit5, t('invest.immoGainLabel'))}</div>
             </div>
             <div className="card immo-scen">
               <h3>{t('invest.immoS6Title')}</h3>
@@ -1248,7 +1259,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
               <input type="text" id="immo-s6-mois" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s6-mois')} onChange={(e) => setImmoField('immo-s6-mois', e.target.value)} placeholder="ex. 14" />
               <label htmlFor="immo-s6-plus">{t('invest.immoS6Plus')}</label>
               <input type="text" id="immo-s6-plus" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s6-plus')} onChange={(e) => setImmoField('immo-s6-plus', e.target.value)} placeholder="ex. 12" />
-              <div className="immo-scen-out" id="immo-out-s6"><div className="immo-mini-stats">{miniStat(t('invest.immoS6SaleNet'), formatEuro2(immoResult.details.saleNet6))}{miniStat(t('invest.immoS6Charges'), formatEuro2(-immoResult.details.cumCf6), 'neg')}{miniStat(t('invest.immoS6Profit'), formatEuro2(immoResult.details.profit6), immoResult.details.profit6 >= 0 ? 'pos' : 'neg')}{miniStat(t('invest.immoS6Eq'), formatEuro2(immoResult.details.eq6), immoResult.details.eq6 >= 0 ? 'pos' : 'neg')}</div>{immoRentabilityBadge(immoResult.details.profit6, t('invest.immoGainLabel'))}</div>
+              <div className="immo-scen-out" id="immo-out-s6"><div className="immo-mini-stats">{miniStat(t('invest.immoS6SaleNet'), fmtC2(immoResult.details.saleNet6))}{miniStat(t('invest.immoS6Charges'), fmtC2(-immoResult.details.cumCf6), 'neg')}{miniStat(t('invest.immoS6Profit'), fmtC2(immoResult.details.profit6), immoResult.details.profit6 >= 0 ? 'pos' : 'neg')}{miniStat(t('invest.immoS6Eq'), fmtC2(immoResult.details.eq6), immoResult.details.eq6 >= 0 ? 'pos' : 'neg')}</div>{immoRentabilityBadge(immoResult.details.profit6, t('invest.immoGainLabel'))}</div>
               <p className="hint">{t('invest.immoS6Hint')}</p>
             </div>
             <div className="card immo-scen">
@@ -1261,7 +1272,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
               <input type="text" id="immo-s7-prixlot" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s7-prixlot')} onChange={(e) => setImmoField('immo-s7-prixlot', e.target.value)} placeholder="ex. 195000" />
               <label htmlFor="immo-s7-delai">{t('invest.immoS7Delai')}</label>
               <input type="text" id="immo-s7-delai" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s7-delai')} onChange={(e) => setImmoField('immo-s7-delai', e.target.value)} placeholder="ex. 24" />
-              <div className="immo-scen-out" id="immo-out-s7"><div className="immo-mini-stats">{miniStat(t('invest.immoS7Total'), formatEuro2(immoResult.details.total7))}{miniStat(t('invest.immoS7Apport'), formatEuro2(immoResult.details.apport7))}{miniStat(t('invest.immoS7SaleNet'), formatEuro2(immoResult.details.saleNet7))}{miniStat(t('invest.immoS7Profit'), formatEuro2(immoResult.details.profit7), immoResult.details.profit7 >= 0 ? 'pos' : 'neg')}</div><p className="hint">{t('invest.immoS7Eq')} : <strong>{formatEuro2(immoResult.details.eq7)}</strong> — {t('invest.immoS7Mens')} : {formatEuro2(immoResult.details.mens7)}/mo.</p>{immoRentabilityBadge(immoResult.details.profit7, t('invest.immoGainLabel'))}</div>
+              <div className="immo-scen-out" id="immo-out-s7"><div className="immo-mini-stats">{miniStat(t('invest.immoS7Total'), fmtC2(immoResult.details.total7))}{miniStat(t('invest.immoS7Apport'), fmtC2(immoResult.details.apport7))}{miniStat(t('invest.immoS7SaleNet'), fmtC2(immoResult.details.saleNet7))}{miniStat(t('invest.immoS7Profit'), fmtC2(immoResult.details.profit7), immoResult.details.profit7 >= 0 ? 'pos' : 'neg')}</div><p className="hint">{t('invest.immoS7Eq')} : <strong>{fmtC2(immoResult.details.eq7)}</strong> — {t('invest.immoS7Mens')} : {fmtC2(immoResult.details.mens7)}/mo.</p>{immoRentabilityBadge(immoResult.details.profit7, t('invest.immoGainLabel'))}</div>
               <p className="hint">{t('invest.immoS7Hint')}</p>
             </div>
             <div className="card immo-scen">
@@ -1272,7 +1283,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
               <input type="text" id="immo-s8-prix" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s8-prix')} onChange={(e) => setImmoField('immo-s8-prix', e.target.value)} placeholder="ex. 260000" />
               <label htmlFor="immo-s8-mois">{t('invest.immoS8Mois')}</label>
               <input type="text" id="immo-s8-mois" className="input-dark immo-persist" value={immoField(activeFields, 'immo-s8-mois')} onChange={(e) => setImmoField('immo-s8-mois', e.target.value)} placeholder="ex. 6" />
-              <div className="immo-scen-out" id="immo-out-s8"><div className="immo-mini-stats">{miniStat(t('invest.immoS8Engagement'), formatEuro2(immoResult.details.prime8))}{miniStat(t('invest.immoS8Duration'), String(Math.round(immoResult.details.mois8)))}{miniStat(t('invest.immoS8CostPerMonth'), formatEuro2(immoResult.details.prime8 / immoResult.details.mois8), 'neg')}{miniStat(t('invest.immoS8Target'), immoResult.details.prix8 > 0 ? formatEuro2(immoResult.details.prix8) : '—')}</div>{immoRentabilityBadge(immoResult.details.prix8 - immoBase.totalProjet - immoResult.details.prime8, t('invest.immoEcartLabel'))}</div>
+              <div className="immo-scen-out" id="immo-out-s8"><div className="immo-mini-stats">{miniStat(t('invest.immoS8Engagement'), fmtC2(immoResult.details.prime8))}{miniStat(t('invest.immoS8Duration'), String(Math.round(immoResult.details.mois8)))}{miniStat(t('invest.immoS8CostPerMonth'), fmtC2(immoResult.details.prime8 / immoResult.details.mois8), 'neg')}{miniStat(t('invest.immoS8Target'), immoResult.details.prix8 > 0 ? fmtC2(immoResult.details.prix8) : '—')}</div>{immoRentabilityBadge(immoResult.details.prix8 - immoBase.totalProjet - immoResult.details.prime8, t('invest.immoEcartLabel'))}</div>
               <p className="hint">{t('invest.immoS8Hint')}</p>
             </div>
           </div>
@@ -1297,8 +1308,8 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                   {immoBase.prix <= 0 ? <tr><td colSpan="6" className="hint">{t(‘invest.immoCompareEmpty’)}</td></tr> : immoCompareRows.map((row, index) => (
                     <tr key={`${row.label}-${index}`} className={`${row.stress ? 'stress-row' : ''} ${!row.stress && immoBest && row.label === immoBest.label ? 'best' : ''}`}>
                       <td>{row.label}</td>
-                      <td className="num">{formatEuro2(row.brut)}</td>
-                      <td className="num">{row.score != null ? formatEuro2(row.cf) : '—'}</td>
+                      <td className="num">{fmtC2(row.brut)}</td>
+                      <td className="num">{row.score != null ? fmtC2(row.cf) : '—'}</td>
                       <td className="num">{formatPct(row.rBrut)}</td>
                       <td className="num">{row.apportForYield > 0 ? formatPct(row.rNet) : '—'}</td>
                       <td>{row.remark}</td>
@@ -1329,9 +1340,9 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                   ) : (
                     <tr key={row.pid}>
                       <td>{row.name}</td>
-                      <td className="num">{formatEuro2(row.prix)}</td>
+                      <td className="num">{fmtC2(row.prix)}</td>
                       <td>{row.best?.label || '—'}</td>
-                      <td className="num">{row.best?.score != null ? formatEuro2(row.best.cf) : '—'}</td>
+                      <td className="num">{row.best?.score != null ? fmtC2(row.best.cf) : '—'}</td>
                       <td className="num">{row.best?.apportForYield > 0 ? formatPct(row.best.rNet) : '—'}</td>
                     </tr>
                   ))}
@@ -1355,9 +1366,9 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
             if (passiveRows.length === 0 && monthGain === 0) return null;
             return (
               <div className="stats-row" style={{ marginBottom: '1rem' }}>
-                {monthPassiveTotal > 0 && <div className="stat-box"><div className="v pos">{formatEuro(monthPassiveTotal)}</div><div className="l">{t('invest.monthlyPassiveLabel')}</div></div>}
-                {monthPassiveTotal > 0 && <div className="stat-box"><div className="v">{formatEuro(monthPassiveTotal * 12)}</div><div className="l">{t('invest.monthlyPassiveAnnualLabel')}</div></div>}
-                {monthGain > 0 && <div className="stat-box"><div className="v pos">{formatEuro(monthGain)}</div><div className="l">{t('invest.monthlyGainLabel')}</div></div>}
+                {monthPassiveTotal > 0 && <div className="stat-box"><div className="v pos">{fmtC(monthPassiveTotal)}</div><div className="l">{t('invest.monthlyPassiveLabel')}</div></div>}
+                {monthPassiveTotal > 0 && <div className="stat-box"><div className="v">{fmtC(monthPassiveTotal * 12)}</div><div className="l">{t('invest.monthlyPassiveAnnualLabel')}</div></div>}
+                {monthGain > 0 && <div className="stat-box"><div className="v pos">{fmtC(monthGain)}</div><div className="l">{t('invest.monthlyGainLabel')}</div></div>}
               </div>
             );
           })()}
@@ -1394,7 +1405,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                 {annualRows.map((row) => (
                   <tr key={row.key}>
                     <td>{row.month}</td>
-                    <td className="num"><strong className={row.gain >= 0 ? 'pos' : 'neg'}>{formatEuro2(row.gain || 0)}</strong></td>
+                    <td className="num"><strong className={row.gain >= 0 ? 'pos' : 'neg'}>{fmtC2(row.gain || 0)}</strong></td>
                     <td>{row.movements || <span className="hint">—</span>}</td>
                     <td>{row.lesson || <span className="hint">—</span>}</td>
                     <td>{row.next || <span className="hint">—</span>}</td>
