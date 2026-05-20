@@ -972,6 +972,11 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
         <section className={`page ${page === 'overview' ? 'active' : ''}`}>
           <h1 className="page-title">{t('invest.overview')}</h1>
           <p className="page-sub">{t('invest.overviewSub')}</p>
+          <p className="hint" style={{ marginTop: 0, marginBottom: '0.75rem', fontSize: '0.72rem' }}>
+            Actifs et Revenu passif sont calculés automatiquement depuis{' '}
+            <button type="button" style={{ background: 'none', border: 'none', color: 'var(--gold-bright)', cursor: 'pointer', padding: 0, fontSize: 'inherit', textDecoration: 'underline' }} onClick={() => update({ page: 'holdings' })}>Mes positions</button>
+            {' '}(colonne Synthèse).
+          </p>
           <div className="stats-row">
             <div className="stat-box"><div className="v">{fmtC(totalOverviewValue)}</div><div className="l">{t('invest.overviewTotal')}</div></div>
             <button type="button" className="stat-box" style={{ cursor: 'pointer', background: 'none', border: 'none', textAlign: 'center' }} onClick={() => update({ page: 'holdings' })}><div className="v">{fmtC(segmentTotals.actif || 0)}</div><div className="l" style={{ color: 'var(--gold, #c9a84c)' }}>{t('invest.holdingsSegmentActif')} →</div></button>
@@ -1021,7 +1026,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                   {holdings.map((row, index) => (
                     <tr key={`${row.asset || 'row'}-${index}`} className={isHoldingSold(row) ? 'row-sold' : ''}>
                       <td><input className="input-dark invest-holding-input" type="text" value={row.asset} onChange={(e) => updateHolding(index, { asset: e.target.value })} placeholder="Ex. BTC" /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" style={{ minWidth: '120px' }} value={row.value || row.computedValue || ''} onChange={(e) => updateHolding(index, { value: e.target.value })} placeholder="Ex. 1 000 000€" /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" style={{ minWidth: '160px' }} value={row.value || row.computedValue || ''} onChange={(e) => updateHolding(index, { value: e.target.value })} placeholder="Ex. 1 000 000€" /></td>
                       <td>
                         <select className="input-dark invest-holding-input" value={row.className === 'immobilier' ? 'immo' : row.className === 'oblig' ? 'obligations' : (row.className || 'autre')} onChange={(e) => updateHolding(index, { className: e.target.value })}>
                           <option value="crypto">{t('invest.holdingsClassCrypto')}</option>

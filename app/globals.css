@@ -1741,7 +1741,7 @@ table.data td.num, table.split td.num, table.immo-compare td.num { text-align: r
 .mindset-shell.invest-hub table.data th:nth-child(1),
 .mindset-shell.invest-hub table.data td:nth-child(1) { min-width: 140px; }
 .mindset-shell.invest-hub table.data th:nth-child(2),
-.mindset-shell.invest-hub table.data td:nth-child(2) { min-width: 130px; }
+.mindset-shell.invest-hub table.data td:nth-child(2) { min-width: 165px; }
 .mindset-shell.invest-hub table.data th:nth-child(3),
 .mindset-shell.invest-hub table.data td:nth-child(3) { min-width: 160px; }
 .mindset-shell.invest-hub table.data th:nth-child(4),
