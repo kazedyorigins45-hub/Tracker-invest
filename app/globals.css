@@ -1636,6 +1636,15 @@ a { color: inherit; }
   line-height: 1 !important;
   box-sizing: border-box;
 }
+textarea.tracker-series-input {
+  height: auto !important;
+  min-height: 64px !important;
+  max-height: none !important;
+  padding-top: 0.3rem !important;
+  padding-bottom: 0.3rem !important;
+  line-height: 1.45 !important;
+  resize: vertical;
+}
 .tracker-series-card textarea,
 .tracker-series-card input {
   min-height: 44px;
