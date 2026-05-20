@@ -995,11 +995,11 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                   </div>
                   {rows.length === 0 ? (
                     <p className="hint" style={{ margin: 0, fontSize: '0.72rem' }}>
-                      {isUsd ? 'No positions yet — go to ' : 'Aucune position — allez dans '}
+                      {locale === 'en' ? 'No positions yet — go to ' : 'Aucune position — allez dans '}
                       <button type="button" style={{ background: 'none', border: 'none', color: 'var(--gold-bright)', cursor: 'pointer', padding: 0, fontSize: 'inherit', textDecoration: 'underline' }} onClick={() => update({ page: 'holdings' })}>
-                        {isUsd ? 'My positions' : 'Mes positions'}
+                        {locale === 'en' ? 'My positions' : 'Mes positions'}
                       </button>
-                      {isUsd ? ' and set the Synth. column.' : ' et définissez la colonne Synthèse.'}
+                      {locale === 'en' ? ' and set the Synth. column.' : ' et définissez la colonne Synthèse.'}
                     </p>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
@@ -1012,7 +1012,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                     </div>
                   )}
                   <button type="button" className="btn-ghost btn-compact" style={{ marginTop: '0.65rem', fontSize: '0.72rem' }} onClick={() => update({ page: 'holdings' })}>
-                    {isUsd ? 'Edit in My positions →' : 'Modifier dans Mes positions →'}
+                    {locale === 'en' ? 'Edit in My positions →' : 'Modifier dans Mes positions →'}
                   </button>
                 </div>
               );

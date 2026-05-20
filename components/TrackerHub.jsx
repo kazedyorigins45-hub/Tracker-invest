@@ -298,8 +298,9 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
   const { t, locale } = useLocale();
   const { currency } = useCurrency();
   const fxRate = useFxRate();
-  const isEnglish = currency === 'usd';
-  const currencySymbol = isEnglish ? '$' : '€';
+  const isUsd = currency === 'usd';
+  const isEnglish = locale === 'en';
+  const currencySymbol = isUsd ? '$' : '€';
   const currencyUnit = `${currencySymbol}/u`;
   const morningItems = locale === 'en' ? MORNING_ITEMS_EN : MORNING_ITEMS_FR;
   const commitmentItems = locale === 'en' ? COMMITMENT_ITEMS_EN : COMMITMENT_ITEMS_FR;
@@ -719,7 +720,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
 
           <div className="stats-row" id="mo-stats">
             <div className="stat-box"><div className="v">{monthlyAutoSnapshot.count || 0}</div><div className="l">{t('tracker.monthlyTradesTotal')}</div></div>
-            <div className="stat-box"><div className={`v ${(monthlyAutoSnapshot.net || 0) >= 0 ? 'pos' : 'neg'}`}>{formatMoney(monthlyAutoSnapshot.net || 0, isEnglish, fxRate)} {currencySymbol}</div><div className="l">{t('tracker.monthlyGlobalResult')}</div></div>
+            <div className="stat-box"><div className={`v ${(monthlyAutoSnapshot.net || 0) >= 0 ? 'pos' : 'neg'}`}>{formatMoney(monthlyAutoSnapshot.net || 0, isUsd, fxRate)} {currencySymbol}</div><div className="l">{t('tracker.monthlyGlobalResult')}</div></div>
             <div className="stat-box"><div className="v">{monthlyAutoSnapshot.count ? Math.round((monthlyAutoSnapshot.wins / monthlyAutoSnapshot.count) * 100) : 0}%</div><div className="l">{t('tracker.monthlyWinrate')}</div></div>
             <div className="stat-box"><div className="v">{monthlyAutoSnapshot.wins || 0} / {monthlyAutoSnapshot.losses || 0}</div><div className="l">{t('tracker.monthlyWinnersLosers')}</div></div>
           </div>
@@ -739,7 +740,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
               <label htmlFor="mo-lesson">{t('tracker.monthlyLesson')}</label>
               <textarea id="mo-lesson" rows="3" className="input-dark portfolio-note" value={monthlySnapshot.monthlyLesson || ''} onChange={(e) => setMonthlyField('monthlyLesson', e.target.value)} />
               <label htmlFor="mo-result-manual">{t('tracker.monthlyResult')}</label>
-              <input type="text" id="mo-result-manual" className="input-dark tracker-monthly-single" value={monthlySnapshot.monthlyResult || formatMoney(monthlyAutoSnapshot.net || 0, isEnglish, fxRate) || ''} onChange={(e) => setMonthlyField('monthlyResult', e.target.value)} placeholder={t('tracker.monthlyResultPlaceholder')} />
+              <input type="text" id="mo-result-manual" className="input-dark tracker-monthly-single" value={monthlySnapshot.monthlyResult || formatMoney(monthlyAutoSnapshot.net || 0, isUsd, fxRate) || ''} onChange={(e) => setMonthlyField('monthlyResult', e.target.value)} placeholder={t('tracker.monthlyResultPlaceholder')} />
             </div>
           </div>
 
@@ -925,7 +926,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
 
           <div className="stats-row" id="w-stats">
             <div className="stat-box"><div className="v">{weeklyStats.count}</div><div className="l">{t('tracker.weeklyTradesCount')}</div></div>
-            <div className="stat-box"><div className={`v ${weeklyStats.net >= 0 ? 'pos' : 'neg'}`}>{formatMoney(weeklyStats.net, isEnglish, fxRate)} {currencySymbol}</div><div className="l">{t('tracker.weeklyNet')}</div></div>
+            <div className="stat-box"><div className={`v ${weeklyStats.net >= 0 ? 'pos' : 'neg'}`}>{formatMoney(weeklyStats.net, isUsd, fxRate)} {currencySymbol}</div><div className="l">{t('tracker.weeklyNet')}</div></div>
             <div className="stat-box"><div className="v">{weeklyWinrate.toFixed(1)} %</div><div className="l">{t('tracker.weeklyWinrate')}</div></div>
             <div className="stat-box"><div className="v">{weeklyStats.wins} / {weeklyStats.losses}</div><div className="l">{t('tracker.weeklyWinLose')}</div></div>
             <div className="stat-box"><div className="v">{weeklyStats.count ? (weeklyStats.net / weeklyStats.count).toLocaleString(isEnglish ? 'en-US' : 'fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : (isEnglish ? '0.00' : '0,00')} {currencySymbol}</div><div className="l">{t('tracker.weeklyAvgPerTrade')}</div></div>
@@ -1000,10 +1001,10 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
                           <option value="short">Short</option>
                         </select>
                       </td>
-                      <td><input className="input-dark tracker-series-input" type="text" value={toDisplayAmount(row.entry, isEnglish, fxRate)} onChange={(e) => updateWeeklyTrade(originalIndex, { entry: toStoredAmount(e.target.value, isEnglish, fxRate) })} /></td>
-                      <td><input className="input-dark tracker-series-input" type="text" value={toDisplayAmount(row.sl ?? row.exit, isEnglish, fxRate)} onChange={(e) => updateWeeklyTrade(originalIndex, { sl: toStoredAmount(e.target.value, isEnglish, fxRate) })} /></td>
+                      <td><input className="input-dark tracker-series-input" type="text" value={toDisplayAmount(row.entry, isUsd, fxRate)} onChange={(e) => updateWeeklyTrade(originalIndex, { entry: toStoredAmount(e.target.value, isUsd, fxRate) })} /></td>
+                      <td><input className="input-dark tracker-series-input" type="text" value={toDisplayAmount(row.sl ?? row.exit, isUsd, fxRate)} onChange={(e) => updateWeeklyTrade(originalIndex, { sl: toStoredAmount(e.target.value, isUsd, fxRate) })} /></td>
                       <td><input className="input-dark tracker-series-input" type="text" value={row.tp ?? row.rr ?? ''} onChange={(e) => updateWeeklyTrade(originalIndex, { tp: e.target.value })} /></td>
-                      <td style={{ background: (() => { const v = parseAmount(row.result); return v == null ? 'transparent' : v > 0 ? 'rgba(34,197,94,0.15)' : v < 0 ? 'rgba(239,68,68,0.15)' : 'transparent'; })() }}><input className="input-dark tracker-series-input" type="text" style={{ color: (() => { const v = parseAmount(row.result); return v == null ? undefined : v > 0 ? 'var(--success, #22c55e)' : v < 0 ? 'var(--danger, #ef4444)' : undefined; })() }} value={toDisplayAmount(row.result, isEnglish, fxRate)} onChange={(e) => updateWeeklyTrade(originalIndex, { result: toStoredAmount(e.target.value, isEnglish, fxRate) })} /></td>
+                      <td style={{ background: (() => { const v = parseAmount(row.result); return v == null ? 'transparent' : v > 0 ? 'rgba(34,197,94,0.15)' : v < 0 ? 'rgba(239,68,68,0.15)' : 'transparent'; })() }}><input className="input-dark tracker-series-input" type="text" style={{ color: (() => { const v = parseAmount(row.result); return v == null ? undefined : v > 0 ? 'var(--success, #22c55e)' : v < 0 ? 'var(--danger, #ef4444)' : undefined; })() }} value={toDisplayAmount(row.result, isUsd, fxRate)} onChange={(e) => updateWeeklyTrade(originalIndex, { result: toStoredAmount(e.target.value, isUsd, fxRate) })} /></td>
                       <td><input className="input-dark tracker-series-input" type="text" value={row.emotion || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { emotion: e.target.value })} /></td>
                       <td><textarea className="input-dark tracker-series-input" rows={3} style={{ resize: 'vertical', minWidth: '160px', verticalAlign: 'top' }} value={row.comment || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { comment: e.target.value })} /></td>
                       <td>
@@ -1037,7 +1038,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
                   fontWeight: 700,
                   letterSpacing: '0.04em',
                 }}>
-                  {weeklyStats.net >= 0 ? '▲' : '▼'} {isEnglish ? 'Month' : 'Mois'}{data.weeklyMonth ? ` ${data.weeklyMonth}` : ''} : {weeklyStats.net >= 0 ? '+' : ''}{formatMoney(weeklyStats.net, isEnglish, fxRate)} {currencySymbol}
+                  {weeklyStats.net >= 0 ? '▲' : '▼'} {isEnglish ? 'Month' : 'Mois'}{data.weeklyMonth ? ` ${data.weeklyMonth}` : ''} : {weeklyStats.net >= 0 ? '+' : ''}{formatMoney(weeklyStats.net, isUsd, fxRate)} {currencySymbol}
                 </span>
               </div>
             )}
