@@ -10,6 +10,7 @@ export default function PricingGrid() {
   const router = useRouter();
   const [cycle, setCycle] = useState('monthly');
   const [loadingPlan, setLoadingPlan] = useState('');
+  const [selectedPlan, setSelectedPlan] = useState('');
   const { locale, t } = useLocale();
   const formatPrice = (value) => new Intl.NumberFormat(locale === 'en' ? 'en-US' : 'fr-FR', { maximumFractionDigits: 2, minimumFractionDigits: Number.isInteger(value) ? 0 : 1 }).format(value);
 
@@ -35,6 +36,7 @@ export default function PricingGrid() {
       }
 
       if (data.url) {
+        setSelectedPlan(planCode);
         window.location.href = data.url;
       }
     } catch {
@@ -55,9 +57,13 @@ export default function PricingGrid() {
         </button>
       </div>
 
+      <p style={{ textAlign: 'center', fontSize: '0.78rem', color: 'var(--muted)', margin: '0.5rem 0 1rem' }}>
+        {t('pricing.vatNotice')}
+      </p>
+
       <div className="subs">
         {PLANS.map((plan) => (
-          <article key={plan.code} className={`sub-card ${plan.highlight ? 'is-selected' : ''}`}>
+          <article key={plan.code} className={`sub-card ${plan.highlight || selectedPlan === plan.code ? 'is-selected' : ''}`}>
             <span className="badge">{plan.highlight ? t('pricing.recommended') : t('pricing.plan')}</span>
             <strong>{locale === 'en' ? plan.nameEn || plan.name : plan.name}</strong>
             <span className="plan-price">{formatPrice(plan.prices[cycle])}€ <small>/{cycle === 'monthly' ? t('pricing.monthly').toLowerCase() : t('pricing.yearly').toLowerCase()}</small></span>
@@ -75,11 +81,11 @@ export default function PricingGrid() {
             <div className="pricing-actions">
               <button
                 type="button"
-                className="btn btn-gold"
-                onClick={() => startCheckout(plan.code)}
+                className={`btn ${selectedPlan === plan.code ? 'btn-dark' : 'btn-gold'}`}
+                onClick={() => { setSelectedPlan(plan.code); startCheckout(plan.code); }}
                 disabled={loadingPlan === plan.code}
               >
-                {loadingPlan === plan.code ? 'Ouverture…' : cycle === 'monthly' ? t('pricing.chooseMonthly') : t('pricing.chooseYearly')}
+                {loadingPlan === plan.code ? 'Ouverture…' : selectedPlan === plan.code ? (locale === 'fr' ? 'Plan selectionne' : 'Plan selected') : cycle === 'monthly' ? t('pricing.chooseMonthly') : t('pricing.chooseYearly')}
               </button>
               <Link href={`/login?plan=${plan.code}&billing=${cycle}`} className="btn btn-dark">
                 {t('pricing.login')}

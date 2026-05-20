@@ -9,7 +9,7 @@ export default function CurrencyToggle({ className = '' }) {
 
   return (
     <button type="button" className={`theme-toggle ${className}`.trim()} onClick={() => setLocale(next)} aria-label="Basculer la devise">
-      {locale === 'fr' ? '$' : '€'}
+      {locale === 'fr' ? '$ USD' : '€ EUR'}
     </button>
   );
 }

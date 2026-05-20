@@ -533,6 +533,11 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
     acc[key] = (acc[key] || 0) + parseAmount(row.computedValue || row.value || 0);
     return acc;
   }, {});
+  const segmentTotals = openHoldings.reduce((acc, row) => {
+    const seg = row.hubSegment || 'actif';
+    acc[seg] = (acc[seg] || 0) + parseAmount(row.computedValue || row.value || 0);
+    return acc;
+  }, {});
 
   const overviewClasses = ['crypto', 'metaux', 'matieres', 'immo', 'obligations', 'actions', 'autre'];
   const overviewLabels = {
@@ -964,6 +969,8 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
           <p className="page-sub">{t('invest.overviewSub')}</p>
           <div className="stats-row">
             <div className="stat-box"><div className="v">{fmtC(totalOverviewValue)}</div><div className="l">{t('invest.overviewTotal')}</div></div>
+            <button type="button" className="stat-box" style={{ cursor: 'pointer', background: 'none', border: 'none', textAlign: 'center' }} onClick={() => update({ page: 'holdings' })}><div className="v">{fmtC(segmentTotals.actif || 0)}</div><div className="l" style={{ color: 'var(--gold, #c9a84c)' }}>{t('invest.holdingsSegmentActif')} →</div></button>
+            <button type="button" className="stat-box" style={{ cursor: 'pointer', background: 'none', border: 'none', textAlign: 'center' }} onClick={() => update({ page: 'holdings' })}><div className="v">{fmtC(segmentTotals.passif || 0)}</div><div className="l" style={{ color: 'var(--gold, #c9a84c)' }}>{t('invest.holdingsSegmentPassif')} →</div></button>
             <div className="stat-box"><div className="v">{holdings.length}</div><div className="l">{t('invest.overviewPositions')}</div></div>
           </div>
           <div className="card">
@@ -1002,7 +1009,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
               <table className="data">
                 <thead>
                   <tr>
-                    <th>{t('invest.holdingsColClass')}</th><th>{t('invest.holdingsColSynth')}</th><th>{t('invest.holdingsColIncome')}</th><th>{t('invest.holdingsColLabel')}</th><th>{t('invest.holdingsColGecko')}</th><th>{t('invest.holdingsColValue')}</th><th>{t('invest.holdingsColQty')}</th><th>{t('invest.holdingsColBuyPrice')}</th><th>{t('invest.holdingsColSellPrice')}</th><th>{t('invest.holdingsColSellDate')}</th><th>{t('invest.holdingsColSaleResult')}</th><th>{t('invest.holdingsColNotes')}</th><th></th>
+                    <th>{t('invest.holdingsColClass')}</th><th>{t('invest.holdingsColSynth')}</th><th>{t('invest.holdingsColIncome')}</th><th>{t('invest.holdingsColLabel')}</th><th>{t('invest.holdingsColGecko')}</th><th style={{ minWidth: '130px' }}>{t('invest.holdingsColValue')}</th><th>{t('invest.holdingsColQty')}</th><th>{t('invest.holdingsColBuyPrice')}</th><th>{t('invest.holdingsColSellPrice')}</th><th>{t('invest.holdingsColSellDate')}</th><th>{t('invest.holdingsColSaleResult')}</th><th>{t('invest.holdingsColNotes')}</th><th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1032,7 +1039,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                       </td>
                       <td><input className="input-dark invest-holding-input" type="text" value={row.asset} onChange={(e) => updateHolding(index, { asset: e.target.value })} placeholder="Ex. BTC" /></td>
                       <td><input className="input-dark invest-holding-input" list="inv-gecko-presets" type="text" value={row.geckoId || ''} onInput={(e) => updateHoldingGeckoId(index, e.currentTarget.value)} onChange={(e) => updateHoldingGeckoId(index, e.currentTarget.value)} placeholder="bitcoin" autoComplete="off" /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={fmtC(parseAmount(row.computedValue || '0'))} readOnly placeholder="Ex. 34 400€" /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" style={{ minWidth: '120px' }} value={row.value || row.computedValue || ''} onChange={(e) => updateHolding(index, { value: e.target.value })} placeholder="Ex. 1 000 000€" /></td>
                       <td><input className="input-dark invest-holding-input" type="text" value={row.quantity} onChange={(e) => updateHolding(index, { quantity: e.target.value, value: '' })} placeholder="Ex. 0.82" /></td>
                       <td><input className="input-dark invest-holding-input" type="text" value={row.avgPrice} onChange={(e) => updateHolding(index, { avgPrice: e.target.value, value: '' })} placeholder="Ex. 42 000€" /></td>
                       <td>

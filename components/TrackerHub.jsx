@@ -40,7 +40,7 @@ function parseAmount(value) {
 
 function computeTradeResult(row) {
   const entry = parseAmount(row.entry);
-  const exit = parseAmount(row.exit);
+  const exit = parseAmount(row.sl ?? row.exit);
   const lots = parseAmount(row.lots) ?? 1;
   if (entry == null || exit == null || !Number.isFinite(lots)) return null;
   const raw = row.direction === 'short' ? (entry - exit) * lots : (exit - entry) * lots;
@@ -372,7 +372,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
     } else {
       dateStr = ym + '-01';
     }
-    update({ weeklyTrades: [...weeklyTrades, { date: dateStr, asset: '', direction: 'long', positionMode: 'forex', positionCapital: '', positionRiskPercent: '', stopLossPips: '', pipValue: '10', stopLossPrice: '', assetPrice: '', lots: '', entry: '', exit: '', rr: '', result: '', emotion: '', comment: '', tvUrl: '' }] });
+    update({ weeklyTrades: [...weeklyTrades, { date: dateStr, asset: '', direction: 'long', positionMode: 'forex', positionCapital: '', positionRiskPercent: '', stopLossPips: '', pipValue: '10', stopLossPrice: '', assetPrice: '', lots: '', entry: '', sl: '', tp: '', result: '', emotion: '', comment: '', tvUrl: '' }] });
   };
   const removeWeeklyTrade = (index) => {
     update({ weeklyTrades: weeklyTrades.filter((_, rowIndex) => rowIndex !== index) });
@@ -507,7 +507,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
           theme: 'dark',
           style: '1',
           locale: 'fr',
-          watchlist: ['BITSTAMP:BTCUSD', 'COINBASE:ETHUSD', 'NASDAQ:NVDA', 'MCX:GOLD1!'],
+          watchlist: ['BITSTAMP:BTCUSD', 'COINBASE:ETHUSD', 'NASDAQ:NVDA', 'MCX:GOLD1!', 'OANDA:XAGUSD'],
           container_id: 'tv-chart-weekly',
         });
       }
@@ -524,6 +524,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
     tp: row.tp || '',
     result: row.result || '',
     emotion: row.emotion || '',
+    comment: row.comment || '',
     tvUrl: row.tvUrl || '',
   });
 
@@ -901,7 +902,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
                     <th>{t('tracker.weeklyAsset')}</th>
                     <th>{t('tracker.weeklyDirection')}</th>
                     <th>{isEnglish ? `Entry (${currencyUnit})` : `Entrée (${currencyUnit})`}</th>
-                    <th>{isEnglish ? `Exit (${currencyUnit})` : `Sortie (${currencyUnit})`}</th>
+                    <th>{t('tracker.weeklyExit')}</th>
                     <th>{t('tracker.weeklyRR')}</th>
                     <th>{isEnglish ? `Result (${currencySymbol})` : `Résultat (${currencySymbol})`}</th>
                     <th>{t('tracker.weeklyEmotion')}</th>
@@ -923,11 +924,11 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
                         </select>
                       </td>
                       <td><input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.entry, isEnglish, fxRate)} onChange={(e) => updateWeeklyTrade(originalIndex, { entry: toStoredAmount(e.target.value, isEnglish, fxRate) })} /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.exit, isEnglish, fxRate)} onChange={(e) => updateWeeklyTrade(originalIndex, { exit: toStoredAmount(e.target.value, isEnglish, fxRate) })} /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={row.rr || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { rr: e.target.value })} /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.result, isEnglish, fxRate)} onChange={(e) => updateWeeklyTrade(originalIndex, { result: toStoredAmount(e.target.value, isEnglish, fxRate) })} /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.sl ?? row.exit, isEnglish, fxRate)} onChange={(e) => updateWeeklyTrade(originalIndex, { sl: toStoredAmount(e.target.value, isEnglish, fxRate) })} /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={row.tp ?? row.rr ?? ''} onChange={(e) => updateWeeklyTrade(originalIndex, { tp: e.target.value })} /></td>
+                      <td style={{ background: (() => { const v = parseAmount(row.result); return v == null ? 'transparent' : v > 0 ? 'rgba(34,197,94,0.15)' : v < 0 ? 'rgba(239,68,68,0.15)' : 'transparent'; })() }}><input className="input-dark invest-holding-input" type="text" style={{ color: (() => { const v = parseAmount(row.result); return v == null ? undefined : v > 0 ? 'var(--success, #22c55e)' : v < 0 ? 'var(--danger, #ef4444)' : undefined; })() }} value={toDisplayAmount(row.result, isEnglish, fxRate)} onChange={(e) => updateWeeklyTrade(originalIndex, { result: toStoredAmount(e.target.value, isEnglish, fxRate) })} /></td>
                       <td><input className="input-dark invest-holding-input" type="text" value={row.emotion || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { emotion: e.target.value })} /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={row.comment || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { comment: e.target.value })} /></td>
+                      <td><textarea className="input-dark invest-holding-input" rows={2} style={{ resize: 'vertical', minWidth: '140px', verticalAlign: 'top' }} value={row.comment || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { comment: e.target.value })} /></td>
                       <td>
                         <div className="s20-tv-stack">
                           <input className="input-dark invest-holding-input" type="url" value={row.tvUrl || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { tvUrl: e.target.value })} placeholder="tradingview.com/x/…" />
@@ -1124,7 +1125,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
             <div className="table-wrap">
               <table className="data">
                 <thead>
-                  <tr><th>{t('tracker.seriesColNum')}</th><th>{t('tracker.seriesColDate')}</th><th>{t('tracker.seriesColAsset')}</th><th>{t('tracker.seriesColDirection')}</th><th>{t('tracker.seriesColEntry')}</th><th>{t('tracker.seriesColSL')}</th><th>{t('tracker.seriesColTP')}</th><th>{t('tracker.seriesColResult')}</th><th>{t('tracker.seriesColEmotion')}</th><th>TradingView</th></tr>
+                  <tr><th>{t('tracker.seriesColNum')}</th><th>{t('tracker.seriesColDate')}</th><th>{t('tracker.seriesColAsset')}</th><th>{t('tracker.seriesColDirection')}</th><th>{t('tracker.seriesColEntry')}</th><th>{t('tracker.seriesColSL')}</th><th>{t('tracker.seriesColTP')}</th><th>{t('tracker.seriesColResult')}</th><th>{t('tracker.seriesColEmotion')}</th><th style={{ minWidth: '160px' }}>{t('tracker.seriesColComment')}</th><th>TradingView</th></tr>
                 </thead>
                 <tbody>
                   {series20Part1.map((row, index) => (
@@ -1138,6 +1139,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
                       <td><input type="text" className="input-dark tracker-series-input" value={row.tp || ''} onChange={(e) => updateSeriesRow('seriesP1', index, 'tp', e.target.value)} /></td>
                       <td><input type="text" className="input-dark tracker-series-input" value={row.result || ''} onChange={(e) => updateSeriesRow('seriesP1', index, 'result', e.target.value)} /></td>
                       <td><input type="text" className="input-dark tracker-series-input" value={row.emotion || ''} onChange={(e) => updateSeriesRow('seriesP1', index, 'emotion', e.target.value)} /></td>
+                      <td><textarea className="input-dark tracker-series-input" rows={2} style={{ resize: 'vertical', minWidth: '140px', verticalAlign: 'top' }} value={row.comment || ''} onChange={(e) => updateSeriesRow('seriesP1', index, 'comment', e.target.value)} /></td>
                       <td>
                         <div className="s20-tv-stack">
                           <input type="url" className="input-dark tracker-series-input" value={row.tvUrl || ''} onChange={(e) => updateSeriesRow('seriesP1', index, 'tvUrl', e.target.value)} placeholder="tradingview.com/x/…" />
@@ -1160,7 +1162,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
             <div className="table-wrap">
               <table className="data">
                 <thead>
-                  <tr><th>{t('tracker.seriesColNum')}</th><th>{t('tracker.seriesColDate')}</th><th>{t('tracker.seriesColAsset')}</th><th>{t('tracker.seriesColDirection')}</th><th>{t('tracker.seriesColEntry')}</th><th>{t('tracker.seriesColSL')}</th><th>{t('tracker.seriesColTP')}</th><th>{t('tracker.seriesColResult')}</th><th>{t('tracker.seriesColEmotion')}</th><th>TradingView</th></tr>
+                  <tr><th>{t('tracker.seriesColNum')}</th><th>{t('tracker.seriesColDate')}</th><th>{t('tracker.seriesColAsset')}</th><th>{t('tracker.seriesColDirection')}</th><th>{t('tracker.seriesColEntry')}</th><th>{t('tracker.seriesColSL')}</th><th>{t('tracker.seriesColTP')}</th><th>{t('tracker.seriesColResult')}</th><th>{t('tracker.seriesColEmotion')}</th><th style={{ minWidth: '160px' }}>{t('tracker.seriesColComment')}</th><th>TradingView</th></tr>
                 </thead>
                 <tbody>
                   {series20Part2.map((row, index) => (
@@ -1174,6 +1176,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
                       <td><input type="text" className="input-dark tracker-series-input" value={row.tp || ''} onChange={(e) => updateSeriesRow('seriesP2', index, 'tp', e.target.value)} /></td>
                       <td><input type="text" className="input-dark tracker-series-input" value={row.result || ''} onChange={(e) => updateSeriesRow('seriesP2', index, 'result', e.target.value)} /></td>
                       <td><input type="text" className="input-dark tracker-series-input" value={row.emotion || ''} onChange={(e) => updateSeriesRow('seriesP2', index, 'emotion', e.target.value)} /></td>
+                      <td><textarea className="input-dark tracker-series-input" rows={2} style={{ resize: 'vertical', minWidth: '140px', verticalAlign: 'top' }} value={row.comment || ''} onChange={(e) => updateSeriesRow('seriesP2', index, 'comment', e.target.value)} /></td>
                       <td>
                         <div className="s20-tv-stack">
                           <input type="url" className="input-dark tracker-series-input" value={row.tvUrl || ''} onChange={(e) => updateSeriesRow('seriesP2', index, 'tvUrl', e.target.value)} placeholder="tradingview.com/x/…" />

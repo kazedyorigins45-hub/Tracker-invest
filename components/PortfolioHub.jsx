@@ -41,9 +41,9 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
   };
 
   const axes = [
-    { key: 'positions', title: t('portfolio.axisPositions'), value: positionsValue, target: Number(String(data.targetActifs).replace(/[^\d.,-]/g, '').replace(',', '.')) || 0 },
-    { key: 'trading', title: t('portfolio.axisTradingNet'), value: tradingNetValue, target: Number(String(data.targetPassif).replace(/[^\d.,-]/g, '').replace(',', '.')) || 0 },
-    { key: 'total', title: t('portfolio.axisTotal'), value: totalValue, target: Number(String(data.targetDispo).replace(/[^\d.,-]/g, '').replace(',', '.')) || 0 },
+    { key: 'positions', title: t('portfolio.axisPositions'), value: positionsValue },
+    { key: 'trading', title: t('portfolio.axisTradingNet'), value: tradingNetValue },
+    { key: 'total', title: t('portfolio.axisTotal'), value: totalValue },
   ];
 
   const handleSaveObjective = async () => {
@@ -110,18 +110,9 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
               <div className="field-block"><label>{t('portfolio.objectiveTitleLabel')}</label><input className="input-dark" type="text" value={data.title} onChange={(e) => update({ title: e.target.value })} placeholder={t('portfolio.objectiveTitlePlaceholder')} /></div>
               <div className="field-block"><label>{t('portfolio.objectiveGlobalLabel')}</label><input className="input-dark" type="text" value={data.target} onChange={(e) => update({ target: e.target.value })} placeholder="500000" /></div>
             </div>
-            <div className="grid-2" style={{ marginTop: '0.5rem' }}>
+            <div className="grid-2" style={{ marginTop: '0.75rem' }}>
               <div className="field-block"><label>{t('portfolio.positionsValueLabel')}</label><input className="input-dark" type="text" value={data.positionsValue} onChange={(e) => update({ positionsValue: e.target.value })} placeholder="ex. 125000" /></div>
               <div className="field-block"><label>{t('portfolio.tradingNetLabel')}</label><input className="input-dark" type="text" value={data.tradingNetValue} onChange={(e) => update({ tradingNetValue: e.target.value })} placeholder="ex. 4800" /></div>
-            </div>
-            <p className="hint" style={{ marginTop: '0.25rem' }}>{t('portfolio.optionalTargetsHint')}</p>
-            <div className="grid-2" style={{ marginTop: '0.5rem' }}>
-              <div><label>{t('portfolio.targetActifsLabel')}</label><input className="input-dark" type="text" value={data.targetActifs} onChange={(e) => update({ targetActifs: e.target.value })} placeholder="ex. 200000" /></div>
-              <div><label>{t('portfolio.targetPassifLabel')}</label><input className="input-dark" type="text" value={data.targetPassif} onChange={(e) => update({ targetPassif: e.target.value })} placeholder="ex. 80000" /></div>
-            </div>
-            <div className="portfolio-single-field">
-              <label>{t('portfolio.targetDispoLabel')}</label>
-              <input className="input-dark" type="text" value={data.targetDispo} onChange={(e) => update({ targetDispo: e.target.value })} placeholder="ex. 50000" />
             </div>
             <label className="field-label">{t('portfolio.noteLabel')}</label>
             <textarea className="input-dark portfolio-note" rows="2" value={data.note} onChange={(e) => update({ note: e.target.value })} placeholder={t('portfolio.notePlaceholder')} />
@@ -145,19 +136,17 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
               <div className="progress-meta"><span>{t('portfolio.progressBarHint')}</span><span><strong>{progressValue}%</strong></span></div>
             </div>
             <h3 style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', letterSpacing: '0.1em', color: 'var(--gold)', textTransform: 'uppercase', margin: '1.75rem 0 0.85rem' }}>{t('portfolio.axesTitle')}</h3>
-            <p className="hint" style={{ marginBottom: '1.1rem' }}>{t('portfolio.axesHint')}</p>
-            {axes.map((axis) => (
-              <div key={axis.key} className="hub-axis">
-                <div className="hub-axis-head">
-                  <span className="hub-axis-title">{axis.title}</span>
-                  <span className="hub-axis-amt">{formatEuro(axis.value)}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              {axes.map((axis) => (
+                <div key={axis.key} style={{ padding: '0.85rem 1rem', background: 'var(--card-bg, rgba(255,255,255,0.03))', borderRadius: '8px', border: '1px solid var(--border, rgba(255,255,255,0.08))' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.78rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>{axis.title}</span>
+                    <span style={{ fontSize: '1.1rem', fontWeight: 600, color: axis.key === 'total' ? 'var(--gold, #c9a84c)' : 'var(--text)' }}>{formatEuro(axis.value)}</span>
+                  </div>
                 </div>
-                <div className="progress-bar">
-                  <div className="fill" style={{ width: `${axis.target ? Math.min(100, Math.round((axis.value / axis.target) * 100)) : 0}%` }} />
-                </div>
-              </div>
-            ))}
-            <p className="hint">{t('portfolio.dataSourceHint')}</p>
+              ))}
+            </div>
+            <p className="hint" style={{ marginTop: '0.75rem' }}>{t('portfolio.dataSourceHint')}</p>
           </div>
 
           <div className="card portfolio-card">
