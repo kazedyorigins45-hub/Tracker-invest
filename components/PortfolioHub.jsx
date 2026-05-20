@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState } from 'react';
 import Link from 'next/link';
@@ -12,31 +12,49 @@ import ThemeToggle from '@/components/ThemeToggle';
 import CurrencyToggle from '@/components/CurrencyToggle';
 import LanguageToggle from '@/components/LanguageToggle';
 
+function parseAmt(raw) {
+  return Number(String(raw ?? '').replace(/[^\d.,-]/g, '').replace(',', '.')) || 0;
+}
+
 export default function PortfolioHub({ userEmail = '', planCode = 'starter', subscription = null }) {
   const [data, setData] = useAccountPayload('portfolioHub_v1', {
     title: '',
     target: '',
     note: '',
-    targetActifs: '',
-    targetPassif: '',
-    targetDispo: '',
     positionsValue: '',
     tradingNetValue: '',
   });
+
+  const [investData] = useAccountPayload('investHub_v2_main', { holdings: [] });
+  const [trackerData] = useAccountPayload('trackerHub_v2_main', { weeklyTrades: [] });
+
   const [saveStatus, setSaveStatus] = useState('');
 
   const update = (patch) => setData((prev) => ({ ...prev, ...patch }));
   const subscriptionLabel = getSubscriptionLabel(subscription, planCode);
   const { t, locale } = useLocale();
   const { currency } = useCurrency();
+  const EUR_TO_USD = useFxRate();
 
-  const positionsValue = Number(String(data.positionsValue).replace(/[^\d.,-]/g, '').replace(',', '.')) || 0;
-  const tradingNetValue = Number(String(data.tradingNetValue).replace(/[^\d.,-]/g, '').replace(',', '.')) || 0;
+  const autoInvestValue = (Array.isArray(investData.holdings) ? investData.holdings : [])
+    .filter((h) => !h.sellDate && !h.saleDate)
+    .reduce((sum, h) => sum + parseAmt(h.computedValue || h.value || 0), 0);
+
+  const autoTradingNet = (Array.isArray(trackerData.weeklyTrades) ? trackerData.weeklyTrades : [])
+    .reduce((sum, row) => sum + parseAmt(row.result || 0), 0);
+
+  const manualPositions = parseAmt(data.positionsValue);
+  const manualTrading = parseAmt(data.tradingNetValue);
+
+  const positionsValue = manualPositions > 0 ? manualPositions : autoInvestValue;
+  const tradingNetValue = manualTrading !== 0 ? manualTrading : autoTradingNet;
+  const isInvestLinked = manualPositions === 0;
+  const isTradingLinked = manualTrading === 0;
+
   const totalValue = positionsValue + tradingNetValue;
-  const targetValue = Number(String(data.target).replace(/[^\d.,-]/g, '').replace(',', '.'));
+  const targetValue = parseAmt(data.target);
   const progressValue = targetValue > 0 ? Math.min(100, Math.round((totalValue / targetValue) * 100)) : 0;
 
-  const EUR_TO_USD = useFxRate();
   const formatEuro = (value) => {
     const v = Number.isFinite(value) ? value : 0;
     if (currency === 'usd') return `$${Math.round(v * EUR_TO_USD).toLocaleString('en-US')}`;
@@ -44,9 +62,9 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
   };
 
   const axes = [
-    { key: 'positions', title: t('portfolio.axisPositions'), value: positionsValue },
-    { key: 'trading', title: t('portfolio.axisTradingNet'), value: tradingNetValue },
-    { key: 'total', title: t('portfolio.axisTotal'), value: totalValue },
+    { key: 'positions', title: t('portfolio.axisPositions'), value: positionsValue, linked: isInvestLinked, href: '/invest' },
+    { key: 'trading', title: t('portfolio.axisTradingNet'), value: tradingNetValue, linked: isTradingLinked, href: '/tracker' },
+    { key: 'total', title: t('portfolio.axisTotal'), value: totalValue, linked: false, href: null },
   ];
 
   const handleSaveObjective = async () => {
@@ -115,16 +133,29 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
               <div className="field-block"><label>{t('portfolio.objectiveGlobalLabel')}</label><input className="input-dark" type="text" value={data.target} onChange={(e) => update({ target: e.target.value })} placeholder="500000" /></div>
             </div>
             <div className="grid-2" style={{ marginTop: '0.75rem' }}>
-              <div className="field-block"><label>{t('portfolio.positionsValueLabel')}</label><input className="input-dark" type="text" value={data.positionsValue} onChange={(e) => update({ positionsValue: e.target.value })} placeholder="ex. 125000" /></div>
-              <div className="field-block"><label>{t('portfolio.tradingNetLabel')}</label><input className="input-dark" type="text" value={data.tradingNetValue} onChange={(e) => update({ tradingNetValue: e.target.value })} placeholder="ex. 4800" /></div>
+              <div className="field-block">
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  {t('portfolio.positionsValueLabel')}
+                  {isInvestLinked && <span style={{ fontSize: '0.65rem', background: 'var(--gold)', color: '#000', borderRadius: '4px', padding: '0 5px', fontWeight: 700, letterSpacing: '0.06em' }}>AUTO</span>}
+                </label>
+                <input className="input-dark" type="text" value={data.positionsValue} onChange={(e) => update({ positionsValue: e.target.value })} placeholder={isInvestLinked ? `${formatEuro(autoInvestValue)} (auto)` : 'ex. 125000'} />
+                {isInvestLinked && <p style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.25rem' }}>Lu depuis <a href="/invest" style={{ color: 'var(--gold-bright)' }}>Elite Invest</a> — {formatEuro(autoInvestValue)}</p>}
+              </div>
+              <div className="field-block">
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  {t('portfolio.tradingNetLabel')}
+                  {isTradingLinked && <span style={{ fontSize: '0.65rem', background: 'var(--gold)', color: '#000', borderRadius: '4px', padding: '0 5px', fontWeight: 700, letterSpacing: '0.06em' }}>AUTO</span>}
+                </label>
+                <input className="input-dark" type="text" value={data.tradingNetValue} onChange={(e) => update({ tradingNetValue: e.target.value })} placeholder={isTradingLinked ? `${formatEuro(autoTradingNet)} (auto)` : 'ex. 4800'} />
+                {isTradingLinked && <p style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.25rem' }}>Lu depuis <a href="/tracker" style={{ color: 'var(--gold-bright)' }}>Elite Tracker</a> — {formatEuro(autoTradingNet)}</p>}
+              </div>
             </div>
             <label className="field-label">{t('portfolio.noteLabel')}</label>
             <textarea className="input-dark portfolio-note" rows="2" value={data.note} onChange={(e) => update({ note: e.target.value })} placeholder={t('portfolio.notePlaceholder')} />
             <div className="toolbar">
               <button className="btn" type="button" onClick={handleSaveObjective} disabled={saveStatus === 'saving'}>{t('portfolio.saveBtn')}</button>
-              <button className="btn btn-ghost" type="button" onClick={() => setSaveStatus('refreshed')}>{t('portfolio.refreshBtn')}</button>
             </div>
-            {saveStatus ? <p className="form-message">{saveStatus === 'saving' ? t('portfolio.statusSaving') : saveStatus === 'saved' ? t('portfolio.statusSaved') : saveStatus === 'refreshed' ? t('portfolio.statusRefreshed') : t('portfolio.statusError')}</p> : null}
+            {saveStatus ? <p className="form-message">{saveStatus === 'saving' ? t('portfolio.statusSaving') : saveStatus === 'saved' ? t('portfolio.statusSaved') : t('portfolio.statusError')}</p> : null}
           </div>
 
           <div className="card portfolio-card">
@@ -142,15 +173,19 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
             <h3 style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', letterSpacing: '0.1em', color: 'var(--gold)', textTransform: 'uppercase', margin: '1.75rem 0 0.85rem' }}>{t('portfolio.axesTitle')}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               {axes.map((axis) => (
-                <div key={axis.key} style={{ padding: '0.85rem 1rem', background: 'var(--card-bg, rgba(255,255,255,0.03))', borderRadius: '8px', border: '1px solid var(--border, rgba(255,255,255,0.08))' }}>
+                <div key={axis.key} style={{ padding: '0.85rem 1rem', background: 'var(--card-bg, rgba(255,255,255,0.03))', borderRadius: '8px', border: `1px solid ${axis.linked ? 'var(--gold, #c9a84c)' : 'var(--border, rgba(255,255,255,0.08))'}` }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '0.78rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)' }}>{axis.title}</span>
+                    <span style={{ fontSize: '0.78rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      {axis.title}
+                      {axis.linked && axis.href && (
+                        <a href={axis.href} style={{ fontSize: '0.6rem', background: 'var(--gold)', color: '#000', borderRadius: '4px', padding: '1px 5px', fontWeight: 700, letterSpacing: '0.05em', textDecoration: 'none' }}>AUTO</a>
+                      )}
+                    </span>
                     <span style={{ fontSize: '1.1rem', fontWeight: 600, color: axis.key === 'total' ? 'var(--gold, #c9a84c)' : 'var(--text)' }}>{formatEuro(axis.value)}</span>
                   </div>
                 </div>
               ))}
             </div>
-            <p className="hint" style={{ marginTop: '0.75rem' }}>{t('portfolio.dataSourceHint')}</p>
           </div>
 
           <div className="card portfolio-card">
