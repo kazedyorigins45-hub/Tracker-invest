@@ -972,18 +972,54 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
         <section className={`page ${page === 'overview' ? 'active' : ''}`}>
           <h1 className="page-title">{t('invest.overview')}</h1>
           <p className="page-sub">{t('invest.overviewSub')}</p>
-          <p className="hint" style={{ marginTop: 0, marginBottom: '0.75rem', fontSize: '0.72rem' }}>
-            Actifs et Revenu passif sont calculés automatiquement depuis{' '}
-            <button type="button" style={{ background: 'none', border: 'none', color: 'var(--gold-bright)', cursor: 'pointer', padding: 0, fontSize: 'inherit', textDecoration: 'underline' }} onClick={() => update({ page: 'holdings' })}>Mes positions</button>
-            {' '}(colonne Synthèse).
-          </p>
+
           <div className="stats-row">
             <div className="stat-box"><div className="v">{fmtC(totalOverviewValue)}</div><div className="l">{t('invest.overviewTotal')}</div></div>
             <button type="button" className="stat-box" style={{ cursor: 'pointer', background: 'none', border: 'none', textAlign: 'center' }} onClick={() => update({ page: 'holdings' })}><div className="v">{fmtC(segmentTotals.actif || 0)}</div><div className="l" style={{ color: 'var(--gold, #c9a84c)' }}>{t('invest.holdingsSegmentActif')} →</div></button>
             <button type="button" className="stat-box" style={{ cursor: 'pointer', background: 'none', border: 'none', textAlign: 'center' }} onClick={() => update({ page: 'holdings' })}><div className="v">{fmtC(segmentTotals.passif || 0)}</div><div className="l" style={{ color: 'var(--gold, #c9a84c)' }}>{t('invest.holdingsSegmentPassif')} →</div></button>
             <div className="stat-box"><div className="v">{holdings.length}</div><div className="l">{t('invest.overviewPositions')}</div></div>
           </div>
-          <div className="card">
+
+          {/* Segment breakdown cards — sourced live from Mes positions */}
+          <div className="grid-2" style={{ marginTop: '1rem', gap: '1rem' }}>
+            {[
+              { seg: 'actif', label: t('invest.holdingsSegmentActif'), total: segmentTotals.actif || 0 },
+              { seg: 'passif', label: t('invest.holdingsSegmentPassif'), total: segmentTotals.passif || 0 },
+            ].map(({ seg, label, total }) => {
+              const rows = openHoldings.filter((h) => (h.hubSegment || 'actif') === seg);
+              return (
+                <div key={seg} className="card" style={{ padding: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.75rem' }}>
+                    <h2 style={{ margin: 0, fontSize: '0.82rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--gold)' }}>{label}</h2>
+                    <span style={{ fontWeight: 700, fontSize: '1.05rem' }}>{fmtC(total)}</span>
+                  </div>
+                  {rows.length === 0 ? (
+                    <p className="hint" style={{ margin: 0, fontSize: '0.72rem' }}>
+                      {isUsd ? 'No positions yet — go to ' : 'Aucune position — allez dans '}
+                      <button type="button" style={{ background: 'none', border: 'none', color: 'var(--gold-bright)', cursor: 'pointer', padding: 0, fontSize: 'inherit', textDecoration: 'underline' }} onClick={() => update({ page: 'holdings' })}>
+                        {isUsd ? 'My positions' : 'Mes positions'}
+                      </button>
+                      {isUsd ? ' and set the Synth. column.' : ' et définissez la colonne Synthèse.'}
+                    </p>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                      {rows.map((h, i) => (
+                        <div key={`${h.asset}-${i}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', padding: '0.3rem 0', borderBottom: '1px solid var(--border-soft)' }}>
+                          <span style={{ color: 'var(--text)' }}>{h.asset || '—'}</span>
+                          <span style={{ color: 'var(--muted)', fontWeight: 600 }}>{fmtC(parseAmount(h.computedValue || h.value || 0))}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <button type="button" className="btn-ghost btn-compact" style={{ marginTop: '0.65rem', fontSize: '0.72rem' }} onClick={() => update({ page: 'holdings' })}>
+                    {isUsd ? 'Edit in My positions →' : 'Modifier dans Mes positions →'}
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="card" style={{ marginTop: '1rem' }}>
             <h2>{t('invest.overviewBreakdown')}</h2>
             <div className="overview-breakdown">
               {overviewClasses.map((key) => {
