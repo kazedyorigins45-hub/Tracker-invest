@@ -496,6 +496,32 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
   }, [data.annualYear, data.monthlyByMonth, isEnglish, setData]);
 
   useEffect(() => {
+    const ticker = document.getElementById('tv-ticker-weekly');
+    if (ticker && !ticker.querySelector('iframe')) {
+      const s = document.createElement('script');
+      s.src = 'https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js';
+      s.async = true;
+      s.innerHTML = JSON.stringify({
+        symbols: [
+          { proName: 'BITSTAMP:BTCUSD', title: 'Bitcoin' },
+          { proName: 'COINBASE:ETHUSD', title: 'Ethereum' },
+          { proName: 'OANDA:XAGUSD', title: 'Argent' },
+          { proName: 'OANDA:XAUUSD', title: 'Or' },
+          { proName: 'NASDAQ:NVDA', title: 'NVDA' },
+          { proName: 'FX:EURUSD', title: 'EUR/USD' },
+          { proName: 'CRYPTOCAP:BTC.D', title: 'BTC Dom.' },
+        ],
+        showSymbolLogo: false,
+        isTransparent: true,
+        displayMode: 'adaptive',
+        colorTheme: 'dark',
+        locale: 'fr',
+      });
+      ticker.appendChild(s);
+    }
+  }, []);
+
+  useEffect(() => {
     const el = document.getElementById('tv-chart-weekly');
     if (!el || el.querySelector('iframe')) return;
     const s = document.createElement('script');
@@ -506,11 +532,11 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
         new window.TradingView.widget({
           autosize: true,
           height: 486,
-          symbol: 'FX:EURUSD',
+          symbol: 'BITSTAMP:BTCUSD',
           theme: 'dark',
           style: '1',
           locale: 'fr',
-          watchlist: ['BITSTAMP:BTCUSD', 'COINBASE:ETHUSD', 'NASDAQ:NVDA', 'MCX:GOLD1!', 'OANDA:XAGUSD'],
+          watchlist: ['BITSTAMP:BTCUSD', 'COINBASE:ETHUSD', 'OANDA:XAGUSD', 'OANDA:XAUUSD', 'NASDAQ:NVDA', 'FX:EURUSD', 'CRYPTOCAP:BTC.D'],
           container_id: 'tv-chart-weekly',
         });
       }
@@ -891,7 +917,11 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
             <div className="stat-box"><div className="v">{weeklyProfitFactor == null ? '—' : weeklyProfitFactor.toFixed(2)}</div><div className="l">{t('tracker.weeklyProfitFactor')}</div></div>
           </div>
 
-          <div className="card" style={{ marginTop: '1rem', padding: '1rem' }}>
+          <div style={{ margin: '1rem 0 0', borderRadius: '10px', overflow: 'hidden', background: 'rgba(0,0,0,0.25)', border: '1px solid var(--border)' }}>
+            <div id="tv-ticker-weekly" className="tradingview-widget-container" style={{ height: '46px' }} />
+          </div>
+
+          <div className="card" style={{ marginTop: '0.75rem', padding: '1rem' }}>
             <h2 style={{ marginBottom: '0.75rem' }}>{t('tracker.weeklyChartTitle')}</h2>
             <div id="tv-chart-weekly" style={{ width: '100%', height: '486px' }} />
           </div>
