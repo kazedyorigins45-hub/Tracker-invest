@@ -6,9 +6,11 @@ import { canAccess, getSubscriptionLabel } from '@/lib/plans';
 import { useAccountPayload } from '@/lib/use-account-payload';
 import { useLocale } from '@/lib/locale';
 import { useFxRate } from '@/lib/fx';
+import { useCurrency } from '@/lib/currency';
 import LogoMark from '@/components/LogoMark';
 import ThemeToggle from '@/components/ThemeToggle';
 import CurrencyToggle from '@/components/CurrencyToggle';
+import LanguageToggle from '@/components/LanguageToggle';
 
 export default function PortfolioHub({ userEmail = '', planCode = 'starter', subscription = null }) {
   const [data, setData] = useAccountPayload('portfolioHub_v1', {
@@ -26,6 +28,7 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
   const update = (patch) => setData((prev) => ({ ...prev, ...patch }));
   const subscriptionLabel = getSubscriptionLabel(subscription, planCode);
   const { t, locale } = useLocale();
+  const { currency } = useCurrency();
 
   const positionsValue = Number(String(data.positionsValue).replace(/[^\d.,-]/g, '').replace(',', '.')) || 0;
   const tradingNetValue = Number(String(data.tradingNetValue).replace(/[^\d.,-]/g, '').replace(',', '.')) || 0;
@@ -36,7 +39,7 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
   const EUR_TO_USD = useFxRate();
   const formatEuro = (value) => {
     const v = Number.isFinite(value) ? value : 0;
-    if (locale === 'en') return `$${Math.round(v * EUR_TO_USD).toLocaleString('en-US')}`;
+    if (currency === 'usd') return `$${Math.round(v * EUR_TO_USD).toLocaleString('en-US')}`;
     return `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(v)}€`;
   };
 
@@ -98,6 +101,7 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
         <div className="mindset-topbar">
           <LogoMark />
           <ThemeToggle className="theme-toggle--app" />
+          <LanguageToggle className="theme-toggle--app" />
           <CurrencyToggle className="theme-toggle--app" />
         </div>
         <h1 className="page-title">{t('portfolio.mainTitle')}</h1>

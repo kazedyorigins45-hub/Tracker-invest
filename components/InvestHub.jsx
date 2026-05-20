@@ -6,9 +6,11 @@ import { canAccess, getSubscriptionLabel } from '@/lib/plans';
 import { useAccountPayload } from '@/lib/use-account-payload';
 import { useLocale } from '@/lib/locale';
 import { useFxRate } from '@/lib/fx';
+import { useCurrency } from '@/lib/currency';
 import LogoMark from '@/components/LogoMark';
 import ThemeToggle from '@/components/ThemeToggle';
 import CurrencyToggle from '@/components/CurrencyToggle';
+import LanguageToggle from '@/components/LanguageToggle';
 
 const NAV = [
   ['cover', 'cover'],
@@ -436,16 +438,18 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   const page = data.page || 'cover';
   const subscriptionLabel = getSubscriptionLabel(subscription, planCode);
   const { t, locale } = useLocale();
+  const { currency } = useCurrency();
+  const isUsd = currency === 'usd';
   const profileLabel = portfolioState.labels?.[profile] || (profile === 'pea' ? t('invest.profilePea') : profile === 'crypto' ? t('invest.profileCrypto') : t('invest.profileMain'));
   const EUR_TO_USD = useFxRate();
   const fmtC = (value) => {
     if (!Number.isFinite(value)) return '';
-    if (locale === 'en') return `$${Math.round(value * EUR_TO_USD).toLocaleString('en-US')}`;
+    if (isUsd) return `$${Math.round(value * EUR_TO_USD).toLocaleString('en-US')}`;
     return `${Math.round(value).toLocaleString('fr-FR')}€`;
   };
   const fmtC2 = (value) => {
     const safe = Number.isFinite(Number(value)) ? Number(value) : 0;
-    if (locale === 'en') return `$${(safe * EUR_TO_USD).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    if (isUsd) return `$${(safe * EUR_TO_USD).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     return `${safe.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
   };
   const update = (patch) => setData((prev) => ({ ...prev, ...patch }));
@@ -946,6 +950,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
             <LogoMark />
           </div>
           <ThemeToggle className="theme-toggle--app" />
+          <LanguageToggle className="theme-toggle--app" />
           <CurrencyToggle className="theme-toggle--app" />
         </div>
         {feedback ? <div className="ui-feedback" role="status" aria-live="polite">{feedback}</div> : null}

@@ -6,9 +6,11 @@ import { canAccess, getSubscriptionLabel } from '@/lib/plans';
 import { useAccountPayload } from '@/lib/use-account-payload';
 import { useLocale } from '@/lib/locale';
 import { useFxRate, FX_FALLBACK_EUR_USD } from '@/lib/fx';
+import { useCurrency } from '@/lib/currency';
 import LogoMark from '@/components/LogoMark';
 import ThemeToggle from '@/components/ThemeToggle';
 import CurrencyToggle from '@/components/CurrencyToggle';
+import LanguageToggle from '@/components/LanguageToggle';
 
 const NAV = [
   ['cover', 'tracker.coverTitle'],
@@ -292,8 +294,9 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
   const page = data.page === 'tradingPlan' ? 'plan' : (data.page || 'cover');
   const subscriptionLabel = getSubscriptionLabel(subscription, planCode);
   const { t, locale } = useLocale();
+  const { currency } = useCurrency();
   const fxRate = useFxRate();
-  const isEnglish = locale === 'en';
+  const isEnglish = currency === 'usd';
   const currencySymbol = isEnglish ? '$' : '€';
   const currencyUnit = `${currencySymbol}/u`;
   const morningItems = locale === 'en' ? MORNING_ITEMS_EN : MORNING_ITEMS_FR;
@@ -636,6 +639,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
             <LogoMark />
           </div>
           <ThemeToggle className="theme-toggle--app" />
+          <LanguageToggle className="theme-toggle--app" />
           <CurrencyToggle className="theme-toggle--app" />
         </div>
         <section className={`page ${page === 'cover' ? 'active' : ''}`}>
