@@ -290,6 +290,8 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
   const [data, setData] = useAccountPayload(`trackerHub_v2_${profile}`, defaultTrackerState());
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const closeSidebar = () => setSidebarOpen(false);
+  const [chartSymbol, setChartSymbol] = React.useState('BITSTAMP:BTCUSD');
+  const [chartSearchInput, setChartSearchInput] = React.useState('');
 
   const page = data.page === 'tradingPlan' ? 'plan' : (data.page || 'cover');
   const subscriptionLabel = getSubscriptionLabel(subscription, planCode);
@@ -523,26 +525,39 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
 
   useEffect(() => {
     const el = document.getElementById('tv-chart-weekly');
-    if (!el || el.querySelector('iframe')) return;
-    const s = document.createElement('script');
-    s.src = 'https://s3.tradingview.com/tv.js';
-    s.async = true;
-    s.onload = () => {
-      if (window.TradingView && document.getElementById('tv-chart-weekly')) {
-        new window.TradingView.widget({
-          autosize: true,
-          height: 486,
-          symbol: 'BITSTAMP:BTCUSD',
-          theme: 'dark',
-          style: '1',
-          locale: 'fr',
-          watchlist: ['BITSTAMP:BTCUSD', 'COINBASE:ETHUSD', 'OANDA:XAGUSD', 'OANDA:XAUUSD', 'NASDAQ:NVDA', 'FX:EURUSD', 'CRYPTOCAP:BTC.D'],
-          container_id: 'tv-chart-weekly',
-        });
+    if (!el) return;
+    el.innerHTML = '';
+
+    function createWidget() {
+      const container = document.getElementById('tv-chart-weekly');
+      if (!container || !window.TradingView) return;
+      new window.TradingView.widget({
+        autosize: true,
+        height: 486,
+        symbol: chartSymbol,
+        theme: 'dark',
+        style: '1',
+        locale: 'fr',
+        watchlist: ['BITSTAMP:BTCUSD', 'COINBASE:ETHUSD', 'OANDA:XAGUSD', 'OANDA:XAUUSD', 'NASDAQ:NVDA', 'FX:EURUSD', 'CRYPTOCAP:BTC.D'],
+        container_id: 'tv-chart-weekly',
+      });
+    }
+
+    if (window.TradingView) {
+      createWidget();
+    } else {
+      const existingScript = document.querySelector('script[src="https://s3.tradingview.com/tv.js"]');
+      if (existingScript) {
+        existingScript.addEventListener('load', createWidget, { once: true });
+      } else {
+        const s = document.createElement('script');
+        s.src = 'https://s3.tradingview.com/tv.js';
+        s.async = true;
+        s.onload = createWidget;
+        document.head.appendChild(s);
       }
-    };
-    document.head.appendChild(s);
-  }, []);
+    }
+  }, [chartSymbol]);
 
   const normalizeS20Row = (row = {}) => ({
     date: row.date || '',
@@ -922,7 +937,33 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
           </div>
 
           <div className="card" style={{ marginTop: '0.75rem', padding: '1rem' }}>
-            <h2 style={{ marginBottom: '0.75rem' }}>{t('tracker.weeklyChartTitle')}</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+              <h2 style={{ margin: 0 }}>{t('tracker.weeklyChartTitle')}</h2>
+              {[
+                { label: 'BTC', sym: 'BITSTAMP:BTCUSD' },
+                { label: 'ETH', sym: 'COINBASE:ETHUSD' },
+                { label: 'Silver', sym: 'OANDA:XAGUSD' },
+                { label: 'Or', sym: 'OANDA:XAUUSD' },
+                { label: 'SP500', sym: 'SP:SPX' },
+                { label: 'EUR/USD', sym: 'FX:EURUSD' },
+              ].map(({ label, sym }) => (
+                <button key={sym} type="button"
+                  className={`btn-ghost btn-compact${chartSymbol === sym ? ' is-active' : ''}`}
+                  style={{ fontSize: '0.72rem', padding: '2px 8px' }}
+                  onClick={() => setChartSymbol(sym)}>
+                  {label}
+                </button>
+              ))}
+              <input
+                className="input-dark"
+                type="text"
+                placeholder={isEnglish ? 'Symbol (e.g. BITSTAMP:BTCUSD)' : 'Symbole (ex : BITSTAMP:BTCUSD)'}
+                value={chartSearchInput}
+                onChange={(e) => setChartSearchInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && chartSearchInput.trim()) { setChartSymbol(chartSearchInput.trim().toUpperCase()); } }}
+                style={{ width: '190px', fontSize: '0.75rem', height: '28px', padding: '0 8px' }}
+              />
+            </div>
             <div id="tv-chart-weekly" style={{ width: '100%', height: '486px' }} />
           </div>
 
@@ -932,6 +973,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
               <table className="data" id="w-trades-table">
                 <thead>
                   <tr>
+                    <th>{t('tracker.seriesColNum')}</th>
                     <th>{t('tracker.weeklyDate')}</th>
                     <th>{t('tracker.weeklyAsset')}</th>
                     <th>{t('tracker.weeklyDirection')}</th>
@@ -946,26 +988,27 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
                   </tr>
                 </thead>
                 <tbody>
-                  {visibleWeeklyTrades.map(({ row, originalIndex }) => {
+                  {visibleWeeklyTrades.map(({ row, originalIndex }, visibleIndex) => {
                     return (
                     <tr key={`${originalIndex}-${row.date || 'trade'}`}>
-                      <td><input className="input-dark invest-holding-input tracker-date-input" type="date" value={row.date || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { date: e.target.value })} /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={row.asset || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { asset: e.target.value })} /></td>
+                      <td style={{ textAlign: 'center', color: 'var(--muted)', fontSize: '0.75rem' }}>{visibleIndex + 1}</td>
+                      <td><input className="input-dark tracker-series-input tracker-date-input" type="date" value={row.date || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { date: e.target.value })} /></td>
+                      <td><input className="input-dark tracker-series-input" type="text" value={row.asset || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { asset: e.target.value })} /></td>
                       <td>
-                        <select className="input-dark invest-holding-input" value={row.direction || 'long'} onChange={(e) => updateWeeklyTrade(originalIndex, { direction: e.target.value })}>
+                        <select className="input-dark tracker-series-input" value={row.direction || 'long'} onChange={(e) => updateWeeklyTrade(originalIndex, { direction: e.target.value })}>
                           <option value="long">Long</option>
                           <option value="short">Short</option>
                         </select>
                       </td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.entry, isEnglish, fxRate)} onChange={(e) => updateWeeklyTrade(originalIndex, { entry: toStoredAmount(e.target.value, isEnglish, fxRate) })} /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={toDisplayAmount(row.sl ?? row.exit, isEnglish, fxRate)} onChange={(e) => updateWeeklyTrade(originalIndex, { sl: toStoredAmount(e.target.value, isEnglish, fxRate) })} /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={row.tp ?? row.rr ?? ''} onChange={(e) => updateWeeklyTrade(originalIndex, { tp: e.target.value })} /></td>
-                      <td style={{ background: (() => { const v = parseAmount(row.result); return v == null ? 'transparent' : v > 0 ? 'rgba(34,197,94,0.15)' : v < 0 ? 'rgba(239,68,68,0.15)' : 'transparent'; })() }}><input className="input-dark invest-holding-input" type="text" style={{ color: (() => { const v = parseAmount(row.result); return v == null ? undefined : v > 0 ? 'var(--success, #22c55e)' : v < 0 ? 'var(--danger, #ef4444)' : undefined; })() }} value={toDisplayAmount(row.result, isEnglish, fxRate)} onChange={(e) => updateWeeklyTrade(originalIndex, { result: toStoredAmount(e.target.value, isEnglish, fxRate) })} /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={row.emotion || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { emotion: e.target.value })} /></td>
-                      <td><textarea className="input-dark invest-holding-input" rows={2} style={{ resize: 'vertical', minWidth: '140px', verticalAlign: 'top' }} value={row.comment || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { comment: e.target.value })} /></td>
+                      <td><input className="input-dark tracker-series-input" type="text" value={toDisplayAmount(row.entry, isEnglish, fxRate)} onChange={(e) => updateWeeklyTrade(originalIndex, { entry: toStoredAmount(e.target.value, isEnglish, fxRate) })} /></td>
+                      <td><input className="input-dark tracker-series-input" type="text" value={toDisplayAmount(row.sl ?? row.exit, isEnglish, fxRate)} onChange={(e) => updateWeeklyTrade(originalIndex, { sl: toStoredAmount(e.target.value, isEnglish, fxRate) })} /></td>
+                      <td><input className="input-dark tracker-series-input" type="text" value={row.tp ?? row.rr ?? ''} onChange={(e) => updateWeeklyTrade(originalIndex, { tp: e.target.value })} /></td>
+                      <td style={{ background: (() => { const v = parseAmount(row.result); return v == null ? 'transparent' : v > 0 ? 'rgba(34,197,94,0.15)' : v < 0 ? 'rgba(239,68,68,0.15)' : 'transparent'; })() }}><input className="input-dark tracker-series-input" type="text" style={{ color: (() => { const v = parseAmount(row.result); return v == null ? undefined : v > 0 ? 'var(--success, #22c55e)' : v < 0 ? 'var(--danger, #ef4444)' : undefined; })() }} value={toDisplayAmount(row.result, isEnglish, fxRate)} onChange={(e) => updateWeeklyTrade(originalIndex, { result: toStoredAmount(e.target.value, isEnglish, fxRate) })} /></td>
+                      <td><input className="input-dark tracker-series-input" type="text" value={row.emotion || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { emotion: e.target.value })} /></td>
+                      <td><textarea className="input-dark tracker-series-input" rows={3} style={{ resize: 'vertical', minWidth: '160px', verticalAlign: 'top' }} value={row.comment || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { comment: e.target.value })} /></td>
                       <td>
                         <div className="s20-tv-stack">
-                          <input className="input-dark invest-holding-input" type="url" value={row.tvUrl || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { tvUrl: e.target.value })} placeholder="tradingview.com/x/…" />
+                          <input className="input-dark tracker-series-input" type="url" value={row.tvUrl || ''} onChange={(e) => updateWeeklyTrade(originalIndex, { tvUrl: e.target.value })} placeholder="tradingview.com/x/…" />
                           <button type="button" className="btn-ghost btn-compact s20-tv-open" onClick={() => {
                             const u = String(row.tvUrl || '').trim();
                             if (!u) return alert(t('tracker.weeklyOpenLink'));
@@ -981,6 +1024,23 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
               </table>
             </div>
             <p className="hint"><strong>{t('tracker.weeklyResultHintLabel')} :</strong> {isEnglish ? 'enter the total amount if needed; the table keeps your current month rows.' : 'saisis le montant total si besoin ; la table conserve tes lignes du mois en cours.'}</p>
+            {weeklyStats.count > 0 && (
+              <div style={{ marginTop: '0.75rem', textAlign: 'center' }}>
+                <span style={{
+                  display: 'inline-block',
+                  padding: '0.4rem 1.5rem',
+                  borderRadius: '20px',
+                  background: weeklyStats.net >= 0 ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
+                  border: `1px solid ${weeklyStats.net >= 0 ? 'rgba(34,197,94,0.4)' : 'rgba(239,68,68,0.4)'}`,
+                  color: weeklyStats.net >= 0 ? 'var(--success, #22c55e)' : 'var(--danger, #ef4444)',
+                  fontSize: '0.88rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.04em',
+                }}>
+                  {weeklyStats.net >= 0 ? '▲' : '▼'} {isEnglish ? 'Month' : 'Mois'}{data.weeklyMonth ? ` ${data.weeklyMonth}` : ''} : {weeklyStats.net >= 0 ? '+' : ''}{formatMoney(weeklyStats.net, isEnglish, fxRate)} {currencySymbol}
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="card">
@@ -1249,6 +1309,10 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
             <textarea className="input-dark" rows="2" value={data.seriesLesson || ''} onChange={(e) => update({ seriesLesson: e.target.value })} />
             <label>{t('tracker.seriesNextLabel')}</label>
             <textarea className="input-dark" rows="2" value={data.seriesNext || ''} onChange={(e) => update({ seriesNext: e.target.value })} />
+            <div style={{ marginTop: '1.25rem' }}>
+              <label>{t('tracker.seriesGlobalCommentLabel')}</label>
+              <textarea className="input-dark" rows="5" style={{ width: '100%', resize: 'vertical', marginTop: '0.35rem' }} value={data.seriesGlobalComment || ''} onChange={(e) => update({ seriesGlobalComment: e.target.value })} placeholder={t('tracker.seriesGlobalCommentPlaceholder')} />
+            </div>
             <div style={{ marginTop: '1rem', display: 'flex', gap: '0.75rem', flexWrap: 'wrap', alignItems: 'center' }}>
               <button type="button" className="btn" onClick={() => {
                 const label = window.prompt(t('tracker.seriesHistoryLabelCol'), data.seriesHistoryLabel || `Série du ${new Date().toLocaleDateString('fr-FR')}`);
