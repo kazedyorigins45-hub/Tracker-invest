@@ -2088,4 +2088,10 @@ table.data td.num, table.split td.num, table.immo-compare td.num { text-align: r
   .mindset-shell .page.active .immo-tool-row > div:first-child { min-width: 100%; flex-basis: 100%; }
   .immo-mini-stats { grid-template-columns: 1fr; }
   .ui-feedback { width: 100%; border-radius: 10px; text-align: center; }
+  /* InvestHub mobile overrides */
+  .mindset-shell.invest-hub .grid-2 { grid-template-columns: 1fr; }
+  .mindset-shell.invest-hub .stats-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mindset-shell.invest-hub .stat-box .v { font-size: 0.82rem; word-break: break-all; }
+  .mindset-shell.invest-hub .card { padding: 0.85rem; }
+  .mindset-shell.invest-hub .page-title { font-size: 1.1rem; }
 }

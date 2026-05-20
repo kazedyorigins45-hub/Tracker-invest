@@ -52,8 +52,6 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
   const isTradingLinked = manualTrading === 0;
 
   const totalValue = positionsValue + tradingNetValue;
-  const targetValue = parseAmt(data.target);
-  const progressValue = targetValue > 0 ? Math.min(100, Math.round((totalValue / targetValue) * 100)) : 0;
 
   const formatEuro = (value) => {
     const v = Number.isFinite(value) ? value : 0;
@@ -130,7 +128,6 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
             <h2>{t('portfolio.objectiveSectionTitle')}</h2>
             <div className="grid-2 portfolio-grid-spaced">
               <div className="field-block"><label>{t('portfolio.objectiveTitleLabel')}</label><input className="input-dark" type="text" value={data.title} onChange={(e) => update({ title: e.target.value })} placeholder={t('portfolio.objectiveTitlePlaceholder')} /></div>
-              <div className="field-block"><label>{t('portfolio.objectiveGlobalLabel')}</label><input className="input-dark" type="text" value={data.target} onChange={(e) => update({ target: e.target.value })} placeholder="500000" /></div>
             </div>
             <div className="grid-2" style={{ marginTop: '0.75rem' }}>
               <div className="field-block">
@@ -164,11 +161,6 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
               <div className="stat-box"><div className="v">{formatEuro(positionsValue)}</div><div className="l">{t('portfolio.statPositions')}</div></div>
               <div className="stat-box"><div className="v pos">+{formatEuro(tradingNetValue)}</div><div className="l">{t('portfolio.statTradingNet')}</div></div>
               <div className="stat-box"><div className="v">{formatEuro(totalValue)}</div><div className="l">{t('portfolio.statTotal')}</div></div>
-              <div className="stat-box"><div className="v">{progressValue}%</div><div className="l">{t('portfolio.statPercent')}</div></div>
-            </div>
-            <div className="progress-wrap">
-              <div className="progress-bar"><div className="fill" style={{ width: `${progressValue}%` }} /></div>
-              <div className="progress-meta"><span>{t('portfolio.progressBarHint')}</span><span><strong>{progressValue}%</strong></span></div>
             </div>
             <h3 style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', letterSpacing: '0.1em', color: 'var(--gold)', textTransform: 'uppercase', margin: '1.75rem 0 0.85rem' }}>{t('portfolio.axesTitle')}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
