@@ -1645,7 +1645,8 @@ a { color: inherit; }
   font-size: 0.88rem;
   line-height: 1.5;
 }
-.table-wrap { overflow-x: auto; border-radius: 8px; -webkit-overflow-scrolling: touch; }
+.table-wrap { overflow-x: auto; border-radius: 8px; -webkit-overflow-scrolling: touch; position: relative; }
+.table-wrap::after { content: ''; position: absolute; top: 0; right: 0; bottom: 0; width: 28px; background: linear-gradient(to left, rgba(0,0,0,0.18), transparent); pointer-events: none; border-radius: 0 8px 8px 0; }
 table.data, table.split, table.immo-compare { width: 100%; border-collapse: collapse; font-size: 0.74rem; table-layout: fixed; }
 table.data { min-width: 1180px; }
 table.immo-compare { min-width: 820px; }
@@ -1738,9 +1739,13 @@ table.data td.num, table.split td.num, table.immo-compare td.num { text-align: r
   border: 1px solid rgba(0,0,0,0.12);
 }
 .mindset-shell.invest-hub table.data th:nth-child(1),
-.mindset-shell.invest-hub table.data td:nth-child(1) { min-width: 170px; }
+.mindset-shell.invest-hub table.data td:nth-child(1) { min-width: 140px; }
 .mindset-shell.invest-hub table.data th:nth-child(2),
-.mindset-shell.invest-hub table.data td:nth-child(2) { min-width: 150px; }
+.mindset-shell.invest-hub table.data td:nth-child(2) { min-width: 130px; }
+.mindset-shell.invest-hub table.data th:nth-child(3),
+.mindset-shell.invest-hub table.data td:nth-child(3) { min-width: 160px; }
+.mindset-shell.invest-hub table.data th:nth-child(4),
+.mindset-shell.invest-hub table.data td:nth-child(4) { min-width: 140px; }
 .mindset-shell.invest-hub table.data td select {
   min-width: 100%;
   height: auto !important;

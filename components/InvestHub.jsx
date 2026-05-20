@@ -1009,12 +1009,14 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
               <table className="data">
                 <thead>
                   <tr>
-                    <th>{t('invest.holdingsColClass')}</th><th>{t('invest.holdingsColSynth')}</th><th>{t('invest.holdingsColIncome')}</th><th>{t('invest.holdingsColLabel')}</th><th>{t('invest.holdingsColGecko')}</th><th style={{ minWidth: '130px' }}>{t('invest.holdingsColValue')}</th><th>{t('invest.holdingsColQty')}</th><th>{t('invest.holdingsColBuyPrice')}</th><th>{t('invest.holdingsColSellPrice')}</th><th>{t('invest.holdingsColSellDate')}</th><th>{t('invest.holdingsColSaleResult')}</th><th>{t('invest.holdingsColNotes')}</th><th></th>
+                    <th>{t('invest.holdingsColLabel')}</th><th style={{ minWidth: '130px' }}>{t('invest.holdingsColValue')}</th><th>{t('invest.holdingsColClass')}</th><th>{t('invest.holdingsColSynth')}</th><th>{t('invest.holdingsColIncome')}</th><th>{t('invest.holdingsColGecko')}</th><th>{t('invest.holdingsColQty')}</th><th>{t('invest.holdingsColBuyPrice')}</th><th>{t('invest.holdingsColSellPrice')}</th><th>{t('invest.holdingsColSellDate')}</th><th>{t('invest.holdingsColSaleResult')}</th><th>{t('invest.holdingsColNotes')}</th><th></th>
                   </tr>
                 </thead>
                 <tbody>
                   {holdings.map((row, index) => (
                     <tr key={`${row.asset || 'row'}-${index}`} className={isHoldingSold(row) ? 'row-sold' : ''}>
+                      <td><input className="input-dark invest-holding-input" type="text" value={row.asset} onChange={(e) => updateHolding(index, { asset: e.target.value })} placeholder="Ex. BTC" /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" style={{ minWidth: '120px' }} value={row.value || row.computedValue || ''} onChange={(e) => updateHolding(index, { value: e.target.value })} placeholder="Ex. 1 000 000€" /></td>
                       <td>
                         <select className="input-dark invest-holding-input" value={row.className === 'immobilier' ? 'immo' : row.className === 'oblig' ? 'obligations' : (row.className || 'autre')} onChange={(e) => updateHolding(index, { className: e.target.value })}>
                           <option value="crypto">{t('invest.holdingsClassCrypto')}</option>
@@ -1037,9 +1039,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                           <input className="input-dark invest-holding-input" type="text" value={row.monthlyPassiveIncome || ''} onChange={(e) => updateHolding(index, { monthlyPassiveIncome: e.target.value })} placeholder="Ex. 450€ / mois" />
                         ) : <span className="hint" style={{ margin: 0 }}>—</span>}
                       </td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={row.asset} onChange={(e) => updateHolding(index, { asset: e.target.value })} placeholder="Ex. BTC" /></td>
                       <td><input className="input-dark invest-holding-input" list="inv-gecko-presets" type="text" value={row.geckoId || ''} onInput={(e) => updateHoldingGeckoId(index, e.currentTarget.value)} onChange={(e) => updateHoldingGeckoId(index, e.currentTarget.value)} placeholder="bitcoin" autoComplete="off" /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" style={{ minWidth: '120px' }} value={row.value || row.computedValue || ''} onChange={(e) => updateHolding(index, { value: e.target.value })} placeholder="Ex. 1 000 000€" /></td>
                       <td><input className="input-dark invest-holding-input" type="text" value={row.quantity} onChange={(e) => updateHolding(index, { quantity: e.target.value, value: '' })} placeholder="Ex. 0.82" /></td>
                       <td><input className="input-dark invest-holding-input" type="text" value={row.avgPrice} onChange={(e) => updateHolding(index, { avgPrice: e.target.value, value: '' })} placeholder="Ex. 42 000€" /></td>
                       <td>
