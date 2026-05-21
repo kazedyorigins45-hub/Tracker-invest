@@ -1098,8 +1098,8 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                         ) : <span className="hint" style={{ margin: 0 }}>—</span>}
                       </td>
                       <td><input className="input-dark invest-holding-input" list="inv-gecko-presets" type="text" value={row.geckoId || ''} onInput={(e) => updateHoldingGeckoId(index, e.currentTarget.value)} onChange={(e) => updateHoldingGeckoId(index, e.currentTarget.value)} placeholder="bitcoin" autoComplete="off" /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={row.quantity} onChange={(e) => updateHolding(index, { quantity: e.target.value, value: '' })} placeholder="Ex. 0.82" /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={row.avgPrice} onChange={(e) => updateHolding(index, { avgPrice: e.target.value, value: '' })} placeholder="Ex. 42 000€" /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={row.quantity} onChange={(e) => updateHolding(index, { quantity: e.target.value })} placeholder="Ex. 0.82" /></td>
+                      <td><input className="input-dark invest-holding-input" type="text" value={row.avgPrice} onChange={(e) => updateHolding(index, { avgPrice: e.target.value })} placeholder="Ex. 42 000€" /></td>
                       <td>
                         <div className="inv-sale-cell">
                           <input className="input-dark invest-holding-input" type="text" value={row.sellPrice || ''} onChange={(e) => {
