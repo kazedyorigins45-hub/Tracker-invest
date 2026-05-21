@@ -1067,7 +1067,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
               <table className="data">
                 <thead>
                   <tr>
-                    <th style={{ minWidth: '110px' }}>{t('invest.holdingsColLabel')}</th><th style={{ minWidth: '150px' }}>{t('invest.holdingsColValue')}</th><th>{t('invest.holdingsColClass')}</th><th>{t('invest.holdingsColSynth')}</th><th style={{ minWidth: '120px' }}>{t('invest.holdingsColIncome')}</th><th>{t('invest.holdingsColGecko')}</th><th style={{ minWidth: '90px' }}>{t('invest.holdingsColQty')}</th><th style={{ minWidth: '130px' }}>{t('invest.holdingsColBuyPrice')}</th><th style={{ minWidth: '130px' }}>{t('invest.holdingsColSellPrice')}</th><th>{t('invest.holdingsColSellDate')}</th><th style={{ minWidth: '110px' }}>{t('invest.holdingsColSaleResult')}</th><th style={{ minWidth: '160px' }}>{t('invest.holdingsColNotes')}</th><th></th>
+                    <th>{t('invest.holdingsColLabel')}</th><th>{t('invest.holdingsColValue')}</th><th>{t('invest.holdingsColClass')}</th><th>{t('invest.holdingsColSynth')}</th><th>{t('invest.holdingsColIncome')}</th><th>{t('invest.holdingsColGecko')}</th><th>{t('invest.holdingsColQty')}</th><th>{t('invest.holdingsColBuyPrice')}</th><th>{t('invest.holdingsColSellPrice')}</th><th>{t('invest.holdingsColSellDate')}</th><th>{t('invest.holdingsColSaleResult')}</th><th>{t('invest.holdingsColNotes')}</th><th></th>
                   </tr>
                 </thead>
                 <tbody>
