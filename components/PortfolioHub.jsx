@@ -13,15 +13,7 @@ import CurrencyToggle from '@/components/CurrencyToggle';
 import LanguageToggle from '@/components/LanguageToggle';
 
 function parseAmt(raw) {
-  let s = String(raw ?? '').replace(/\s+/g, '').replace(/[^\d,.-]/g, '');
-  const lastComma = s.lastIndexOf(',');
-  const lastDot = s.lastIndexOf('.');
-  if (lastComma > -1 && lastDot > -1) {
-    s = lastComma > lastDot ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, '');
-  } else if (lastComma > -1) {
-    s = s.replace(',', '.');
-  }
-  return parseFloat(s) || 0;
+  return Number(String(raw ?? '').replace(/\s+/g, '').replace(/[^\d.,-]/g, '').replace(',', '.')) || 0;
 }
 
 export default function PortfolioHub({ userEmail = '', planCode = 'starter', subscription = null }) {
