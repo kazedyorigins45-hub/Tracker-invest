@@ -290,8 +290,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
   const [data, setData] = useAccountPayload(`trackerHub_v2_${profile}`, defaultTrackerState());
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const closeSidebar = () => setSidebarOpen(false);
-  const [chartSymbol, setChartSymbol] = React.useState('COINBASE:BTCUSD');
-  const [chartSearchInput, setChartSearchInput] = React.useState('');
+
 
   const page = data.page === 'tradingPlan' ? 'plan' : (data.page || 'cover');
   const subscriptionLabel = getSubscriptionLabel(subscription, planCode);
@@ -564,55 +563,6 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
     }
   }, []);
 
-  useEffect(() => {
-    const el = document.getElementById('tv-chart-weekly');
-    if (!el) return;
-    el.innerHTML = '';
-
-    const widgetDiv = document.createElement('div');
-    widgetDiv.className = 'tradingview-widget-container__widget';
-    widgetDiv.style.cssText = 'height:100%;width:100%';
-    el.appendChild(widgetDiv);
-
-    const copyright = document.createElement('div');
-    copyright.className = 'tradingview-widget-copyright';
-    copyright.innerHTML = '<a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets</span></a> by TradingView';
-    el.appendChild(copyright);
-
-    const config = JSON.stringify({
-      width: '100%',
-      height: '100%',
-      symbol: chartSymbol,
-      interval: 'D',
-      timezone: 'Etc/UTC',
-      theme: 'light',
-      style: '1',
-      locale: 'en',
-      hide_top_toolbar: false,
-      allow_symbol_change: true,
-      save_image: true,
-      calendar: false,
-      details: false,
-      hide_side_toolbar: false,
-      hide_legend: false,
-      hide_volume: false,
-      hotlist: false,
-      withdateranges: false,
-      backgroundColor: '#ffffff',
-      gridColor: 'rgba(46, 46, 46, 0.06)',
-      studies: [],
-    });
-
-    const temp = document.createElement('div');
-    temp.innerHTML = `<script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>${config}<\/script>`;
-    const parsed = temp.querySelector('script');
-    if (parsed) {
-      const s = document.createElement('script');
-      Array.from(parsed.attributes).forEach((attr) => s.setAttribute(attr.name, attr.value));
-      s.textContent = parsed.textContent;
-      el.appendChild(s);
-    }
-  }, [chartSymbol]);
 
   const normalizeS20Row = (row = {}) => ({
     date: row.date || '',
@@ -989,37 +939,6 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
 
           <div style={{ margin: '1rem 0 0', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--border)' }}>
             <div id="tv-ticker-weekly" className="tradingview-widget-container" style={{ height: '400px', width: '100%' }} />
-          </div>
-
-          <div className="card" style={{ marginTop: '0.75rem', padding: '1rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
-              <h2 style={{ margin: 0 }}>{t('tracker.weeklyChartTitle')}</h2>
-              {[
-                { label: 'BTC', sym: 'COINBASE:BTCUSD' },
-                { label: 'ETH', sym: 'COINBASE:ETHUSD' },
-                { label: 'Silver', sym: 'OANDA:XAGUSD' },
-                { label: 'Or', sym: 'OANDA:XAUUSD' },
-                { label: 'SP500', sym: 'SP:SPX' },
-                { label: 'EUR/USD', sym: 'FX:EURUSD' },
-              ].map(({ label, sym }) => (
-                <button key={sym} type="button"
-                  className={`btn-ghost btn-compact${chartSymbol === sym ? ' is-active' : ''}`}
-                  style={{ fontSize: '0.72rem', padding: '2px 8px' }}
-                  onClick={() => setChartSymbol(sym)}>
-                  {label}
-                </button>
-              ))}
-              <input
-                className="input-dark"
-                type="text"
-                placeholder={isEnglish ? 'Symbol (e.g. BITSTAMP:BTCUSD)' : 'Symbole (ex : BITSTAMP:BTCUSD)'}
-                value={chartSearchInput}
-                onChange={(e) => setChartSearchInput(e.target.value)}
-                onKeyDown={(e) => { if (e.key === 'Enter' && chartSearchInput.trim()) { setChartSymbol(chartSearchInput.trim().toUpperCase()); } }}
-                style={{ width: '190px', fontSize: '0.75rem', height: '28px', padding: '0 8px' }}
-              />
-            </div>
-            <div id="tv-chart-weekly" className="tradingview-widget-container" style={{ width: '100%', height: '600px' }} />
           </div>
 
           <div className="card">
