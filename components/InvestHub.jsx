@@ -1062,14 +1062,14 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
               <table className="data">
                 <thead>
                   <tr>
-                    <th>{t('invest.holdingsColLabel')}</th><th style={{ minWidth: '130px' }}>{t('invest.holdingsColValue')}</th><th>{t('invest.holdingsColClass')}</th><th>{t('invest.holdingsColSynth')}</th><th>{t('invest.holdingsColIncome')}</th><th>{t('invest.holdingsColGecko')}</th><th>{t('invest.holdingsColQty')}</th><th>{t('invest.holdingsColBuyPrice')}</th><th>{t('invest.holdingsColSellPrice')}</th><th>{t('invest.holdingsColSellDate')}</th><th>{t('invest.holdingsColSaleResult')}</th><th>{t('invest.holdingsColNotes')}</th><th></th>
+                    <th style={{ minWidth: '110px' }}>{t('invest.holdingsColLabel')}</th><th style={{ minWidth: '150px' }}>{t('invest.holdingsColValue')}</th><th>{t('invest.holdingsColClass')}</th><th>{t('invest.holdingsColSynth')}</th><th style={{ minWidth: '120px' }}>{t('invest.holdingsColIncome')}</th><th>{t('invest.holdingsColGecko')}</th><th style={{ minWidth: '90px' }}>{t('invest.holdingsColQty')}</th><th style={{ minWidth: '130px' }}>{t('invest.holdingsColBuyPrice')}</th><th style={{ minWidth: '130px' }}>{t('invest.holdingsColSellPrice')}</th><th>{t('invest.holdingsColSellDate')}</th><th style={{ minWidth: '110px' }}>{t('invest.holdingsColSaleResult')}</th><th style={{ minWidth: '160px' }}>{t('invest.holdingsColNotes')}</th><th></th>
                   </tr>
                 </thead>
                 <tbody>
                   {holdings.map((row, index) => (
                     <tr key={index} className={isHoldingSold(row) ? 'row-sold' : ''}>
-                      <td><input className="input-dark invest-holding-input" type="text" value={row.asset} onChange={(e) => updateHolding(index, { asset: e.target.value })} placeholder="Ex. BTC" /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" style={{ minWidth: '160px' }} value={row.value || row.computedValue || ''} onChange={(e) => updateHolding(index, { value: e.target.value })} placeholder="Ex. 1 000 000€" /></td>
+                      <td><textarea className="input-dark invest-holding-input" rows={1} value={row.asset} onChange={(e) => updateHolding(index, { asset: e.target.value })} onInput={(e) => { e.target.style.height = 'auto'; e.target.style.height = `${e.target.scrollHeight}px`; }} placeholder="Ex. BTC" /></td>
+                      <td><textarea className="input-dark invest-holding-input" rows={1} value={row.value || row.computedValue || ''} onChange={(e) => updateHolding(index, { value: e.target.value })} onInput={(e) => { e.target.style.height = 'auto'; e.target.style.height = `${e.target.scrollHeight}px`; }} placeholder="Ex. 1 000 000€" /></td>
                       <td>
                         <select className="input-dark invest-holding-input" value={row.className === 'immobilier' ? 'immo' : row.className === 'oblig' ? 'obligations' : (row.className || 'autre')} onChange={(e) => updateHolding(index, { className: e.target.value })}>
                           <option value="crypto">{t('invest.holdingsClassCrypto')}</option>
@@ -1089,27 +1089,27 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                       </td>
                       <td>
                         {(row.hubSegment || 'actif') === 'passif' ? (
-                          <input className="input-dark invest-holding-input" type="text" value={row.monthlyPassiveIncome || ''} onChange={(e) => updateHolding(index, { monthlyPassiveIncome: e.target.value })} placeholder="Ex. 450€ / mois" />
+                          <textarea className="input-dark invest-holding-input" rows={1} value={row.monthlyPassiveIncome || ''} onChange={(e) => updateHolding(index, { monthlyPassiveIncome: e.target.value })} onInput={(e) => { e.target.style.height = 'auto'; e.target.style.height = `${e.target.scrollHeight}px`; }} placeholder="Ex. 450€ / mois" />
                         ) : <span className="hint" style={{ margin: 0 }}>—</span>}
                       </td>
                       <td><input className="input-dark invest-holding-input" list="inv-gecko-presets" type="text" value={row.geckoId || ''} onInput={(e) => updateHoldingGeckoId(index, e.currentTarget.value)} onChange={(e) => updateHoldingGeckoId(index, e.currentTarget.value)} placeholder="bitcoin" autoComplete="off" /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={row.quantity} onChange={(e) => updateHolding(index, { quantity: e.target.value, value: '' })} placeholder="Ex. 0.82" /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={row.avgPrice} onChange={(e) => updateHolding(index, { avgPrice: e.target.value, value: '' })} placeholder="Ex. 42 000€" /></td>
+                      <td><textarea className="input-dark invest-holding-input" rows={1} value={row.quantity} onChange={(e) => updateHolding(index, { quantity: e.target.value, value: '' })} onInput={(e) => { e.target.style.height = 'auto'; e.target.style.height = `${e.target.scrollHeight}px`; }} placeholder="Ex. 0.82" /></td>
+                      <td><textarea className="input-dark invest-holding-input" rows={1} value={row.avgPrice} onChange={(e) => updateHolding(index, { avgPrice: e.target.value, value: '' })} onInput={(e) => { e.target.style.height = 'auto'; e.target.style.height = `${e.target.scrollHeight}px`; }} placeholder="Ex. 42 000€" /></td>
                       <td>
                         <div className="inv-sale-cell">
-                          <input className="input-dark invest-holding-input" type="text" value={row.sellPrice || ''} onChange={(e) => {
+                          <textarea className="input-dark invest-holding-input" rows={1} value={row.sellPrice || ''} onChange={(e) => {
                             const nextSell = e.target.value;
                             const qty = parseAmount(row.quantity || row.qty || 0) || 1;
                             const buy = parseAmount(row.avgPrice || row.buyAvg || 0);
                             const sale = parseAmount(nextSell);
                             const result = Number.isFinite(qty) && Number.isFinite(buy) && Number.isFinite(sale) ? ((sale - buy) * qty) : 0;
                             updateHolding(index, { sellPrice: nextSell, saleResult: String(Math.round(result * 100) / 100) });
-                          }} placeholder={t('invest.holdingSellPlaceholder')} />
+                          }} onInput={(e) => { e.target.style.height = 'auto'; e.target.style.height = `${e.target.scrollHeight}px`; }} placeholder={t('invest.holdingSellPlaceholder')} />
                           <button type="button" className="btn-inv-sale-live" onClick={() => fetchLiveSellPrice(index)} disabled={classLabel(row) !== 'crypto'} title={classLabel(row) === 'crypto' ? t('invest.holdingCoursCryptoTitle') : t('invest.holdingCoursOnlyTitle')}>{t('invest.holdingCoursBtn')}</button>
                         </div>
                       </td>
                       <td><input className="input-dark invest-holding-input" type="date" value={row.sellDate || row.saleDate || ''} onChange={(e) => updateHolding(index, { sellDate: e.target.value, saleDate: e.target.value })} /></td>
-                      <td><input className="input-dark invest-holding-input" type="text" value={row.saleResult || ''} onChange={(e) => updateHolding(index, { saleResult: e.target.value })} placeholder={t('invest.holdingResultPlaceholder')} /></td>
+                      <td><textarea className="input-dark invest-holding-input" rows={1} value={row.saleResult || ''} onChange={(e) => updateHolding(index, { saleResult: e.target.value })} onInput={(e) => { e.target.style.height = 'auto'; e.target.style.height = `${e.target.scrollHeight}px`; }} placeholder={t('invest.holdingResultPlaceholder')} /></td>
                       <td><textarea className="input-dark invest-holding-input tracker-series-input" value={row.notes || ''} onChange={(e) => updateHolding(index, { notes: e.target.value })} onInput={(e) => { e.target.style.height = 'auto'; e.target.style.height = `${e.target.scrollHeight}px`; }} placeholder={t('invest.holdingsColNotes')} rows={1} /></td>
                       <td><button type="button" className="link-del" onClick={() => removeHolding(index)}>×</button></td>
                     </tr>
