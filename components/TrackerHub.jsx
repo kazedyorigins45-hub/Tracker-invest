@@ -290,7 +290,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
   const [data, setData] = useAccountPayload(`trackerHub_v2_${profile}`, defaultTrackerState());
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const closeSidebar = () => setSidebarOpen(false);
-  const [chartSymbol, setChartSymbol] = React.useState('BITSTAMP:BTCUSD');
+  const [chartSymbol, setChartSymbol] = React.useState('COINBASE:BTCUSD');
   const [chartSearchInput, setChartSearchInput] = React.useState('');
 
   const page = data.page === 'tradingPlan' ? 'plan' : (data.page || 'cover');
@@ -531,11 +531,17 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
 
     const widgetDiv = document.createElement('div');
     widgetDiv.className = 'tradingview-widget-container__widget';
-    widgetDiv.style.cssText = 'height:calc(100% - 32px);width:100%';
+    widgetDiv.style.cssText = 'height:100%;width:100%';
     el.appendChild(widgetDiv);
 
+    const copyright = document.createElement('div');
+    copyright.className = 'tradingview-widget-copyright';
+    copyright.innerHTML = '<a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets</span></a> by TradingView';
+    el.appendChild(copyright);
+
     const config = JSON.stringify({
-      autosize: true,
+      width: '100%',
+      height: '100%',
       symbol: chartSymbol,
       interval: 'D',
       timezone: 'Etc/UTC',
@@ -949,7 +955,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
               <h2 style={{ margin: 0 }}>{t('tracker.weeklyChartTitle')}</h2>
               {[
-                { label: 'BTC', sym: 'BITSTAMP:BTCUSD' },
+                { label: 'BTC', sym: 'COINBASE:BTCUSD' },
                 { label: 'ETH', sym: 'COINBASE:ETHUSD' },
                 { label: 'Silver', sym: 'OANDA:XAGUSD' },
                 { label: 'Or', sym: 'OANDA:XAUUSD' },
@@ -973,7 +979,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
                 style={{ width: '190px', fontSize: '0.75rem', height: '28px', padding: '0 8px' }}
               />
             </div>
-            <div id="tv-chart-weekly" className="tradingview-widget-container" style={{ width: '100%', height: '486px' }} />
+            <div id="tv-chart-weekly" className="tradingview-widget-container" style={{ width: '100%', height: '600px' }} />
           </div>
 
           <div className="card">
