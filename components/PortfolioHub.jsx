@@ -43,7 +43,11 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
 
   const autoInvestValue = (Array.isArray(investData.holdings) ? investData.holdings : [])
     .filter((h) => !h.sellDate && !h.saleDate)
-    .reduce((sum, h) => sum + parseAmt(h.computedValue || h.value || 0), 0);
+    .reduce((sum, h) => {
+      const direct = parseAmt(h.value);
+      const fallback = parseAmt(h.quantity || h.qty) * parseAmt(h.avgPrice || h.buyAvg);
+      return sum + (direct > 0 ? direct : fallback);
+    }, 0);
 
   const autoTradingNet = (Array.isArray(trackerData.weeklyTrades) ? trackerData.weeklyTrades : [])
     .reduce((sum, row) => sum + parseAmt(row.result || 0), 0);

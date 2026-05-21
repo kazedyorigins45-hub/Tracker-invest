@@ -62,7 +62,7 @@ export default function HomeContent() {
       <nav className="subs" aria-label={t('home.subscriptionsTitle')}>
         {PLANS.map((plan) => (
           <Link key={plan.code} href="/pricing" className={`sub-card ${plan.highlight ? 'is-selected' : ''}`}>
-            <span className="badge">{plan.highlight ? 'Recommandé' : 'Plan'}</span>
+            <span className="badge">{plan.highlight ? (locale === 'en' ? 'Recommended' : 'Recommandé') : (locale === 'en' ? 'Plan' : 'Plan')}</span>
             <strong>{locale === 'en' ? plan.nameEn : plan.name}</strong>
             <span className="desc">{locale === 'en' ? plan.descriptionEn : plan.description}</span>
             <span style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--gold, #c9a84c)' }}>{formatPlanPrice(plan.prices.monthly)}<span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--muted)' }}>{plan.prices.monthly > 0 ? (locale === 'en' ? '/mo' : '/mois') : ''}</span></span>

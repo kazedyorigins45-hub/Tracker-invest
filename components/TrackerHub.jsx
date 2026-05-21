@@ -532,12 +532,9 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
     const widgetDiv = document.createElement('div');
     widgetDiv.className = 'tradingview-widget-container__widget';
     widgetDiv.style.cssText = 'height:calc(100% - 32px);width:100%';
+    el.appendChild(widgetDiv);
 
-    const script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
-    script.async = true;
-    script.textContent = JSON.stringify({
+    const config = JSON.stringify({
       autosize: true,
       symbol: chartSymbol,
       interval: 'D',
@@ -560,8 +557,15 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
       studies: [],
     });
 
-    el.appendChild(widgetDiv);
-    el.appendChild(script);
+    const temp = document.createElement('div');
+    temp.innerHTML = `<script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>${config}<\/script>`;
+    const parsed = temp.querySelector('script');
+    if (parsed) {
+      const s = document.createElement('script');
+      Array.from(parsed.attributes).forEach((attr) => s.setAttribute(attr.name, attr.value));
+      s.textContent = parsed.textContent;
+      el.appendChild(s);
+    }
   }, [chartSymbol]);
 
   const normalizeS20Row = (row = {}) => ({

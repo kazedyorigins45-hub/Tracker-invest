@@ -1103,7 +1103,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                       </td>
                       <td><input className="input-dark invest-holding-input" type="date" value={row.sellDate || row.saleDate || ''} onChange={(e) => updateHolding(index, { sellDate: e.target.value, saleDate: e.target.value })} /></td>
                       <td><input className="input-dark invest-holding-input" type="text" value={row.saleResult || ''} onChange={(e) => updateHolding(index, { saleResult: e.target.value })} placeholder={t('invest.holdingResultPlaceholder')} /></td>
-                      <td><textarea className="input-dark invest-holding-input tracker-series-input" value={row.notes || ''} onChange={(e) => updateHolding(index, { notes: e.target.value })} placeholder={t('invest.holdingsColNotes')} rows={1} /></td>
+                      <td><textarea className="input-dark invest-holding-input tracker-series-input" value={row.notes || ''} onChange={(e) => updateHolding(index, { notes: e.target.value })} onInput={(e) => { e.target.style.height = 'auto'; e.target.style.height = `${e.target.scrollHeight}px`; }} placeholder={t('invest.holdingsColNotes')} rows={1} /></td>
                       <td><button type="button" className="link-del" onClick={() => removeHolding(index)}>×</button></td>
                     </tr>
                   ))}
