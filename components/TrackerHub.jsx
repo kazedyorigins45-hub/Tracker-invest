@@ -499,28 +499,68 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
   }, [data.annualYear, data.monthlyByMonth, isEnglish, setData]);
 
   useEffect(() => {
-    const ticker = document.getElementById('tv-ticker-weekly');
-    if (ticker && !ticker.querySelector('iframe')) {
+    const el = document.getElementById('tv-ticker-weekly');
+    if (!el) return;
+    el.innerHTML = '';
+
+    const widgetDiv = document.createElement('div');
+    widgetDiv.className = 'tradingview-widget-container__widget';
+    widgetDiv.style.cssText = 'height:100%;width:100%';
+    el.appendChild(widgetDiv);
+
+    const copyright = document.createElement('div');
+    copyright.className = 'tradingview-widget-copyright';
+    copyright.innerHTML = '<a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets</span></a> by TradingView';
+    el.appendChild(copyright);
+
+    const config = JSON.stringify({
+      colorTheme: 'dark',
+      dateRange: '12M',
+      showChart: true,
+      locale: 'fr',
+      isTransparent: true,
+      showSymbolLogo: true,
+      showFloatingTooltip: false,
+      width: '100%',
+      height: '400',
+      tabs: [
+        {
+          title: 'Crypto',
+          symbols: [
+            { s: 'COINBASE:BTCUSD', d: 'Bitcoin' },
+            { s: 'COINBASE:ETHUSD', d: 'Ethereum' },
+            { s: 'CRYPTOCAP:BTC.D', d: 'BTC Dom.' },
+          ],
+          originalTitle: 'Crypto',
+        },
+        {
+          title: 'Matières premières',
+          symbols: [
+            { s: 'OANDA:XAUUSD', d: 'Or' },
+            { s: 'OANDA:XAGUSD', d: 'Argent' },
+          ],
+          originalTitle: 'Commodities',
+        },
+        {
+          title: 'Forex & Actions',
+          symbols: [
+            { s: 'FX:EURUSD', d: 'EUR/USD' },
+            { s: 'NASDAQ:NVDA', d: 'NVDA' },
+            { s: 'SP:SPX', d: 'S&P 500' },
+          ],
+          originalTitle: 'Forex & Stocks',
+        },
+      ],
+    });
+
+    const temp = document.createElement('div');
+    temp.innerHTML = `<script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>${config}<\/script>`;
+    const parsed = temp.querySelector('script');
+    if (parsed) {
       const s = document.createElement('script');
-      s.src = 'https://s3.tradingview.com/external-embedding/embed-widget-ticker-tape.js';
-      s.async = true;
-      s.innerHTML = JSON.stringify({
-        symbols: [
-          { proName: 'BITSTAMP:BTCUSD', title: 'Bitcoin' },
-          { proName: 'COINBASE:ETHUSD', title: 'Ethereum' },
-          { proName: 'OANDA:XAGUSD', title: 'Argent' },
-          { proName: 'OANDA:XAUUSD', title: 'Or' },
-          { proName: 'NASDAQ:NVDA', title: 'NVDA' },
-          { proName: 'FX:EURUSD', title: 'EUR/USD' },
-          { proName: 'CRYPTOCAP:BTC.D', title: 'BTC Dom.' },
-        ],
-        showSymbolLogo: false,
-        isTransparent: true,
-        displayMode: 'adaptive',
-        colorTheme: 'dark',
-        locale: 'fr',
-      });
-      ticker.appendChild(s);
+      Array.from(parsed.attributes).forEach((attr) => s.setAttribute(attr.name, attr.value));
+      s.textContent = parsed.textContent;
+      el.appendChild(s);
     }
   }, []);
 
@@ -947,8 +987,8 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
             <div className="stat-box"><div className="v">{weeklyProfitFactor == null ? '—' : weeklyProfitFactor.toFixed(2)}</div><div className="l">{t('tracker.weeklyProfitFactor')}</div></div>
           </div>
 
-          <div style={{ margin: '1rem 0 0', borderRadius: '10px', overflow: 'hidden', background: 'rgba(0,0,0,0.25)', border: '1px solid var(--border)' }}>
-            <div id="tv-ticker-weekly" className="tradingview-widget-container" style={{ height: '46px' }} />
+          <div style={{ margin: '1rem 0 0', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+            <div id="tv-ticker-weekly" className="tradingview-widget-container" style={{ height: '400px', width: '100%' }} />
           </div>
 
           <div className="card" style={{ marginTop: '0.75rem', padding: '1rem' }}>
