@@ -1684,6 +1684,7 @@ table.data td.num, table.split td.num, table.immo-compare td.num { text-align: r
   text-transform: uppercase;
   padding: 0.4rem 0.3rem;
   border-bottom: 0;
+  white-space: nowrap;
 }
 .mindset-shell.invest-hub table.data td {
   padding: 0.22rem 0.28rem;
