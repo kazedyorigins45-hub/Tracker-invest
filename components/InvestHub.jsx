@@ -236,9 +236,14 @@ function normalizeInvestHolding(row = {}) {
     monthlyPassiveIncome: row.monthlyPassiveIncome || row.passiveMonthlyIncome || '',
     value: row.value || '',
   };
+  const directValue = parseAmount(normalized.value);
+  const computedNumeric = parseAmount(normalized.quantity) * parseAmount(normalized.avgPrice);
+  const resolvedValue = directValue > 0 ? directValue : (computedNumeric > 0 ? computedNumeric : 0);
+  const displayValue = normalized.value || (resolvedValue > 0 ? formatEuro(resolvedValue) : '');
   return {
     ...normalized,
-    computedValue: normalized.value || computeHoldingValue(normalized.quantity, normalized.avgPrice),
+    computedValue: displayValue,
+    resolvedValue,
   };
 }
 
@@ -538,15 +543,15 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   const annualCharges = Number(data.annualCharges || 0);
   const annualPayment = Number(data.loanPayment || 0) * 12;
   const annualCashflow = annualIncome - annualPayment - annualCharges;
-  const totalOverviewValue = openHoldings.reduce((sum, row) => sum + parseAmount(row.computedValue || row.value || 0), 0);
+  const totalOverviewValue = openHoldings.reduce((sum, row) => sum + (row.resolvedValue || 0), 0);
   const classTotals = openHoldings.reduce((acc, row) => {
     const key = classLabel(row);
-    acc[key] = (acc[key] || 0) + parseAmount(row.computedValue || row.value || 0);
+    acc[key] = (acc[key] || 0) + (row.resolvedValue || 0);
     return acc;
   }, {});
   const segmentTotals = openHoldings.reduce((acc, row) => {
     const seg = row.hubSegment || 'actif';
-    acc[seg] = (acc[seg] || 0) + parseAmount(row.computedValue || row.value || 0);
+    acc[seg] = (acc[seg] || 0) + (row.resolvedValue || 0);
     return acc;
   }, {});
 
@@ -1013,7 +1018,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                       {rows.map((h, i) => (
                         <div key={`${h.asset}-${i}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', padding: '0.3rem 0', borderBottom: '1px solid var(--border-soft)' }}>
                           <span style={{ color: 'var(--text)' }}>{h.asset || '—'}</span>
-                          <span style={{ color: 'var(--muted)', fontWeight: 600 }}>{fmtC(parseAmount(h.computedValue || h.value || 0))}</span>
+                          <span style={{ color: 'var(--muted)', fontWeight: 600 }}>{fmtC(h.resolvedValue || 0)}</span>
                         </div>
                       ))}
                     </div>
