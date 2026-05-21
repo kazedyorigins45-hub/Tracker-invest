@@ -507,7 +507,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   const selectedAnnualYear = data.annualYear || String(new Date().getFullYear());
   const annualMonthlySource = { ...(data.monthly || {}), ...(data.monthlyByMonth || {}) };
   const goalsState = { target: data.goalTarget || '', why: data.goalWhy || '', steps: data.goalSteps || '', ...(data.goals || {}) };
-  const holdings = (Array.isArray(data.holdings) && data.holdings.length ? data.holdings : defaultInvestState().holdings).map(normalizeInvestHolding);
+  const holdings = (Array.isArray(data.holdings) ? data.holdings : defaultInvestState().holdings).map(normalizeInvestHolding);
   const isHoldingSold = (row) => !!String(row.sellDate || row.saleDate || '').trim();
   const openHoldings = holdings.filter((row) => !isHoldingSold(row));
   const immoLinkedHoldings = openHoldings.filter((row) => ['immobilier', 'immo'].includes(String(row.className || '').toLowerCase()));
