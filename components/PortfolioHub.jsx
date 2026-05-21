@@ -25,8 +25,13 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
     tradingNetValue: '',
   });
 
-  const [investData] = useAccountPayload('investHub_v2_main', { holdings: [] });
-  const [trackerData] = useAccountPayload('trackerHub_v2_main', { weeklyTrades: [] });
+  const [investProfileState] = useAccountPayload('investHub_profiles_v1', { current: 'main' });
+  const [trackerProfileState] = useAccountPayload('trackerHub_profiles_v1', { current: 'default' });
+  const investProfile = investProfileState.current || 'main';
+  const trackerProfile = trackerProfileState.current || 'default';
+
+  const [investData] = useAccountPayload(`investHub_v2_${investProfile}`, { holdings: [] });
+  const [trackerData] = useAccountPayload(`trackerHub_v2_${trackerProfile}`, { weeklyTrades: [] });
 
   const [saveStatus, setSaveStatus] = useState('');
 
@@ -128,6 +133,7 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
             <h2>{t('portfolio.objectiveSectionTitle')}</h2>
             <div className="grid-2 portfolio-grid-spaced">
               <div className="field-block"><label>{t('portfolio.objectiveTitleLabel')}</label><input className="input-dark" type="text" value={data.title} onChange={(e) => update({ title: e.target.value })} placeholder={t('portfolio.objectiveTitlePlaceholder')} /></div>
+              <div className="field-block"><label>{t('portfolio.objectiveGlobalLabel')}</label><input className="input-dark" type="text" value={data.target} onChange={(e) => update({ target: e.target.value })} placeholder="ex. 200000" /></div>
             </div>
             <div className="grid-2" style={{ marginTop: '0.75rem' }}>
               <div className="field-block">
@@ -161,7 +167,23 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
               <div className="stat-box"><div className="v">{formatEuro(positionsValue)}</div><div className="l">{t('portfolio.statPositions')}</div></div>
               <div className="stat-box"><div className="v pos">+{formatEuro(tradingNetValue)}</div><div className="l">{t('portfolio.statTradingNet')}</div></div>
               <div className="stat-box"><div className="v">{formatEuro(totalValue)}</div><div className="l">{t('portfolio.statTotal')}</div></div>
+              {parseAmt(data.target) > 0 && (
+                <div className="stat-box"><div className="v" style={{ color: 'var(--gold)' }}>{Math.min(100, Math.round(totalValue / parseAmt(data.target) * 100))}%</div><div className="l">{t('portfolio.statPercent')}</div></div>
+              )}
             </div>
+            {parseAmt(data.target) > 0 ? (
+              <div style={{ marginTop: '1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--muted)', marginBottom: '0.35rem' }}>
+                  <span>{formatEuro(totalValue)}</span>
+                  <span>{formatEuro(parseAmt(data.target))}</span>
+                </div>
+                <div style={{ background: 'var(--border, rgba(255,255,255,0.1))', borderRadius: '6px', height: '10px', overflow: 'hidden' }}>
+                  <div style={{ width: `${Math.min(100, totalValue / parseAmt(data.target) * 100)}%`, height: '100%', background: 'var(--gold, #c9a84c)', borderRadius: '6px', transition: 'width 0.4s ease' }} />
+                </div>
+              </div>
+            ) : (
+              <p style={{ fontSize: '0.72rem', color: 'var(--muted)', marginTop: '0.75rem' }}>{t('portfolio.progressBarHint')}</p>
+            )}
             <h3 style={{ fontFamily: 'Cinzel, serif', fontSize: '0.72rem', letterSpacing: '0.1em', color: 'var(--gold)', textTransform: 'uppercase', margin: '1.75rem 0 0.85rem' }}>{t('portfolio.axesTitle')}</h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
               {axes.map((axis) => (

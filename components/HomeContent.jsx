@@ -3,10 +3,23 @@
 import Link from 'next/link';
 import { PLANS } from '@/lib/plans';
 import { useLocale } from '@/lib/locale';
+import { useCurrency } from '@/lib/currency';
+import { useFxRate } from '@/lib/fx';
 import DashboardContent from '@/components/DashboardContent';
 
 export default function HomeContent() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const { currency } = useCurrency();
+  const fxRate = useFxRate();
+
+  const formatPlanPrice = (eur) => {
+    if (eur === 0) return locale === 'en' ? 'Free' : 'Gratuit';
+    if (currency === 'usd') {
+      const usd = eur * fxRate;
+      return `$${new Intl.NumberFormat('en-US', { minimumFractionDigits: Number.isInteger(usd) ? 0 : 2, maximumFractionDigits: 2 }).format(usd)}`;
+    }
+    return `${new Intl.NumberFormat('fr-FR', { minimumFractionDigits: Number.isInteger(eur) ? 0 : 2, maximumFractionDigits: 2 }).format(eur)} €`;
+  };
 
   return (
     <div className="home-wrap">
@@ -50,8 +63,9 @@ export default function HomeContent() {
         {PLANS.map((plan) => (
           <Link key={plan.code} href="/pricing" className={`sub-card ${plan.highlight ? 'is-selected' : ''}`}>
             <span className="badge">{plan.highlight ? 'Recommandé' : 'Plan'}</span>
-            <strong>{plan.name}</strong>
-            <span className="desc">{plan.description}</span>
+            <strong>{locale === 'en' ? plan.nameEn : plan.name}</strong>
+            <span className="desc">{locale === 'en' ? plan.descriptionEn : plan.description}</span>
+            <span style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--gold, #c9a84c)' }}>{formatPlanPrice(plan.prices.monthly)}<span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--muted)' }}>{plan.prices.monthly > 0 ? (locale === 'en' ? '/mo' : '/mois') : ''}</span></span>
             <span className="cta">{t('home.plans')} →</span>
           </Link>
         ))}

@@ -80,10 +80,10 @@ function toDisplayAmount(value, isEnglish, fxRate = FX_FALLBACK_EUR_USD) {
   return String(Number((n * fxRate).toFixed(2)));
 }
 
-function formatMoney(value, isEnglish, fxRate = FX_FALLBACK_EUR_USD) {
+function formatMoney(value, isUsd, fxRate = FX_FALLBACK_EUR_USD) {
   const n = parseAmount(value);
   if (n == null) return value || '0.00';
-  return Number((n * (isEnglish ? fxRate : 1)).toFixed(2)).toLocaleString(isEnglish ? 'en-US' : 'fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return Number((n * (isUsd ? fxRate : 1)).toFixed(2)).toLocaleString(isUsd ? 'en-US' : 'fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function formatCalcNumber(value, locale = 'fr-FR', maximumFractionDigits = 2) {
@@ -529,35 +529,39 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
     if (!el) return;
     el.innerHTML = '';
 
-    function createWidget() {
-      const container = document.getElementById('tv-chart-weekly');
-      if (!container || !window.TradingView) return;
-      new window.TradingView.widget({
-        autosize: true,
-        height: 486,
-        symbol: chartSymbol,
-        theme: 'dark',
-        style: '1',
-        locale: 'fr',
-        watchlist: ['BITSTAMP:BTCUSD', 'COINBASE:ETHUSD', 'OANDA:XAGUSD', 'OANDA:XAUUSD', 'NASDAQ:NVDA', 'FX:EURUSD', 'CRYPTOCAP:BTC.D'],
-        container_id: 'tv-chart-weekly',
-      });
-    }
+    const widgetDiv = document.createElement('div');
+    widgetDiv.className = 'tradingview-widget-container__widget';
+    widgetDiv.style.cssText = 'height:calc(100% - 32px);width:100%';
 
-    if (window.TradingView) {
-      createWidget();
-    } else {
-      const existingScript = document.querySelector('script[src="https://s3.tradingview.com/tv.js"]');
-      if (existingScript) {
-        existingScript.addEventListener('load', createWidget, { once: true });
-      } else {
-        const s = document.createElement('script');
-        s.src = 'https://s3.tradingview.com/tv.js';
-        s.async = true;
-        s.onload = createWidget;
-        document.head.appendChild(s);
-      }
-    }
+    const script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+    script.async = true;
+    script.textContent = JSON.stringify({
+      autosize: true,
+      symbol: chartSymbol,
+      interval: 'D',
+      timezone: 'Etc/UTC',
+      theme: 'light',
+      style: '1',
+      locale: 'en',
+      hide_top_toolbar: false,
+      allow_symbol_change: true,
+      save_image: true,
+      calendar: false,
+      details: false,
+      hide_side_toolbar: false,
+      hide_legend: false,
+      hide_volume: false,
+      hotlist: false,
+      withdateranges: false,
+      backgroundColor: '#ffffff',
+      gridColor: 'rgba(46, 46, 46, 0.06)',
+      studies: [],
+    });
+
+    el.appendChild(widgetDiv);
+    el.appendChild(script);
   }, [chartSymbol]);
 
   const normalizeS20Row = (row = {}) => ({
@@ -929,7 +933,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
             <div className="stat-box"><div className={`v ${weeklyStats.net >= 0 ? 'pos' : 'neg'}`}>{formatMoney(weeklyStats.net, isUsd, fxRate)} {currencySymbol}</div><div className="l">{t('tracker.weeklyNet')}</div></div>
             <div className="stat-box"><div className="v">{weeklyWinrate.toFixed(1)} %</div><div className="l">{t('tracker.weeklyWinrate')}</div></div>
             <div className="stat-box"><div className="v">{weeklyStats.wins} / {weeklyStats.losses}</div><div className="l">{t('tracker.weeklyWinLose')}</div></div>
-            <div className="stat-box"><div className="v">{weeklyStats.count ? (weeklyStats.net / weeklyStats.count).toLocaleString(isEnglish ? 'en-US' : 'fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : (isEnglish ? '0.00' : '0,00')} {currencySymbol}</div><div className="l">{t('tracker.weeklyAvgPerTrade')}</div></div>
+            <div className="stat-box"><div className="v">{weeklyStats.count ? formatMoney(weeklyStats.net / weeklyStats.count, isUsd, fxRate) : (isEnglish ? '0.00' : '0,00')} {currencySymbol}</div><div className="l">{t('tracker.weeklyAvgPerTrade')}</div></div>
             <div className="stat-box"><div className="v">{weeklyProfitFactor == null ? '—' : weeklyProfitFactor.toFixed(2)}</div><div className="l">{t('tracker.weeklyProfitFactor')}</div></div>
           </div>
 
@@ -965,11 +969,16 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
                 style={{ width: '190px', fontSize: '0.75rem', height: '28px', padding: '0 8px' }}
               />
             </div>
-            <div id="tv-chart-weekly" style={{ width: '100%', height: '486px' }} />
+            <div id="tv-chart-weekly" className="tradingview-widget-container" style={{ width: '100%', height: '486px' }} />
           </div>
 
           <div className="card">
             <h2>{t('tracker.weeklyTradesTitle')}</h2>
+            <p className="hint" style={{ marginTop: 0, marginBottom: '0.75rem' }}>
+              {isEnglish
+                ? 'For a losing trade, put "-" before the result so the calculations are done automatically.'
+                : 'Pour un trade perdant, mettez « - » devant le résultat. Pour que le calcul se fasse automatiquement.'}
+            </p>
             <div className="table-wrap">
               <table className="data" id="w-trades-table">
                 <thead>

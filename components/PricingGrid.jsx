@@ -5,6 +5,8 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FEATURE_LABELS, PLANS } from '@/lib/plans';
 import { useLocale } from '@/lib/locale';
+import { useCurrency } from '@/lib/currency';
+import { useFxRate } from '@/lib/fx';
 
 export default function PricingGrid() {
   const router = useRouter();
@@ -12,7 +14,17 @@ export default function PricingGrid() {
   const [loadingPlan, setLoadingPlan] = useState('');
   const [selectedPlan, setSelectedPlan] = useState('');
   const { locale, t } = useLocale();
-  const formatPrice = (value) => new Intl.NumberFormat(locale === 'en' ? 'en-US' : 'fr-FR', { maximumFractionDigits: 2, minimumFractionDigits: Number.isInteger(value) ? 0 : 1 }).format(value);
+  const { currency } = useCurrency();
+  const fxRate = useFxRate();
+
+  const formatPrice = (eur) => {
+    if (eur === 0) return locale === 'en' ? 'Free' : 'Gratuit';
+    if (currency === 'usd') {
+      const usd = eur * fxRate;
+      return `$${new Intl.NumberFormat('en-US', { minimumFractionDigits: Number.isInteger(usd) ? 0 : 2, maximumFractionDigits: 2 }).format(usd)}`;
+    }
+    return new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2, minimumFractionDigits: Number.isInteger(eur) ? 0 : 2 }).format(eur);
+  };
 
   async function startCheckout(planCode) {
     setLoadingPlan(planCode);
@@ -66,7 +78,7 @@ export default function PricingGrid() {
           <article key={plan.code} className={`sub-card ${plan.highlight || selectedPlan === plan.code ? 'is-selected' : ''}`}>
             <span className="badge">{plan.highlight ? t('pricing.recommended') : t('pricing.plan')}</span>
             <strong>{locale === 'en' ? plan.nameEn || plan.name : plan.name}</strong>
-            <span className="plan-price">{formatPrice(plan.prices[cycle])}€ <small>/{cycle === 'monthly' ? t('pricing.monthly').toLowerCase() : t('pricing.yearly').toLowerCase()}</small></span>
+            <span className="plan-price">{formatPrice(plan.prices[cycle])}{plan.prices[cycle] > 0 && currency !== 'usd' ? '€' : ''} {plan.prices[cycle] > 0 ? <small>/{cycle === 'monthly' ? t('pricing.monthly').toLowerCase() : t('pricing.yearly').toLowerCase()}</small> : null}</span>
             <span className="pricing-cycle">{cycle === 'monthly' ? t('pricing.monthly') : t('pricing.yearly')} — {t('pricing.autoRenew')}</span>
             <span className="desc">{locale === 'en' ? plan.descriptionEn || plan.description : plan.description}</span>
             <div className="billing-note">{plan.billing[cycle].note}</div>
