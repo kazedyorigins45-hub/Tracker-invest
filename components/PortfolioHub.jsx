@@ -16,6 +16,19 @@ function parseAmt(raw) {
   return Number(String(raw ?? '').replace(/\s+/g, '').replace(/[^\d.,-]/g, '').replace(',', '.')) || 0;
 }
 
+function parseAmtFR(raw) {
+  let s = String(raw ?? '').replace(/\s+/g, '').replace(/[^\d,.-]/g, '');
+  const lastComma = s.lastIndexOf(',');
+  const lastDot = s.lastIndexOf('.');
+  if (lastComma > -1 && lastDot > -1) {
+    s = lastComma > lastDot ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, '');
+  } else if (lastComma > -1) {
+    s = s.replace(',', '.');
+  }
+  const v = Number.parseFloat(s);
+  return Number.isFinite(v) ? v : 0;
+}
+
 export default function PortfolioHub({ userEmail = '', planCode = 'starter', subscription = null }) {
   const [data, setData] = useAccountPayload('portfolioHub_v1', {
     title: '',
@@ -44,8 +57,8 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
   const autoInvestValue = (Array.isArray(investData.holdings) ? investData.holdings : [])
     .filter((h) => !h.sellDate && !h.saleDate)
     .reduce((sum, h) => {
-      const direct = parseAmt(h.value);
-      const fallback = parseAmt(h.quantity || h.qty) * parseAmt(h.avgPrice || h.buyAvg);
+      const direct = parseAmtFR(h.value);
+      const fallback = parseAmtFR(h.quantity || h.qty) * parseAmtFR(h.avgPrice || h.buyAvg);
       return sum + (direct > 0 ? direct : fallback);
     }, 0);
 
