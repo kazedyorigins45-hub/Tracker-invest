@@ -479,6 +479,13 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   React.useEffect(() => {
     if (['export', 'memo', 'finance'].includes(page)) update({ page: 'cover' });
   }, [page]);
+
+  React.useEffect(() => {
+    document.querySelectorAll('textarea.invest-holding-input').forEach((el) => {
+      el.style.height = 'auto';
+      el.style.height = `${el.scrollHeight}px`;
+    });
+  }, [data.holdings]);
   const projectScoreKeys = ['projectOpportunities', 'projectTechnology', 'projectEcosystem', 'projectRoadmap', 'projectMarketing', 'projectMomentum'];
   const projectScores = projectScoreKeys.map((key) => Math.min(10, Math.max(0, parseAmount(data[key]))));
   const projectAverage = projectScores.length ? Math.round((projectScores.reduce((sum, score) => sum + score, 0) / projectScores.length) * 10) / 10 : 0;
@@ -1060,7 +1067,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                 </thead>
                 <tbody>
                   {holdings.map((row, index) => (
-                    <tr key={`${row.asset || 'row'}-${index}`} className={isHoldingSold(row) ? 'row-sold' : ''}>
+                    <tr key={index} className={isHoldingSold(row) ? 'row-sold' : ''}>
                       <td><input className="input-dark invest-holding-input" type="text" value={row.asset} onChange={(e) => updateHolding(index, { asset: e.target.value })} placeholder="Ex. BTC" /></td>
                       <td><input className="input-dark invest-holding-input" type="text" style={{ minWidth: '160px' }} value={row.value || row.computedValue || ''} onChange={(e) => updateHolding(index, { value: e.target.value })} placeholder="Ex. 1 000 000€" /></td>
                       <td>
