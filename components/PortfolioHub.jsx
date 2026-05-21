@@ -55,10 +55,10 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
   const manualPositions = parseAmt(data.positionsValue);
   const manualTrading = parseAmt(data.tradingNetValue);
 
-  const positionsValue = manualPositions > 0 ? manualPositions : autoInvestValue;
-  const tradingNetValue = manualTrading !== 0 ? manualTrading : autoTradingNet;
-  const isInvestLinked = manualPositions === 0;
-  const isTradingLinked = manualTrading === 0;
+  const positionsValue = autoInvestValue > 0 ? autoInvestValue : (manualPositions > 0 ? manualPositions : 0);
+  const tradingNetValue = autoTradingNet !== 0 ? autoTradingNet : (manualTrading !== 0 ? manualTrading : 0);
+  const isInvestLinked = autoInvestValue > 0;
+  const isTradingLinked = autoTradingNet !== 0;
 
   const totalValue = positionsValue + tradingNetValue;
 
