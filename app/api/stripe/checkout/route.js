@@ -43,30 +43,56 @@ export async function POST(request) {
       .eq('code', planCode)
       .maybeSingle();
 
-    if (planError) {
-      return NextResponse.json({ ok: false, error: planError.message }, { status: 400 });
+    if (planError || !planRow) {
+      return NextResponse.json({ ok: false, error: planError?.message || 'Plan introuvable.' }, { status: 400 });
     }
 
-    const priceId = billingCycle === 'yearly' ? planRow?.stripe_price_yearly_id : planRow?.stripe_price_monthly_id;
+    const priceId = billingCycle === 'yearly' ? planRow.stripe_price_yearly_id : planRow.stripe_price_monthly_id;
     if (!priceId) {
       return NextResponse.json({ ok: false, error: `Price Stripe manquant pour ${planCode} (${billingCycle}).` }, { status: 400 });
     }
 
-    const { data: existingSubscription } = await admin
+    const { data: existingSub } = await admin
       .from('user_subscriptions')
-      .select('stripe_customer_id')
+      .select('stripe_customer_id, stripe_subscription_id, status')
       .eq('user_id', authData.user.id)
       .maybeSingle();
 
-    let customerId = existingSubscription?.stripe_customer_id || '';
+    let customerId = existingSub?.stripe_customer_id || '';
 
-    if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: authData.user.email,
+    // If the user already has a live Stripe subscription, update it in place
+    const hasActiveSub =
+      existingSub?.stripe_subscription_id &&
+      ['active', 'trialing', 'past_due'].includes(existingSub.status);
+
+    if (hasActiveSub) {
+      const stripeSubscription = await stripe.subscriptions.retrieve(existingSub.stripe_subscription_id);
+      const currentItemId = stripeSubscription.items.data[0]?.id;
+
+      await stripe.subscriptions.update(existingSub.stripe_subscription_id, {
+        items: [{ id: currentItemId, price: priceId }],
+        proration_behavior: 'create_prorations',
         metadata: {
           user_id: authData.user.id,
           plan_code: planCode,
+          billing_cycle: billingCycle,
         },
+      });
+
+      await admin.from('user_subscriptions').update({
+        plan_code: planCode,
+        billing_cycle: billingCycle,
+        updated_at: new Date().toISOString(),
+      }).eq('user_id', authData.user.id);
+
+      return NextResponse.json({ ok: true, updated: true });
+    }
+
+    // No active subscription — create Stripe Customer if needed, then a Checkout Session
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: authData.user.email,
+        metadata: { user_id: authData.user.id, plan_code: planCode },
       });
       customerId = customer.id;
 

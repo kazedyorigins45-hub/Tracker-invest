@@ -63,9 +63,8 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
       const data = await res.json();
       if (!res.ok || !data.ok) throw new Error(data.error || 'Erreur');
       setMessage(t('billing.saved'));
-      await Promise.all([
-        fetch('/api/billing/overview', { credentials: 'same-origin' }).then((r) => r.json()).then((d) => d.ok && setOverview(d)),
-      ]);
+      const refreshed = await fetch('/api/billing/overview', { credentials: 'same-origin' }).then((r) => r.json());
+      if (refreshed.ok) setOverview(refreshed);
       return data;
     } catch {
       setMessage(t('billing.error'));
@@ -84,6 +83,8 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
   const sub = currentSubscription || {};
   const invoices = overview?.invoices || [];
   const paymentMethods = overview?.paymentMethods || [];
+  const isPaymentFailed = sub.status === 'past_due' || sub.status === 'unpaid';
+  const dateLocale = locale === 'en' ? 'en-US' : 'fr-FR';
 
   return (
     <div className="mindset-shell">
@@ -121,6 +122,15 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
         <h1 className="page-title">{t('billing.title')}</h1>
         <p className="page-sub">{t('billing.subtitle')}</p>
 
+        {isPaymentFailed && (
+          <div className="billing-alert" role="alert">
+            <strong>Paiement échoué.</strong> Ton abonnement est suspendu.{' '}
+            <a href="/api/stripe/portal" className="billing-alert-link">
+              Mettre à jour ma carte →
+            </a>
+          </div>
+        )}
+
         <div className="portfolio-stack">
           <div className="card portfolio-card portfolio-card--large">
             <h2>{t('billing.summary')}</h2>
@@ -128,9 +138,11 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
               <div className="stat"><span className="muted">{t('billing.currentPlan')}</span><strong>{currentPlan?.name || planCode}</strong></div>
               <div className="stat"><span className="muted">{t('billing.status')}</span><strong>{sub.status || '—'}</strong></div>
               <div className="stat"><span className="muted">{t('billing.cycle')}</span><strong>{sub.billing_cycle === 'yearly' ? 'Annuel' : 'Mensuel'}</strong></div>
-              <div className="stat"><span className="muted">{t('billing.nextPayment')}</span><strong>{formatDate(sub.current_period_end, locale === 'en' ? 'en-US' : 'fr-FR')}</strong></div>
+              <div className="stat"><span className="muted">{t('billing.nextPayment')}</span><strong>{formatDate(sub.current_period_end, dateLocale)}</strong></div>
             </div>
-            <p className="hint" style={{ marginTop: '0.75rem' }}>{sub.cancel_at_period_end ? t('billing.cancelAtEnd') : ''}</p>
+            {sub.cancel_at_period_end ? (
+              <p className="hint" style={{ marginTop: '0.75rem' }}>{t('billing.cancelAtEnd')}</p>
+            ) : null}
           </div>
 
           <div className="card portfolio-card">
@@ -158,6 +170,9 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
               <button className="btn btn-ghost" type="button" disabled={busy || !sub.cancel_at_period_end} onClick={() => runAction('/api/billing/resume')}>
                 {t('billing.resume')}
               </button>
+              {sub.stripe_customer_id ? (
+                <a href="/api/stripe/portal" className="btn btn-ghost">{t('billing.portal') || 'Portail Stripe'}</a>
+              ) : null}
             </div>
             {message ? <p className="form-message">{message}</p> : null}
           </div>
@@ -167,18 +182,28 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
               <h2>{t('billing.paymentMethods')}</h2>
               {paymentMethods.length ? (
                 <ul className="stack-list">
-                  {paymentMethods.map((pm) => <li key={pm.id}>{pm.brand?.toUpperCase?.() || 'CARD'} •••• {pm.last4} {pm.exp_month}/{pm.exp_year}</li>)}
+                  {paymentMethods.map((pm) => (
+                    <li key={pm.id}>{pm.brand?.toUpperCase?.() || 'CARD'} •••• {pm.last4} {pm.exp_month}/{pm.exp_year}</li>
+                  ))}
                 </ul>
               ) : <p className="hint">{t('billing.noPaymentMethods')}</p>}
             </div>
+
             <div className="card portfolio-card">
               <h2>{t('billing.invoices')}</h2>
               {invoices.length ? (
                 <ul className="stack-list">
                   {invoices.map((invoice) => (
-                    <li key={invoice.id}>
-                      <strong>{formatMoney(invoice.total || invoice.amount_paid || 0, locale === 'en' ? 'en-US' : 'fr-FR')}</strong>
-                      {' '}— {invoice.status}
+                    <li key={invoice.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                      <strong>{formatMoney(invoice.total || invoice.amount_paid || 0, dateLocale)}</strong>
+                      <span className="muted">— {formatDate(invoice.created, dateLocale)}</span>
+                      <span className="muted">— {invoice.status}</span>
+                      {invoice.hosted_invoice_url ? (
+                        <a href={invoice.hosted_invoice_url} target="_blank" rel="noopener noreferrer" className="billing-invoice-link">Voir</a>
+                      ) : null}
+                      {invoice.invoice_pdf ? (
+                        <a href={invoice.invoice_pdf} target="_blank" rel="noopener noreferrer" className="billing-invoice-link">PDF</a>
+                      ) : null}
                     </li>
                   ))}
                 </ul>
