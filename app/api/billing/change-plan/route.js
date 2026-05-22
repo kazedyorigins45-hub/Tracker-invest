@@ -34,18 +34,65 @@ export async function POST(request) {
     }
 
     const admin = createServiceClient();
-    const { data: planRow, error: planError } = await admin.from('pricing_plans').select('*').eq('code', planCode).maybeSingle();
+    const { data: planRow, error: planError } = await admin
+      .from('pricing_plans')
+      .select('*')
+      .eq('code', planCode)
+      .maybeSingle();
+
     if (planError || !planRow) {
       return NextResponse.json({ ok: false, error: 'Plan introuvable.' }, { status: 400 });
     }
 
-    const priceId = billingCycle === 'yearly' ? planRow.stripe_price_yearly_id : planRow.stripe_price_monthly_id;
+    const priceId = billingCycle === 'yearly'
+      ? planRow.stripe_price_yearly_id
+      : planRow.stripe_price_monthly_id;
+
     if (!priceId) {
-      return NextResponse.json({ ok: false, error: `Price Stripe manquant pour ${planCode}.` }, { status: 400 });
+      return NextResponse.json(
+        { ok: false, error: `Price Stripe manquant pour ${planCode}.` },
+        { status: 400 }
+      );
     }
 
-    const { data: subscription } = await admin.from('user_subscriptions').select('stripe_customer_id').eq('user_id', authData.user.id).maybeSingle();
-    let customerId = subscription?.stripe_customer_id || '';
+    const { data: existingSub } = await admin
+      .from('user_subscriptions')
+      .select('stripe_customer_id, stripe_subscription_id, status')
+      .eq('user_id', authData.user.id)
+      .maybeSingle();
+
+    const hasActiveSub =
+      existingSub?.stripe_subscription_id &&
+      ['active', 'trialing', 'past_due'].includes(existingSub.status);
+
+    // If the user already has a live Stripe subscription, update it in place
+    if (hasActiveSub) {
+      const stripeSubscription = await stripe.subscriptions.retrieve(
+        existingSub.stripe_subscription_id
+      );
+      const currentItemId = stripeSubscription.items.data[0]?.id;
+
+      await stripe.subscriptions.update(existingSub.stripe_subscription_id, {
+        items: [{ id: currentItemId, price: priceId }],
+        proration_behavior: 'create_prorations',
+        metadata: {
+          user_id: authData.user.id,
+          plan_code: planCode,
+          billing_cycle: billingCycle,
+        },
+      });
+
+      await admin.from('user_subscriptions').update({
+        plan_code: planCode,
+        billing_cycle: billingCycle,
+        updated_at: new Date().toISOString(),
+      }).eq('user_id', authData.user.id);
+
+      return NextResponse.json({ ok: true, updated: true }, { headers: response.headers });
+    }
+
+    // No active subscription — create a Checkout Session
+    let customerId = existingSub?.stripe_customer_id || '';
 
     if (!customerId) {
       const customer = await stripe.customers.create({ email: authData.user.email });
