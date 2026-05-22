@@ -504,56 +504,39 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
 
     const widgetDiv = document.createElement('div');
     widgetDiv.className = 'tradingview-widget-container__widget';
-    widgetDiv.style.cssText = 'height:100%;width:100%';
+    widgetDiv.style.cssText = 'height:calc(100% - 32px);width:100%';
     el.appendChild(widgetDiv);
 
     const copyright = document.createElement('div');
     copyright.className = 'tradingview-widget-copyright';
-    copyright.innerHTML = '<a href="https://www.tradingview.com/" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets</span></a> by TradingView';
+    copyright.innerHTML = '<a href="https://fr.tradingview.com/symbols/BTCUSD/?exchange=BINANCE" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a>';
     el.appendChild(copyright);
 
     const config = JSON.stringify({
-      colorTheme: 'dark',
-      dateRange: '12M',
-      showChart: true,
+      allow_symbol_change: true,
+      calendar: false,
+      details: false,
+      hide_side_toolbar: false,
+      hide_top_toolbar: false,
+      hide_legend: false,
+      hide_volume: false,
+      hotlist: false,
+      interval: 'D',
       locale: 'fr',
-      isTransparent: true,
-      showSymbolLogo: true,
-      showFloatingTooltip: false,
-      width: '100%',
-      height: '400',
-      tabs: [
-        {
-          title: 'Crypto',
-          symbols: [
-            { s: 'COINBASE:BTCUSD', d: 'Bitcoin' },
-            { s: 'COINBASE:ETHUSD', d: 'Ethereum' },
-            { s: 'CRYPTOCAP:BTC.D', d: 'BTC Dom.' },
-          ],
-          originalTitle: 'Crypto',
-        },
-        {
-          title: 'Matières premières',
-          symbols: [
-            { s: 'OANDA:XAUUSD', d: 'Or' },
-            { s: 'OANDA:XAGUSD', d: 'Argent' },
-          ],
-          originalTitle: 'Commodities',
-        },
-        {
-          title: 'Forex & Actions',
-          symbols: [
-            { s: 'FX:EURUSD', d: 'EUR/USD' },
-            { s: 'NASDAQ:NVDA', d: 'NVDA' },
-            { s: 'SP:SPX', d: 'S&P 500' },
-          ],
-          originalTitle: 'Forex & Stocks',
-        },
-      ],
+      save_image: true,
+      style: '1',
+      symbol: 'BINANCE:BTCUSD',
+      theme: 'light',
+      timezone: 'Etc/UTC',
+      backgroundColor: '#ffffff',
+      gridColor: 'rgba(46, 46, 46, 0.06)',
+      withdateranges: false,
+      studies: [],
+      autosize: true,
     });
 
     const temp = document.createElement('div');
-    temp.innerHTML = `<script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-market-overview.js" async>${config}<\/script>`;
+    temp.innerHTML = `<script type="text/javascript" src="https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js" async>${config}<\/script>`;
     const parsed = temp.querySelector('script');
     if (parsed) {
       const s = document.createElement('script');
@@ -938,7 +921,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
           </div>
 
           <div style={{ margin: '1rem 0 0', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--border)' }}>
-            <div id="tv-ticker-weekly" className="tradingview-widget-container" style={{ height: '400px', width: '100%' }} />
+            <div id="tv-ticker-weekly" className="tradingview-widget-container" style={{ height: '610px', width: '100%' }} />
           </div>
 
           <div className="card">

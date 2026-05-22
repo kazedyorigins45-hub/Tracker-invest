@@ -27,6 +27,7 @@
 }
 
 :root[data-theme='light'] {
+  --th-bg: rgba(139, 97, 23, 0.14);
   --bg: #f7f2ea;
   --bg-soft: #fffaf2;
   --bg-glow-1: rgba(153, 112, 33, 0.08);
@@ -1196,7 +1197,7 @@ a { color: inherit; }
   box-sizing: border-box;
 }
 .mindset-shell.invest-hub .input-dark {
-  background: rgba(0,0,0,0.35);
+  background: var(--input-bg);
   border: 1px solid var(--border);
   color: var(--text);
   border-radius: 8px;
@@ -1449,7 +1450,7 @@ a { color: inherit; }
 .mindset-shell.tracker-hub input.input-dark,
 .mindset-shell.tracker-hub select.input-dark,
 .mindset-shell.tracker-hub textarea.input-dark {
-  background: rgba(0, 0, 0, 0.35);
+  background: var(--input-bg);
   border: 1px solid var(--border);
   color: var(--text);
   border-radius: 8px;
@@ -1502,7 +1503,7 @@ a { color: inherit; }
 }
 .mindset-shell.tracker-hub table.data th {
   text-align: left;
-  background: rgba(0,0,0,0.45);
+  background: var(--th-bg, rgba(0,0,0,0.45));
   color: var(--gold-bright);
   font-size: 0.62rem;
   letter-spacing: 0.08em;
@@ -1677,7 +1678,7 @@ table.data td.num, table.split td.num, table.immo-compare td.num { text-align: r
   min-width: 1020px;
 }
 .mindset-shell.invest-hub table.data th {
-  background: #0d1520;
+  background: var(--th-bg, #0d1520);
   color: var(--gold-bright);
   font-size: 0.6rem;
   letter-spacing: 0.06em;
