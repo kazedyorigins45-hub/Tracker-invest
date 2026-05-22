@@ -920,8 +920,8 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
             <div className="stat-box"><div className="v">{weeklyProfitFactor == null ? '—' : weeklyProfitFactor.toFixed(2)}</div><div className="l">{t('tracker.weeklyProfitFactor')}</div></div>
           </div>
 
-          <div style={{ margin: '1rem 0 0', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--border)' }}>
-            <div id="tv-ticker-weekly" className="tradingview-widget-container" style={{ height: '610px', width: '100%' }} />
+          <div style={{ margin: '1rem 0 0', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--border)', height: '610px' }}>
+            <div id="tv-ticker-weekly" className="tradingview-widget-container" style={{ height: '100%', width: '100%' }} />
           </div>
 
           <div className="card">
