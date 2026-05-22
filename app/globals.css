@@ -28,6 +28,7 @@
 
 :root[data-theme='light'] {
   --th-bg: rgba(139, 97, 23, 0.14);
+  --track-bg: rgba(0, 0, 0, 0.08);
   --bg: #f7f2ea;
   --bg-soft: #fffaf2;
   --bg-glow-1: rgba(153, 112, 33, 0.08);
@@ -1947,14 +1948,14 @@ table.data td.num, table.split td.num, table.immo-compare td.num { text-align: r
 .hint { font-size: 0.78rem; color: var(--muted); margin-top: 0.5rem; line-height: 1.45; }
 .note { margin-top: 2rem; font-size: 0.72rem; color: var(--muted); text-align: center; line-height: 1.5; }
 .stats-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
-.stat-box { background: rgba(0,0,0,0.35); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; text-align: center; }
+.stat-box { background: var(--panel-bg); border: 1px solid var(--border); border-radius: 10px; padding: 1rem; text-align: center; }
 .stat-box .v { font-family: var(--font-cinzel), serif; font-size: 1.2rem; color: var(--gold-bright); }
 .stat-box .l { font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-top: 0.35rem; }
 .progress-wrap { margin: 1.25rem 0 0.5rem; }
 .progress-bar {
   height: 14px;
   border-radius: 8px;
-  background: rgba(0,0,0,0.45);
+  background: var(--track-bg, rgba(0,0,0,0.45));
   border: 1px solid var(--border);
   overflow: hidden;
 }
