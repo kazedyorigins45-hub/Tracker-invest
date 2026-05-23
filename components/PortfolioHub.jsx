@@ -158,16 +158,22 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
                   {t('portfolio.positionsValueLabel')}
                   {isInvestLinked && <span style={{ fontSize: '0.65rem', background: 'var(--gold)', color: '#000', borderRadius: '4px', padding: '0 5px', fontWeight: 700, letterSpacing: '0.06em' }}>AUTO</span>}
                 </label>
-                <input className="input-dark" type="text" value={data.positionsValue} onChange={(e) => update({ positionsValue: e.target.value })} placeholder={isInvestLinked ? `${formatEuro(autoInvestValue)} (auto)` : 'ex. 125000'} />
-                {isInvestLinked && <p style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.25rem' }}>Lu depuis <a href="/invest" style={{ color: 'var(--gold-bright)' }}>Elite Invest</a> — {formatEuro(autoInvestValue)}</p>}
+                {isInvestLinked ? (
+                  <div className="input-dark auto-linked-value">{formatEuro(autoInvestValue)}<p style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.25rem', marginBottom: 0 }}>Lu depuis <a href="/invest" style={{ color: 'var(--gold-bright)' }}>Elite Invest</a></p></div>
+                ) : (
+                  <input className="input-dark" type="text" value={data.positionsValue} onChange={(e) => update({ positionsValue: e.target.value })} placeholder="ex. 125000" />
+                )}
               </div>
               <div className="field-block">
                 <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                   {t('portfolio.tradingNetLabel')}
                   {isTradingLinked && <span style={{ fontSize: '0.65rem', background: 'var(--gold)', color: '#000', borderRadius: '4px', padding: '0 5px', fontWeight: 700, letterSpacing: '0.06em' }}>AUTO</span>}
                 </label>
-                <input className="input-dark" type="text" value={data.tradingNetValue} onChange={(e) => update({ tradingNetValue: e.target.value })} placeholder={isTradingLinked ? `${formatEuro(autoTradingNet)} (auto)` : 'ex. 4800'} />
-                {isTradingLinked && <p style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.25rem' }}>Lu depuis <a href="/tracker" style={{ color: 'var(--gold-bright)' }}>Elite Tracker</a> — {formatEuro(autoTradingNet)}</p>}
+                {isTradingLinked ? (
+                  <div className="input-dark auto-linked-value">{formatEuro(autoTradingNet)}<p style={{ fontSize: '0.7rem', color: 'var(--muted)', marginTop: '0.25rem', marginBottom: 0 }}>Lu depuis <a href="/tracker" style={{ color: 'var(--gold-bright)' }}>Elite Tracker</a></p></div>
+                ) : (
+                  <input className="input-dark" type="text" value={data.tradingNetValue} onChange={(e) => update({ tradingNetValue: e.target.value })} placeholder="ex. 4800" />
+                )}
               </div>
             </div>
             <label className="field-label">{t('portfolio.noteLabel')}</label>

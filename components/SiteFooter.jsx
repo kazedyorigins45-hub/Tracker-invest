@@ -14,6 +14,7 @@ export default function SiteFooter() {
           <p>Une suite premium pour la discipline, le trading et l’investissement.</p>
         </div>
         <div className="footer-links">
+          <Link href="/mentions-legales">Mentions légales</Link>
           <Link href="/terms">CGU</Link>
           <Link href="/privacy">Confidentialité</Link>
           <Link href="/login">{t('site.login')}</Link>

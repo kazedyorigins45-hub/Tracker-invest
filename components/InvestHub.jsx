@@ -1094,7 +1094,12 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                       </td>
                       <td>
                         {(row.hubSegment || 'actif') === 'passif' ? (
-                          <textarea className="input-dark invest-holding-input" rows={1} value={row.monthlyPassiveIncome || ''} onChange={(e) => updateHolding(index, { monthlyPassiveIncome: e.target.value })} onInput={(e) => { e.target.style.height = 'auto'; e.target.style.height = `${e.target.scrollHeight}px`; }} placeholder="Ex. 450€ / mois" />
+                          <>
+                            <textarea className="input-dark invest-holding-input" rows={1} value={row.monthlyPassiveIncome || ''} onChange={(e) => updateHolding(index, { monthlyPassiveIncome: e.target.value })} onInput={(e) => { e.target.style.height = 'auto'; e.target.style.height = `${e.target.scrollHeight}px`; }} placeholder="Ex. 450€ / mois" />
+                            {isUsd && parseAmount(row.monthlyPassiveIncome || 0) > 0 && (
+                              <span className="hint" style={{ margin: '2px 0 0', display: 'block', fontSize: '0.7rem' }}>{fmtC(parseAmount(row.monthlyPassiveIncome || 0))}/mo</span>
+                            )}
+                          </>
                         ) : <span className="hint" style={{ margin: 0 }}>—</span>}
                       </td>
                       <td><input className="input-dark invest-holding-input" list="inv-gecko-presets" type="text" value={row.geckoId || ''} onInput={(e) => updateHoldingGeckoId(index, e.currentTarget.value)} onChange={(e) => updateHoldingGeckoId(index, e.currentTarget.value)} placeholder="bitcoin" autoComplete="off" /></td>
