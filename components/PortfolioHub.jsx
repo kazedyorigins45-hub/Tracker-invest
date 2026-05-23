@@ -55,12 +55,8 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
   const EUR_TO_USD = useFxRate();
 
   const autoInvestValue = (Array.isArray(investData.holdings) ? investData.holdings : [])
-    .filter((h) => !h.sellDate && !h.saleDate)
-    .reduce((sum, h) => {
-      const direct = parseAmtFR(h.value);
-      const fallback = parseAmtFR(h.quantity || h.qty) * parseAmtFR(h.avgPrice || h.buyAvg);
-      return sum + (direct > 0 ? direct : fallback);
-    }, 0);
+    .filter((h) => !h.sellDate && !h.saleDate && (h.hubSegment || 'actif') === 'passif')
+    .reduce((sum, h) => sum + parseAmtFR(h.monthlyPassiveIncome || h.passiveMonthlyIncome || 0), 0);
 
   const autoTradingNet = (Array.isArray(trackerData.weeklyTrades) ? trackerData.weeklyTrades : [])
     .reduce((sum, row) => sum + parseAmt(row.result || 0), 0);
