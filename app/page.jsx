@@ -1,5 +1,6 @@
 import SiteHeader from '@/components/SiteHeader';
 import HomeContent from '@/components/HomeContent';
+import SiteFooter from '@/components/SiteFooter';
 
 export const metadata = {
   title: 'Accueil',
@@ -11,6 +12,7 @@ export default function HomePage() {
     <main>
       <SiteHeader />
       <HomeContent />
+      <SiteFooter />
     </main>
   );
 }
