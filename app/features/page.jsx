@@ -1,5 +1,6 @@
 import SiteHeader from '@/components/SiteHeader';
 import FeaturesContent from '@/components/FeaturesContent';
+import SiteFooter from '@/components/SiteFooter';
 
 export const metadata = {
   title: 'Fonctionnalités',
@@ -11,6 +12,7 @@ export default function FeaturesPage() {
     <main>
       <SiteHeader />
       <FeaturesContent />
+      <SiteFooter />
     </main>
   );
 }

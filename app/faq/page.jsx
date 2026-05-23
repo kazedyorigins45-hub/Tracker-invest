@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useLocale } from '@/lib/locale';
+import SiteFooter from '@/components/SiteFooter';
 
 export default function FaqPage() {
   const { t } = useLocale();
@@ -24,6 +25,7 @@ export default function FaqPage() {
           <div className="pillar"><strong>Sécurité</strong>Routes protégées et auth Supabase côté serveur.</div>
         </div>
       </div>
+      <SiteFooter />
     </main>
   );
 }

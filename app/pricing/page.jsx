@@ -1,5 +1,6 @@
 import PricingGrid from '@/components/PricingGrid';
 import SiteHeader from '@/components/SiteHeader';
+import SiteFooter from '@/components/SiteFooter';
 
 export const metadata = {
   title: 'Abonnements',
@@ -17,6 +18,7 @@ export default function PricingPage() {
         <PricingGrid />
         <footer className="note">Le choix mensuel/annuel est déjà prêt. Le bouton d’abonnement ouvre maintenant Stripe Checkout.</footer>
       </div>
+      <SiteFooter />
     </main>
   );
 }
