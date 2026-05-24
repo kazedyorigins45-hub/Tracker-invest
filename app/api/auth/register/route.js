@@ -17,7 +17,7 @@ export async function POST(request) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${siteUrl}/login` },
+      options: { emailRedirectTo: `${siteUrl}/confirmed` },
     });
 
     if (error) {
