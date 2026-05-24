@@ -80,8 +80,8 @@ const FAQ_SECTIONS = [
           <span>
             Jamais. Vos données de trading et d&apos;investissement sont strictement privées. Elles ne sont ni vendues, ni partagées avec des tiers.<br /><br />
             Une question ? Notre support est disponible pour vous accompagner dans la gestion de votre empire financier.{' '}
-            <a href="mailto:jonathangieraerts@hotmail.com" className="faq-email-link">
-              jonathangieraerts@hotmail.com
+            <a href="mailto:tracker-invest@proton.me" className="faq-email-link">
+              tracker-invest@proton.me
             </a>
           </span>
         ),
