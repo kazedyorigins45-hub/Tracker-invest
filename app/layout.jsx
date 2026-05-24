@@ -21,15 +21,15 @@ const playfair = Playfair_Display({
 });
 
 export const metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://mindset-invest.com'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://tracker-invest.com'),
   title: {
-    default: 'Mindset Invest',
-    template: '%s | Mindset Invest',
+    default: 'Tracker-invest',
+    template: '%s | Tracker-invest',
   },
-  description: 'Mindset Invest : abonnements premium pour le mindset, le trading et l’investissement.',
+  description: "Tracker-invest : abonnements premium pour le mindset, le trading et l'investissement.",
   openGraph: {
-    title: 'Mindset Invest',
-    description: 'Abonnements premium pour le mindset, le trading et l’investissement.',
+    title: 'Tracker-invest',
+    description: "Abonnements premium pour le mindset, le trading et l'investissement.",
     type: 'website',
   },
 };

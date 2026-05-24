@@ -10,7 +10,7 @@ export default function SiteFooter() {
     <footer className="site-footer">
       <div className="container footer-grid">
         <div>
-          <strong>Mindset Invest</strong>
+          <strong>Tracker-invest</strong>
           <p>Une suite premium pour la discipline, le trading et l’investissement.</p>
         </div>
         <div className="footer-links">

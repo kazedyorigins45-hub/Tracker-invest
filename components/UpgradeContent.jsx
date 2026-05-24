@@ -8,7 +8,7 @@ const FEATURE_TEXT = {
   tracker: 'Elite Tracker — carnet de trading',
   invest: 'Elite Invest — patrimoine long terme',
   portfolio: 'Mes investissements — synthèse globale',
-  mindset: 'Mindset Invest — espace mental',
+  mindset: 'Tracker-invest — espace mental',
 };
 
 export default function UpgradeContent({ feature }) {

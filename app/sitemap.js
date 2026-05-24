@@ -1,5 +1,5 @@
 export default function sitemap() {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mindset-invest.com';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tracker-invest.com';
   const paths = ['/', '/pricing', '/features', '/faq', '/terms', '/privacy', '/mentions-legales'];
 
   return paths.map((path) => ({

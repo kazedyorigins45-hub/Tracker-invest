@@ -25,7 +25,7 @@ export default function HomeContent() {
     <div className="home-wrap">
       <section className="home-hero">
         <div className="home-hero-main">
-          <span className="badge">Mindset Invest</span>
+          <span className="badge">Tracker-invest</span>
           <h1 className="home-title">{t('home.headline')}</h1>
           <p className="tagline">{t('home.tagline')}</p>
 

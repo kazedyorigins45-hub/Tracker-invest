@@ -13,7 +13,7 @@ export default function AppSidebar({ planCode = 'starter', subscription = null, 
     <aside className="app-sidebar">
       <div className="app-sidebar-top">
         <Link className="brand brand-dark" href="/dashboard">
-          Mindset Invest
+          Tracker-invest
         </Link>
         <p className="app-plan">{t('app.subscription')} : {subscriptionLabel}</p>
         {subscription?.status ? <p className="app-subscription-status">{t('app.status')} : {subscription.status}</p> : null}

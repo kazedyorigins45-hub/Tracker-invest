@@ -17,7 +17,7 @@ export default function DashboardPageView({ planCode = 'starter', subscription =
         <div className="brand-block">
           <div className="brand-top">
             <div className="tag">Dashboard</div>
-            <Link href="/dashboard" className="brand-link"><h1>Mindset Invest</h1></Link>
+            <Link href="/dashboard" className="brand-link"><h1>Tracker-invest</h1></Link>
             <p>{t('dashboard.subtitle')}</p>
           </div>
 

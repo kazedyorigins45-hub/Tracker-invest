@@ -1,5 +1,5 @@
 export default function robots() {
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://mindset-invest.com';
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://tracker-invest.com';
 
   return {
     rules: [

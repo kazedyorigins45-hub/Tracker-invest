@@ -4,7 +4,7 @@ import SiteFooter from '@/components/SiteFooter';
 
 export const metadata = {
   title: 'Abonnements',
-  description: 'Compare les abonnements Mindset Invest et choisis le niveau adapté à ton usage.',
+  description: 'Compare les abonnements Tracker-invest et choisis le niveau adapté à ton usage.',
 };
 
 export default function PricingPage() {

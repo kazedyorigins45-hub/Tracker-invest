@@ -67,7 +67,7 @@ export default function AuthForm() {
     <form className="auth-card" onSubmit={submit}>
       <div className="auth-head">
         <span className="badge">{t('site.login')}</span>
-        <h1>Mindset Invest</h1>
+        <h1>Tracker-invest</h1>
         <p>Connecte-toi pour accéder à ton espace. Chaque compte a ses propres données ; avec Supabase, elles peuvent être synchronisées entre tes appareils.</p>
         {selectedPlan ? (
           <p className="auth-selection">

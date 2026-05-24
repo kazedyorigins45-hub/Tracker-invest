@@ -4,7 +4,7 @@ import SiteFooter from '@/components/SiteFooter';
 
 export const metadata = {
   title: 'Accueil',
-  description: 'Mindset Invest — trading, investissement et mindset dans un même univers.',
+  description: 'Tracker-invest — trading, investissement et mindset dans un même univers.',
 };
 
 export default function HomePage() {

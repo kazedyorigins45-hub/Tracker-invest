@@ -171,7 +171,7 @@ export default function MindsetHub({ userEmail = '', planCode = 'starter', subsc
           <div className="brand-block">
             <div className="brand-top">
               <div className="tag">Mindset</div>
-              <Link href="/" className="brand-link"><h1>Mindset Invest</h1></Link>
+              <Link href="/" className="brand-link"><h1>Tracker-invest</h1></Link>
               <p>{t('home.mindsetSpaceDesc')}</p>
             </div>
 

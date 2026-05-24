@@ -28,7 +28,7 @@ export default function SiteHeaderClient({ user: serverUser, planCode: serverPla
     <header className="site-header">
       <div className="container site-header-inner">
         <Link className="brand" href="/">
-          Mindset Invest
+          Tracker-invest
         </Link>
         <nav className="nav">
           <Link href="/pricing">{t('site.subscriptions')}</Link>
