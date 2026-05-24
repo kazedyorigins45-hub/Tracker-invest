@@ -1,12 +1,20 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createBrowserClient } from '@supabase/ssr';
 import { useLocale } from '@/lib/locale';
 
+function getSupabase() {
+  return createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+}
+
 export default function ResetPasswordForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useLocale();
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -16,16 +24,22 @@ export default function ResetPasswordForm() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    );
-    supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        setReady(true);
-      }
-    });
-  }, []);
+    const code = searchParams.get('code');
+    if (!code) {
+      setError('Lien invalide ou expiré.');
+      return;
+    }
+
+    getSupabase()
+      .auth.exchangeCodeForSession(code)
+      .then(({ error: err }) => {
+        if (err) {
+          setError('Lien invalide ou expiré.');
+        } else {
+          setReady(true);
+        }
+      });
+  }, [searchParams]);
 
   async function submit(e) {
     e.preventDefault();
@@ -36,11 +50,7 @@ export default function ResetPasswordForm() {
     setLoading(true);
     setError('');
 
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-    );
-    const { error: updateError } = await supabase.auth.updateUser({ password });
+    const { error: updateError } = await getSupabase().auth.updateUser({ password });
 
     setLoading(false);
     if (updateError) {
@@ -56,7 +66,7 @@ export default function ResetPasswordForm() {
       <div className="auth-card">
         <div className="auth-head">
           <h1>Tracker-invest</h1>
-          <p>{t('auth.resetDesc')}</p>
+          <p>{error || t('auth.resetDesc')}</p>
         </div>
       </div>
     );
