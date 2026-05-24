@@ -14,9 +14,13 @@ export async function POST(request) {
     const response = NextResponse.json({ ok: true });
     const supabase = createSupabaseRouteClient(request, response);
 
-    await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${siteUrl}/reset-password`,
     });
+
+    if (error) {
+      return NextResponse.json({ ok: false, error: 'Trop de tentatives. Attends quelques minutes avant de réessayer.' }, { status: 429 });
+    }
 
     return NextResponse.json({ ok: true });
   } catch (error) {
