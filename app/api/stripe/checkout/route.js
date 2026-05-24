@@ -115,6 +115,7 @@ export async function POST(request) {
       cancel_url: `${siteUrl}/pricing?checkout=cancelled`,
       allow_promotion_codes: true,
       subscription_data: {
+        trial_period_days: 5,
         metadata: {
           user_id: authData.user.id,
           plan_code: planCode,
