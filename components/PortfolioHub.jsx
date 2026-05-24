@@ -38,13 +38,13 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
     tradingNetValue: '',
   });
 
-  const [investProfileState] = useAccountPayload('investHub_profiles_v1', { current: 'main' });
-  const [trackerProfileState] = useAccountPayload('trackerHub_profiles_v1', { current: 'default' });
+  const [investProfileState] = useAccountPayload('investHub_profiles_v1', { current: 'main' }, { readonly: true });
+  const [trackerProfileState] = useAccountPayload('trackerHub_profiles_v1', { current: 'default' }, { readonly: true });
   const investProfile = investProfileState.current || 'main';
   const trackerProfile = trackerProfileState.current || 'default';
 
-  const [investData] = useAccountPayload(`investHub_v2_${investProfile}`, { holdings: [] });
-  const [trackerData] = useAccountPayload(`trackerHub_v2_${trackerProfile}`, { weeklyTrades: [] });
+  const [investData] = useAccountPayload(`investHub_v2_${investProfile}`, { holdings: [] }, { readonly: true });
+  const [trackerData] = useAccountPayload(`trackerHub_v2_${trackerProfile}`, { weeklyTrades: [] }, { readonly: true });
 
   const [saveStatus, setSaveStatus] = useState('');
 
