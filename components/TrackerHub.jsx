@@ -291,6 +291,13 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const closeSidebar = () => setSidebarOpen(false);
 
+  // If data has no `page` field it was written by another module (PortfolioHub bug) — restore defaults
+  useEffect(() => {
+    if (data.page === undefined && Array.isArray(data.weeklyTrades) && data.weeklyTrades.length === 0) {
+      setData(defaultTrackerState());
+    }
+  }, [data]);
+
 
   const page = data.page === 'tradingPlan' ? 'plan' : (data.page || 'cover');
   const subscriptionLabel = getSubscriptionLabel(subscription, planCode);

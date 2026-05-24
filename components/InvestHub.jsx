@@ -440,6 +440,13 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   const profile = portfolioState.current || 'main';
   const [data, setData] = useAccountPayload(`investHub_v2_${profile}`, defaultInvestState());
 
+  // If data has no `page` field it was written by another module (PortfolioHub bug) — restore defaults
+  React.useEffect(() => {
+    if (data.page === undefined && Array.isArray(data.holdings) && data.holdings.length === 0) {
+      setData(defaultInvestState());
+    }
+  }, [data]);
+
   const page = data.page || 'cover';
   const subscriptionLabel = getSubscriptionLabel(subscription, planCode);
   const { t, locale } = useLocale();
