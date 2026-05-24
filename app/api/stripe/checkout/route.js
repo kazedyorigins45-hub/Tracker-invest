@@ -110,12 +110,15 @@ export async function POST(request) {
       mode: 'subscription',
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
-      payment_method_types: ['card'],
+      payment_method_collection: 'if_required',
       success_url: `${siteUrl}/dashboard?checkout=success`,
       cancel_url: `${siteUrl}/pricing?checkout=cancelled`,
       allow_promotion_codes: true,
       subscription_data: {
         trial_period_days: 5,
+        trial_settings: {
+          end_behavior: { missing_payment_method: 'cancel' },
+        },
         metadata: {
           user_id: authData.user.id,
           plan_code: planCode,
