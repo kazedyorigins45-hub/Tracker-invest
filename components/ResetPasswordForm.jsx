@@ -28,6 +28,7 @@ export default function ResetPasswordForm() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+        setError('');
         setReady(true);
       }
     });
