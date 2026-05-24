@@ -24,21 +24,30 @@ export default function ResetPasswordForm() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    const supabase = getSupabase();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+        setReady(true);
+      }
+    });
+
     const code = searchParams.get('code');
-    if (!code) {
-      setError('Lien invalide ou expiré.');
-      return;
+    if (code) {
+      supabase.auth.exchangeCodeForSession(code).then(({ error: err }) => {
+        if (err) setError('Lien invalide ou expiré.');
+      });
+    } else {
+      const timer = setTimeout(() => {
+        setError('Lien invalide ou expiré.');
+      }, 2000);
+      return () => {
+        subscription.unsubscribe();
+        clearTimeout(timer);
+      };
     }
 
-    getSupabase()
-      .auth.exchangeCodeForSession(code)
-      .then(({ error: err }) => {
-        if (err) {
-          setError('Lien invalide ou expiré.');
-        } else {
-          setReady(true);
-        }
-      });
+    return () => subscription.unsubscribe();
   }, [searchParams]);
 
   async function submit(e) {
@@ -66,7 +75,7 @@ export default function ResetPasswordForm() {
       <div className="auth-card">
         <div className="auth-head">
           <h1>Tracker-invest</h1>
-          <p>{error || t('auth.resetDesc')}</p>
+          <p>{error || 'Vérification du lien…'}</p>
         </div>
       </div>
     );
