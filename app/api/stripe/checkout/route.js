@@ -110,6 +110,7 @@ export async function POST(request) {
       mode: 'subscription',
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
+      payment_method_types: ['card', 'bancontact', 'sepa_debit'],
       success_url: `${siteUrl}/dashboard?checkout=success`,
       cancel_url: `${siteUrl}/pricing?checkout=cancelled`,
       allow_promotion_codes: true,
