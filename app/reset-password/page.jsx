@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import ResetPasswordForm from '@/components/ResetPasswordForm';
 
 export const metadata = {
@@ -8,7 +9,9 @@ export const metadata = {
 export default function ResetPasswordPage() {
   return (
     <main className="auth-wrap">
-      <ResetPasswordForm />
+      <Suspense fallback={<div className="auth-card"><div className="auth-head"><h1>Tracker-invest</h1></div></div>}>
+        <ResetPasswordForm />
+      </Suspense>
     </main>
   );
 }
