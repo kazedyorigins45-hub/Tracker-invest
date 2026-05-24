@@ -95,16 +95,17 @@ export async function POST(request) {
         metadata: { user_id: authData.user.id, plan_code: planCode },
       });
       customerId = customer.id;
-
-      await admin.from('user_subscriptions').upsert({
-        user_id: authData.user.id,
-        stripe_customer_id: customerId,
-        plan_code: planCode,
-        billing_cycle: billingCycle,
-        status: 'active',
-        updated_at: new Date().toISOString(),
-      });
     }
+
+    // Always record the intended plan before checkout so user gets access on return
+    await admin.from('user_subscriptions').upsert({
+      user_id: authData.user.id,
+      stripe_customer_id: customerId,
+      plan_code: planCode,
+      billing_cycle: billingCycle,
+      status: existingSub?.status || 'active',
+      updated_at: new Date().toISOString(),
+    });
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',
