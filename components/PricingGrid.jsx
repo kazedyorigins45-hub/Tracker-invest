@@ -93,11 +93,11 @@ export default function PricingGrid() {
             <div className="pricing-actions">
               <button
                 type="button"
-                className={`btn ${selectedPlan === plan.code ? 'btn-dark' : 'btn-gold'}`}
-                onClick={() => { setSelectedPlan(plan.code); startCheckout(plan.code); }}
+                className="btn btn-gold"
+                onClick={() => startCheckout(plan.code)}
                 disabled={loadingPlan === plan.code}
               >
-                {loadingPlan === plan.code ? 'Ouverture…' : selectedPlan === plan.code ? (locale === 'fr' ? 'Plan selectionne' : 'Plan selected') : cycle === 'monthly' ? t('pricing.chooseMonthly') : t('pricing.chooseYearly')}
+                {loadingPlan === plan.code ? 'Ouverture…' : cycle === 'monthly' ? t('pricing.chooseMonthly') : t('pricing.chooseYearly')}
               </button>
               <Link href={`/login?plan=${plan.code}&billing=${cycle}`} className="btn btn-dark">
                 {t('pricing.login')}
