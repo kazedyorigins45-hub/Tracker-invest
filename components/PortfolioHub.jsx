@@ -55,6 +55,14 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
   const EUR_TO_USD = useFxRate();
 
   const autoInvestValue = (Array.isArray(investData.holdings) ? investData.holdings : [])
+    .filter((h) => !h.sellDate && !h.saleDate)
+    .reduce((sum, h) => {
+      const direct = parseAmtFR(h.value);
+      const fallback = parseAmtFR(h.quantity || h.qty) * parseAmtFR(h.avgPrice || h.buyAvg);
+      return sum + (direct > 0 ? direct : fallback);
+    }, 0);
+
+  const autoPassiveMonthly = (Array.isArray(investData.holdings) ? investData.holdings : [])
     .filter((h) => !h.sellDate && !h.saleDate && (h.hubSegment || 'actif') === 'passif')
     .reduce((sum, h) => sum + parseAmtFR(h.monthlyPassiveIncome || h.passiveMonthlyIncome || 0), 0);
 
@@ -186,6 +194,9 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
               <div className="stat-box"><div className="v">{formatEuro(positionsValue)}</div><div className="l">{t('portfolio.statPositions')}</div></div>
               <div className="stat-box"><div className="v pos">+{formatEuro(tradingNetValue)}</div><div className="l">{t('portfolio.statTradingNet')}</div></div>
               <div className="stat-box"><div className="v">{formatEuro(totalValue)}</div><div className="l">{t('portfolio.statTotal')}</div></div>
+              {autoPassiveMonthly > 0 && (
+                <div className="stat-box"><div className="v pos">{formatEuro(autoPassiveMonthly)}<span style={{ fontSize: '0.65rem', color: 'var(--muted)' }}>/mois</span></div><div className="l">{locale === 'en' ? 'Passive income' : 'Revenu passif'}</div></div>
+              )}
               {parseAmt(data.target) > 0 && (
                 <div className="stat-box"><div className="v" style={{ color: 'var(--gold)' }}>{Math.min(100, Math.round(totalValue / parseAmt(data.target) * 100))}%</div><div className="l">{t('portfolio.statPercent')}</div></div>
               )}
