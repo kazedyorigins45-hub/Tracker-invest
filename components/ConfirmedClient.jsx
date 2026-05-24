@@ -20,11 +20,15 @@ export default function ConfirmedClient() {
     const code = searchParams.get('code');
 
     async function confirm() {
+      const supabase = getSupabase();
       if (code) {
-        const { error } = await getSupabase().auth.exchangeCodeForSession(code);
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (error) {
-          setStatus('error');
-          return;
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) {
+            setStatus('error');
+            return;
+          }
         }
       }
       setStatus('success');
