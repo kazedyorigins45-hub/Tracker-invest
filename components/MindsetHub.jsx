@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { canAccess, getSubscriptionLabel } from '@/lib/plans';
 import { useAccountPayload } from '@/lib/use-account-payload';
 import { useLocale } from '@/lib/locale';
@@ -33,6 +34,8 @@ export default function MindsetHub({ userEmail = '', planCode = 'starter', subsc
   const { t, locale } = useLocale();
   const dateLocale = locale === 'en' ? 'en-US' : 'fr-FR';
   const subscriptionLabel = getSubscriptionLabel(subscription, planCode);
+  const searchParams = useSearchParams();
+  const portalMissing = searchParams.get('portal') === 'missing';
   const [state, setState] = useAccountPayload(STORAGE_KEY, defaultState());
   const [activePage, setActivePage] = useState('home');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -196,8 +199,14 @@ export default function MindsetHub({ userEmail = '', planCode = 'starter', subsc
         </div>
 
         <div className="sidebar-bottom">
-          <p className="app-plan">{subscriptionLabel}</p>
+          <p className="app-plan">{t('app.subscription')} : {subscriptionLabel}</p>
           <span id="auth-user-email" style={{ wordBreak: 'break-all' }}>{userEmail}</span>
+          {planCode !== 'starter' && !portalMissing ? (
+            <a href="/api/stripe/portal" className="sidebar-portal">{t('dashboard.manage')}</a>
+          ) : null}
+          {portalMissing ? (
+            <p style={{ fontSize: '0.75rem', color: 'var(--muted)', margin: '0' }}>Abonnement géré manuellement.</p>
+          ) : null}
           <form action="/api/auth/logout" method="post">
             <button type="submit" className="sidebar-logout">{t('site.logout')}</button>
           </form>

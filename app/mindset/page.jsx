@@ -1,3 +1,4 @@
+import { Suspense } from 'react';
 import { redirect } from 'next/navigation';
 import MindsetHub from '@/components/MindsetHub';
 import { getSessionContext } from '@/lib/subscription';
@@ -9,5 +10,9 @@ export default async function MindsetPage() {
   if (!user) redirect('/login?redirect=/mindset');
   if (trialExpired) redirect('/pricing');
 
-  return <MindsetHub userEmail={user.email} planCode={planCode} subscription={subscription} />;
+  return (
+    <Suspense>
+      <MindsetHub userEmail={user.email} planCode={planCode} subscription={subscription} />
+    </Suspense>
+  );
 }
