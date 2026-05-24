@@ -5,6 +5,7 @@ import Link from 'next/link';
 import LogoMark from '@/components/LogoMark';
 import ThemeToggle from '@/components/ThemeToggle';
 import CurrencyToggle from '@/components/CurrencyToggle';
+import LocaleToggle from '@/components/LocaleToggle';
 import { useLocale } from '@/lib/locale';
 
 export default function SiteHeaderClient({ user: serverUser, planCode: serverPlanCode, subscription: serverSubscription }) {
@@ -56,6 +57,7 @@ export default function SiteHeaderClient({ user: serverUser, planCode: serverPla
           )}
           <div className="site-header-controls">
             <LogoMark />
+            <LocaleToggle className="theme-toggle--header" />
             <ThemeToggle className="theme-toggle--header" />
             <CurrencyToggle className="theme-toggle--header" />
           </div>

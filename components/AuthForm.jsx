@@ -31,6 +31,27 @@ export default function AuthForm() {
     }
   }
 
+  async function submitReset(e) {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    setMessage('');
+
+    const res = await fetch('/api/auth/reset-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await readJson(res);
+
+    setLoading(false);
+    if (!res.ok || !data.ok) {
+      setError(data.error || t('auth.genericError'));
+      return;
+    }
+    setMessage(t('auth.resetSent'));
+  }
+
   async function submit(e) {
     e.preventDefault();
     setLoading(true);
@@ -46,7 +67,7 @@ export default function AuthForm() {
     const data = await readJson(res);
 
     if (!res.ok || !data.ok) {
-      setError(data.error || 'Une erreur est survenue.');
+      setError(data.error || t('auth.genericError'));
       setLoading(false);
       return;
     }
@@ -63,12 +84,40 @@ export default function AuthForm() {
     router.refresh();
   }
 
+  if (mode === 'forgot') {
+    return (
+      <form className="auth-card" onSubmit={submitReset}>
+        <div className="auth-head">
+          <span className="badge">{t('auth.resetTitle')}</span>
+          <h1>Tracker-invest</h1>
+          <p>{t('auth.resetDesc')}</p>
+        </div>
+
+        <label>
+          {t('auth.email')}
+          <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" autoComplete="email" required />
+        </label>
+
+        {error ? <p className="form-error">{error}</p> : null}
+        {message ? <p className="form-message">{message}</p> : null}
+
+        <button className="btn btn-gold" type="submit" disabled={loading}>
+          {loading ? t('auth.loading') : t('auth.sendLink')}
+        </button>
+
+        <button type="button" className="auth-link" onClick={() => { setMode('login'); setError(''); setMessage(''); }}>
+          {t('auth.backToLogin')}
+        </button>
+      </form>
+    );
+  }
+
   return (
     <form className="auth-card" onSubmit={submit}>
       <div className="auth-head">
         <span className="badge">{t('site.login')}</span>
         <h1>Tracker-invest</h1>
-        <p>Connecte-toi pour accéder à ton espace. Chaque compte a ses propres données ; avec Supabase, elles peuvent être synchronisées entre tes appareils.</p>
+        <p>{t('auth.tagline')}</p>
         {selectedPlan ? (
           <p className="auth-selection">
             {t('site.login')}: {selectedPlan.name} — {selectedBilling === 'yearly' ? t('pricing.yearly') : t('pricing.monthly')}
@@ -78,24 +127,30 @@ export default function AuthForm() {
 
       <div className="auth-toggle">
         <button type="button" className={mode === 'login' ? 'active' : ''} onClick={() => setMode('login')}>{t('site.login')}</button>
-        <button type="button" className={mode === 'register' ? 'active' : ''} onClick={() => setMode('register')}>Créer un compte</button>
+        <button type="button" className={mode === 'register' ? 'active' : ''} onClick={() => setMode('register')}>{t('auth.createAccount')}</button>
       </div>
 
       <label>
-        E-mail
+        {t('auth.email')}
         <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" autoComplete="email" required />
       </label>
 
       <label>
-        Mot de passe
+        {t('auth.password')}
         <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required minLength={8} />
       </label>
+
+      {mode === 'login' ? (
+        <button type="button" className="auth-link auth-link--right" onClick={() => { setMode('forgot'); setError(''); setMessage(''); }}>
+          {t('auth.forgotPassword')}
+        </button>
+      ) : null}
 
       {error ? <p className="form-error">{error}</p> : null}
       {message ? <p className="form-message">{message}</p> : null}
 
       <button className="btn btn-gold" type="submit" disabled={loading}>
-        {loading ? 'Chargement…' : mode === 'login' ? 'Se connecter' : 'Créer mon compte'}
+        {loading ? t('auth.loading') : mode === 'login' ? t('auth.signIn') : t('auth.signUp')}
       </button>
     </form>
   );

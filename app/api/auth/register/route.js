@@ -13,7 +13,12 @@ export async function POST(request) {
 
     const response = NextResponse.json({ ok: true });
     const supabase = createSupabaseRouteClient(request, response);
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: `${siteUrl}/login` },
+    });
 
     if (error) {
       return NextResponse.json({ ok: false, error: error.message || 'Inscription impossible.' }, { status: 400 });

@@ -839,6 +839,19 @@ a { color: inherit; }
   text-align: center;
 }
 .auth-selection { margin: 0; padding-top: 0.25rem; }
+.auth-link {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 0.82rem;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.2s;
+}
+.auth-link:hover { color: var(--gold-bright); }
+.auth-link--right { text-align: right; justify-self: end; }
 .auth-toggle { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
 .auth-toggle button { padding: 0.8rem; border-radius: 12px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; }
 .auth-toggle button.active { background: rgba(201, 169, 98, 0.12); color: var(--gold-bright); }
