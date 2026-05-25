@@ -97,12 +97,14 @@ export async function POST(request) {
     if (!customerId) {
       const customer = await stripe.customers.create({ email: authData.user.email });
       customerId = customer.id;
+      // Store the customer ID only — plan_code and status will be set by the
+      // webhook once payment is confirmed. Never grant plan access before that.
       await admin.from('user_subscriptions').upsert({
         user_id: authData.user.id,
         stripe_customer_id: customerId,
-        plan_code: planCode,
+        plan_code: 'starter',
         billing_cycle: billingCycle,
-        status: 'active',
+        status: 'incomplete',
         updated_at: new Date().toISOString(),
       });
     }
