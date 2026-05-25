@@ -436,9 +436,10 @@ function bestImmoRow(rows) {
 }
 
 export default function InvestHub({ userEmail = '', planCode = 'starter', subscription = null }) {
-  const [portfolioState, setPortfolioState] = useAccountPayload('investHub_profiles_v1', defaultPortfolioState());
+  const [portfolioState, setPortfolioState, , profileSaveError] = useAccountPayload('investHub_profiles_v1', defaultPortfolioState());
   const profile = portfolioState.current || 'main';
-  const [data, setData] = useAccountPayload(`investHub_v2_${profile}`, defaultInvestState());
+  const [data, setData, , dataSaveError] = useAccountPayload(`investHub_v2_${profile}`, defaultInvestState());
+  const saveError = profileSaveError || dataSaveError;
 
   // If data has no `page` field it was written by another module (PortfolioHub bug) — restore defaults
   React.useEffect(() => {
@@ -481,6 +482,11 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
     setFeedback(message);
     if (typeof window !== 'undefined') window.setTimeout(() => setFeedback(''), 2800);
   };
+
+  React.useEffect(() => {
+    if (saveError) notify(`Erreur de sauvegarde — vos données n'ont pas été enregistrées : ${saveError}`);
+  }, [saveError]);
+
   const immoCalc = data.immoCalc || defaultImmoCalcState();
   const activePropertyId = immoCalc.activePropertyId || immoCalc.propertyOrder?.[0] || 'p0';
   const immoProperties = immoCalc.properties || defaultImmoCalcState().properties;

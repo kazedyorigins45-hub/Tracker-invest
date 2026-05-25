@@ -285,11 +285,20 @@ function defaultProfileState() {
 }
 
 export default function TrackerHub({ userEmail = '', planCode = 'starter', subscription = null }) {
-  const [profileState, setProfileState] = useAccountPayload('trackerHub_profiles_v1', defaultProfileState());
+  const [profileState, setProfileState, , profileSaveError] = useAccountPayload('trackerHub_profiles_v1', defaultProfileState());
   const profile = profileState.current || 'default';
-  const [data, setData] = useAccountPayload(`trackerHub_v2_${profile}`, defaultTrackerState());
+  const [data, setData, , dataSaveError] = useAccountPayload(`trackerHub_v2_${profile}`, defaultTrackerState());
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const closeSidebar = () => setSidebarOpen(false);
+  const [feedback, setFeedback] = React.useState('');
+  const saveError = profileSaveError || dataSaveError;
+
+  useEffect(() => {
+    if (saveError) {
+      setFeedback(`Erreur de sauvegarde — vos données n'ont pas été enregistrées : ${saveError}`);
+      if (typeof window !== 'undefined') window.setTimeout(() => setFeedback(''), 4000);
+    }
+  }, [saveError]);
 
   // If data has no `page` field it was written by another module (PortfolioHub bug) — restore defaults
   useEffect(() => {
@@ -678,6 +687,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
           <LanguageToggle className="theme-toggle--app" />
           <CurrencyToggle className="theme-toggle--app" />
         </div>
+        {feedback ? <div className="ui-feedback" role="status" aria-live="polite">{feedback}</div> : null}
         <section className={`page ${page === 'cover' ? 'active' : ''}`}>
           <span className="dec-arrow" aria-hidden="true">↗</span>
           <h1 className="page-title">{t('tracker.coverHeroTitle')}</h1>
