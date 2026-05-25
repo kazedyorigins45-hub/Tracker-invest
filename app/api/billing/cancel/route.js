@@ -23,12 +23,16 @@ export async function POST(request) {
     const { data: subscription } = await admin.from('user_subscriptions').select('*').eq('user_id', authData.user.id).maybeSingle();
     if (!subscription) return NextResponse.json({ ok: false, error: 'Abonnement introuvable.' }, { status: 404 });
 
+    if (!subscription.stripe_subscription_id || !['active', 'trialing'].includes(subscription.status)) {
+      return NextResponse.json({ ok: false, error: 'Aucun abonnement actif à annuler.' }, { status: 400 });
+    }
+
     const stripe = getStripe();
-    if (stripe && subscription.stripe_subscription_id) {
+    if (stripe) {
       await stripe.subscriptions.update(subscription.stripe_subscription_id, { cancel_at_period_end: true });
     }
 
-    await admin.from('user_subscriptions').update({ cancel_at_period_end: true, status: 'active', updated_at: new Date().toISOString() }).eq('user_id', authData.user.id);
+    await admin.from('user_subscriptions').update({ cancel_at_period_end: true, updated_at: new Date().toISOString() }).eq('user_id', authData.user.id);
 
     return NextResponse.json({ ok: true }, { headers: response.headers });
   } catch (error) {
