@@ -43,13 +43,6 @@ export default function MindsetHub({ userEmail = '', planCode = 'starter', subsc
   useEffect(() => { setMounted(true); }, []);
   const closeSidebar = () => setSidebarOpen(false);
 
-  function renderPage(name) {
-    setActivePage(name);
-    setSidebarOpen(false);
-    const el = document.getElementById(`page-${name}`);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
   const stats = useMemo(() => {
     const journalCount = (state.journal || []).length;
     const rulesCount = (state.rules || []).length;
@@ -140,6 +133,7 @@ export default function MindsetHub({ userEmail = '', planCode = 'starter', subsc
 
   function renderPage(name) {
     setActivePage(name);
+    setSidebarOpen(false);
     const el = document.getElementById(`page-${name}`);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }

@@ -65,25 +65,29 @@ async function syncSubscription(admin, subscription, extra = {}) {
       : null,
     last_stripe_event_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-  });
+  }, { onConflict: 'user_id' });
 
   if (priceId) {
-    await admin.from('stripe_webhook_events').upsert({
-      id: `${subscription.id}:${priceId}`,
-      type: 'subscription.sync',
-      payload: { subscription_id: subscription.id, price_id: priceId },
-      processed_at: new Date().toISOString(),
-    });
+    try {
+      await admin.from('stripe_webhook_events').upsert({
+        id: `${subscription.id}:${priceId}`,
+        type: 'subscription.sync',
+        payload: { subscription_id: subscription.id, price_id: priceId },
+        processed_at: new Date().toISOString(),
+      });
+    } catch {}
   }
 }
 
 async function markEventProcessed(admin, eventId, eventType) {
-  await admin.from('stripe_webhook_events').upsert({
-    id: eventId,
-    type: eventType,
-    payload: {},
-    processed_at: new Date().toISOString(),
-  });
+  try {
+    await admin.from('stripe_webhook_events').upsert({
+      id: eventId,
+      type: eventType,
+      payload: {},
+      processed_at: new Date().toISOString(),
+    });
+  } catch {}
 }
 
 async function isEventAlreadyProcessed(admin, eventId) {
@@ -164,7 +168,7 @@ export async function POST(request) {
         cancel_at_period_end: false,
         last_stripe_event_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
-      });
+      }, { onConflict: 'user_id' });
     }
 
     if (event.type === 'invoice.paid') {
@@ -186,6 +190,15 @@ export async function POST(request) {
       const invoice = event.data.object;
       const subscriptionId = invoice.subscription;
       if (!subscriptionId) return NextResponse.json({ received: true });
+
+      // Retrieve current subscription status from Stripe before marking past_due.
+      // During checkout, Stripe may fire invoice.payment_failed for an initial attempt
+      // that immediately retries and succeeds — in that case the subscription is already
+      // active and we must not overwrite it with past_due.
+      const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId);
+      if (stripeSubscription.status !== 'past_due' && stripeSubscription.status !== 'unpaid') {
+        return NextResponse.json({ received: true });
+      }
 
       const customerId = String(invoice.customer || '');
       const { data: row } = await admin

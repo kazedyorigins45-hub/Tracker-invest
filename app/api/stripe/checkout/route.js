@@ -103,7 +103,7 @@ export async function POST(request) {
       stripe_customer_id: customerId,
       plan_code: planCode,
       billing_cycle: billingCycle,
-      status: existingSub?.status || 'active',
+      status: existingSub?.status || 'incomplete',
       updated_at: new Date().toISOString(),
     });
 
@@ -112,7 +112,7 @@ export async function POST(request) {
       customer: customerId,
       line_items: [{ price: priceId, quantity: 1 }],
       payment_method_collection: 'if_required',
-      success_url: `${siteUrl}/dashboard?checkout=success`,
+      success_url: `${siteUrl}/billing?checkout=success`,
       cancel_url: `${siteUrl}/pricing?checkout=cancelled`,
       allow_promotion_codes: true,
       subscription_data: {

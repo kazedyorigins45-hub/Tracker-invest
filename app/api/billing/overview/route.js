@@ -20,12 +20,56 @@ export async function GET(request) {
     }
 
     const admin = createServiceClient();
-    const { data: subscription } = await admin.from('user_subscriptions').select('*').eq('user_id', authData.user.id).maybeSingle();
+    let { data: subscription } = await admin.from('user_subscriptions').select('*').eq('user_id', authData.user.id).maybeSingle();
+
+    const stripe = getStripe();
+
+    // Auto-sync from Stripe if subscription data is incomplete (webhook may have been missed)
+    if (stripe && subscription?.stripe_customer_id && !subscription?.stripe_subscription_id) {
+      try {
+        const list = await stripe.subscriptions.list({
+          customer: subscription.stripe_customer_id,
+          status: 'all',
+          limit: 5,
+        });
+        const activeSub = list.data.find((s) =>
+          ['active', 'trialing', 'past_due'].includes(s.status)
+        ) || list.data[0];
+
+        if (activeSub) {
+          const priceId = activeSub.items?.data?.[0]?.price?.id;
+          let planCode = activeSub.metadata?.plan_code || null;
+          if (!planCode && priceId) {
+            const { data: planRow } = await admin
+              .from('pricing_plans')
+              .select('code')
+              .or(`stripe_price_monthly_id.eq.${priceId},stripe_price_yearly_id.eq.${priceId}`)
+              .maybeSingle();
+            planCode = planRow?.code || 'starter';
+          }
+
+          const updates = {
+            stripe_subscription_id: activeSub.id,
+            plan_code: planCode || 'starter',
+            billing_cycle: activeSub.metadata?.billing_cycle || 'monthly',
+            status: activeSub.status,
+            current_period_end: activeSub.current_period_end
+              ? new Date(activeSub.current_period_end * 1000).toISOString()
+              : null,
+            cancel_at_period_end: !!activeSub.cancel_at_period_end,
+            updated_at: new Date().toISOString(),
+          };
+
+          await admin.from('user_subscriptions').update(updates).eq('user_id', authData.user.id);
+          subscription = { ...subscription, ...updates };
+        }
+      } catch {}
+    }
+
     const { data: plan } = subscription?.plan_code
       ? await admin.from('pricing_plans').select('*').eq('code', subscription.plan_code).maybeSingle()
       : { data: null };
 
-    const stripe = getStripe();
     let invoices = [];
     let paymentMethods = [];
 
@@ -38,8 +82,8 @@ export async function GET(request) {
       invoices = invoiceList.data.map((invoice) => ({
         id: invoice.id,
         status: invoice.status,
-        total: invoice.total,
-        amount_paid: invoice.amount_paid,
+        total: invoice.total != null ? invoice.total / 100 : null,
+        amount_paid: invoice.amount_paid != null ? invoice.amount_paid / 100 : null,
         hosted_invoice_url: invoice.hosted_invoice_url,
         invoice_pdf: invoice.invoice_pdf,
         created: invoice.created ? new Date(invoice.created * 1000).toISOString() : null,

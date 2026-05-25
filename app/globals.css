@@ -852,6 +852,10 @@ a { color: inherit; }
 }
 .auth-link:hover { color: var(--gold-bright); }
 .auth-link--right { text-align: right; justify-self: end; }
+.input-password-wrap { position: relative; display: flex; align-items: center; }
+.input-password-wrap input { flex: 1; padding-right: 2.75rem !important; }
+.input-password-toggle { position: absolute; right: 0.75rem; background: none; border: none; cursor: pointer; color: var(--muted); padding: 0; display: flex; align-items: center; transition: color 0.2s; }
+.input-password-toggle:hover { color: var(--gold-bright); }
 .auth-toggle { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; }
 .auth-toggle button { padding: 0.8rem; border-radius: 12px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; }
 .auth-toggle button.active { background: rgba(201, 169, 98, 0.12); color: var(--gold-bright); }
@@ -919,6 +923,8 @@ a { color: inherit; }
 .stack-list li { line-height: 1.4; }
 .billing-invoice-link { font-size: 0.75rem; color: var(--gold-bright); text-decoration: underline; white-space: nowrap; }
 .billing-invoice-link:hover { opacity: 0.75; }
+.billing-success { margin: 0 0 1.25rem; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(60, 180, 100, 0.12); border: 1px solid rgba(60, 180, 100, 0.35); color: #7dd4a0; font-size: 0.85rem; line-height: 1.45; }
+:root[data-theme='light'] .billing-success { background: rgba(40, 160, 80, 0.08); border-color: rgba(40, 160, 80, 0.3); color: #1a7a40; }
 .billing-alert { margin: 0 0 1.25rem; padding: 0.75rem 1rem; border-radius: 8px; background: rgba(220, 80, 80, 0.12); border: 1px solid rgba(220, 80, 80, 0.35); color: #e8a0a0; font-size: 0.85rem; line-height: 1.45; }
 .billing-alert-link { color: #e8a0a0; text-decoration: underline; font-weight: 600; }
 .billing-alert-link:hover { opacity: 0.75; }

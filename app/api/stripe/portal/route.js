@@ -33,7 +33,7 @@ export async function GET(request) {
       .maybeSingle();
 
     if (!subscription?.stripe_customer_id) {
-      return NextResponse.redirect(new URL('/mindset?portal=missing', siteUrl));
+      return NextResponse.redirect(new URL('/dashboard?portal=missing', siteUrl));
     }
 
     const portal = await stripe.billingPortal.sessions.create({

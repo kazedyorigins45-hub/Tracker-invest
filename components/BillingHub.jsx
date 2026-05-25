@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import LogoMark from '@/components/LogoMark';
 import ThemeToggle from '@/components/ThemeToggle';
 import CurrencyToggle from '@/components/CurrencyToggle';
@@ -21,12 +22,24 @@ function formatDate(value, locale = 'fr-FR') {
 
 export default function BillingHub({ userEmail = '', planCode = 'starter', subscription = null }) {
   const { t, locale } = useLocale();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const checkoutSuccess = searchParams.get('checkout') === 'success';
   const [overview, setOverview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(planCode);
   const [selectedCycle, setSelectedCycle] = useState(subscription?.billing_cycle || 'monthly');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (!checkoutSuccess) return;
+    const timer = setTimeout(() => {
+      router.replace('/billing');
+    }, 6000);
+    return () => clearTimeout(timer);
+  }, [checkoutSuccess, router]);
 
   const currentPlan = useMemo(() => getPlan(overview?.subscription?.plan_code || planCode), [overview, planCode]);
   const currentSubscription = overview?.subscription || subscription;
@@ -88,7 +101,8 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
 
   return (
     <div className="mindset-shell">
-      <aside className="sidebar">
+      <aside className={`sidebar${sidebarOpen ? ' sidebar--open' : ''}`}>
+        <div className="sidebar-close" onClick={() => setSidebarOpen(false)} aria-label="Fermer le menu">✕</div>
         <div className="brand-block">
           <div className="brand-top">
             <div className="tag">Mindset</div>
@@ -114,13 +128,25 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
 
       <main className="main">
         <div className="mindset-topbar">
-          <LogoMark />
+          <div className="mindset-topbar-left">
+            <button type="button" className="hamburger-btn" onClick={() => setSidebarOpen((v) => !v)} aria-label="Menu">
+              <span /><span /><span />
+            </button>
+            <LogoMark />
+          </div>
           <ThemeToggle className="theme-toggle--app" />
           <CurrencyToggle className="theme-toggle--app" />
         </div>
 
         <h1 className="page-title">{t('billing.title')}</h1>
         <p className="page-sub">{t('billing.subtitle')}</p>
+
+        {checkoutSuccess && (
+          <div className="billing-success" role="status">
+            <strong>Paiement confirmé !</strong> Ton abonnement est maintenant actif.{' '}
+            <Link href="/mindset" className="billing-alert-link">Retour à l'accueil →</Link>
+          </div>
+        )}
 
         {isPaymentFailed && (
           <div className="billing-alert" role="alert">
