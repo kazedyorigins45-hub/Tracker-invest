@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { canAccess, getSubscriptionLabel } from '@/lib/plans';
 import { useLocale } from '@/lib/locale';
 import DashboardContent from '@/components/DashboardContent';
@@ -10,6 +10,8 @@ export default function DashboardPageView({ planCode = 'starter', subscription =
   const subscriptionLabel = getSubscriptionLabel(subscription, planCode);
   const { t } = useLocale();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const portalMissing = searchParams.get('portal') === 'missing';
 
   return (
     <div className="mindset-shell">
@@ -42,8 +44,11 @@ export default function DashboardPageView({ planCode = 'starter', subscription =
         <div className="sidebar-bottom">
           <p className="app-plan">{t('app.subscription')} : {subscriptionLabel}</p>
           <span id="auth-user-email" style={{ wordBreak: 'break-all' }}>{userEmail}</span>
-          {planCode !== 'starter' ? (
+          {planCode !== 'starter' && !portalMissing ? (
             <a href="/api/stripe/portal" className="sidebar-portal">{t('dashboard.manage')}</a>
+          ) : null}
+          {portalMissing ? (
+            <p style={{ fontSize: '0.75rem', color: 'var(--muted)', margin: '0' }}>Abonnement géré manuellement.</p>
           ) : null}
           <form action="/api/auth/logout" method="post">
             <button type="submit" className="sidebar-logout">{t('site.logout')}</button>
