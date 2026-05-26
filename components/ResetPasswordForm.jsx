@@ -24,6 +24,14 @@ export default function ResetPasswordForm() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
+    const urlError = searchParams.get('error');
+    const urlErrorCode = searchParams.get('error_code');
+    if (urlError || urlErrorCode) {
+      const expired = urlErrorCode === 'otp_expired' || urlError === 'access_denied';
+      setError(expired ? 'Ce lien a expiré. Demande un nouveau lien de réinitialisation.' : 'Lien invalide ou expiré.');
+      return;
+    }
+
     const supabase = getSupabase();
     let recovered = false;
 
@@ -77,6 +85,11 @@ export default function ResetPasswordForm() {
           <h1>Tracker-invest</h1>
           <p>{error || 'Vérification du lien…'}</p>
         </div>
+        {error && (
+          <button type="button" className="btn btn-gold" onClick={() => router.push('/login')}>
+            Retour à la connexion
+          </button>
+        )}
       </div>
     );
   }
