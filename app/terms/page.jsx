@@ -138,7 +138,7 @@ export default function TermsPage() {
 
           <section>
             <h3>6 – Obligations des parties</h3>
-            <p>Les obligations de Tracker-invest sont des <em>obligations de moyens</em> (art. 5.72 du Code civil). La responsabilité de Tracker-invest est limitée aux dommages directs, pour un montant maximum équivalent au total effectivement payé par le Client au cours des 3 derniers mois précédant le fait générateur.</p>
+            <p>Les obligations de Tracker-invest sont des <em>obligations de moyens</em> (art. 5.72 du Code civil). La responsabilité de Tracker-invest est limitée aux dommages directs, pour un montant maximum équivalent au total effectivement payé par le Client au cours des 6 derniers mois précédant le fait générateur.</p>
             <p>Le Client s'engage à mettre à disposition de Tracker-invest, en temps utile, tous les documents, données et informations nécessaires. Les deux parties sont tenues à la confidentialité des données échangées.</p>
           </section>
 
