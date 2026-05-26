@@ -37,14 +37,9 @@ export default function ConfirmedClient() {
           return;
         }
       } else if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if (error) {
-          const { data: { session } } = await supabase.auth.getSession();
-          if (!session) {
-            setStatus('error');
-            return;
-          }
-        }
+        // Supabase already verified the email before redirecting here with the code.
+        // Try to establish a session, but show success either way.
+        await supabase.auth.exchangeCodeForSession(code);
       }
 
       setStatus('success');
