@@ -118,7 +118,8 @@ export async function POST(request) {
   try {
     event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
   } catch (error) {
-    return NextResponse.json({ error: `Webhook invalide: ${error.message}` }, { status: 400 });
+    console.error('[webhook] Signature verification failed:', error);
+    return NextResponse.json({ error: 'Invalid webhook signature.' }, { status: 400 });
   }
 
   // Idempotence: skip events already processed
@@ -226,6 +227,7 @@ export async function POST(request) {
     await markEventProcessed(admin, event.id, event.type);
     return NextResponse.json({ received: true });
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[webhook] Handler error:', error);
+    return NextResponse.json({ error: 'Internal server error.' }, { status: 500 });
   }
 }

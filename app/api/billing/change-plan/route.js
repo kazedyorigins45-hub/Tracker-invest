@@ -11,7 +11,7 @@ function getStripe() {
   return new Stripe(stripeSecret);
 }
 
-const VALID_PLAN_CODES = ['starter', 'trader', 'investor', 'empire'];
+const VALID_PLAN_CODES = ['trader', 'investor', 'empire'];
 
 export async function POST(request) {
   try {
@@ -80,6 +80,7 @@ export async function POST(request) {
         existingSub.stripe_subscription_id
       );
       const currentItemId = stripeSubscription.items.data[0]?.id;
+      const idempotencyKey = `change-${authData.user.id}-${planCode}-${billingCycle}`;
 
       await stripe.subscriptions.update(existingSub.stripe_subscription_id, {
         items: [{ id: currentItemId, price: priceId }],
@@ -89,14 +90,9 @@ export async function POST(request) {
           plan_code: planCode,
           billing_cycle: billingCycle,
         },
-      });
+      }, { idempotencyKey });
 
-      await admin.from('user_subscriptions').update({
-        plan_code: planCode,
-        billing_cycle: billingCycle,
-        updated_at: new Date().toISOString(),
-      }).eq('user_id', authData.user.id);
-
+      // DB is updated exclusively by the webhook (customer.subscription.updated)
       return NextResponse.json({ ok: true, updated: true }, { headers: response.headers });
     }
 
@@ -141,7 +137,7 @@ export async function POST(request) {
 
     return NextResponse.json({ ok: true, url: session.url }, { headers: response.headers });
   } catch (error) {
-    console.error('[billing/change-plan] Unexpected error:', error?.message);
+    console.error('[billing/change-plan] Unexpected error:', error);
     return NextResponse.json({ ok: false, error: 'Erreur serveur.' }, { status: 500 });
   }
 }

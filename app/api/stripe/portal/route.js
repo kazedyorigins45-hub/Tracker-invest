@@ -10,7 +10,7 @@ function getStripe() {
   return new Stripe(stripeSecret);
 }
 
-export async function GET(request) {
+export async function POST(request) {
   try {
     const stripe = getStripe();
     if (!stripe) {
@@ -43,7 +43,7 @@ export async function GET(request) {
 
     return NextResponse.redirect(portal.url);
   } catch (error) {
-    console.error('[stripe/portal] Unexpected error:', error?.message);
+    console.error('[stripe/portal] Unexpected error:', error);
     return NextResponse.json({ ok: false, error: 'Erreur serveur.' }, { status: 500 });
   }
 }

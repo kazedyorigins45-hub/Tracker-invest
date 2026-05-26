@@ -197,7 +197,9 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
                 {t('billing.resume')}
               </button>
               {sub.stripe_customer_id ? (
-                <a href="/api/stripe/portal" className="btn btn-ghost">{t('billing.portal') || 'Portail Stripe'}</a>
+                <form method="post" action="/api/stripe/portal" style={{ display: 'inline' }}>
+                  <button type="submit" className="btn btn-ghost">{t('billing.portal') || 'Portail Stripe'}</button>
+                </form>
               ) : null}
               {sub.stripe_customer_id ? (
                 <button className="btn btn-ghost" type="button" disabled={busy} onClick={async () => {

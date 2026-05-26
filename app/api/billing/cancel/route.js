@@ -35,15 +35,16 @@ export async function POST(request) {
     }
 
     const stripe = getStripe();
-    if (stripe) {
-      await stripe.subscriptions.update(subscription.stripe_subscription_id, { cancel_at_period_end: true });
+    if (!stripe) {
+      return NextResponse.json({ ok: false, error: 'Stripe non configuré.' }, { status: 500 });
     }
 
+    await stripe.subscriptions.update(subscription.stripe_subscription_id, { cancel_at_period_end: true });
     await admin.from('user_subscriptions').update({ cancel_at_period_end: true, updated_at: new Date().toISOString() }).eq('user_id', authData.user.id);
 
     return NextResponse.json({ ok: true }, { headers: response.headers });
   } catch (error) {
-    console.error('[billing/cancel] Unexpected error:', error?.message);
+    console.error('[billing/cancel] Unexpected error:', error);
     return NextResponse.json({ ok: false, error: 'Erreur serveur.' }, { status: 500 });
   }
 }

@@ -1,9 +1,14 @@
 import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
 import { createServiceClient, createSupabaseRouteClient } from '@/lib/supabase/server';
+import { checkRateLimit, getClientIp } from '@/lib/ratelimit';
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY;
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+
+if (process.env.NODE_ENV === 'production' && !process.env.NEXT_PUBLIC_SITE_URL) {
+  console.error('[stripe/checkout] CRITICAL: NEXT_PUBLIC_SITE_URL is not set — Stripe redirects will point to localhost.');
+}
 
 const VALID_PLAN_CODES = ['trader', 'investor', 'empire'];
 
@@ -14,12 +19,23 @@ function getStripe() {
 
 export async function POST(request) {
   try {
+    const ip = getClientIp(request);
+    const { allowed } = await checkRateLimit('checkout', ip);
+    if (!allowed) {
+      return NextResponse.json({ ok: false, error: 'Trop de tentatives. Réessaie dans 1 minute.' }, { status: 429 });
+    }
+
     const body = await request.json().catch(() => ({}));
     const planCode = String(body.planCode || '').trim();
     const billingCycle = body.billingCycle === 'yearly' ? 'yearly' : 'monthly';
+    const termsAccepted = body.termsAccepted === true;
 
     if (!planCode || !VALID_PLAN_CODES.includes(planCode)) {
       return NextResponse.json({ ok: false, error: 'Plan invalide.' }, { status: 400 });
+    }
+
+    if (!termsAccepted) {
+      return NextResponse.json({ ok: false, error: 'Vous devez accepter les conditions générales.' }, { status: 400 });
     }
 
     const stripe = getStripe();
@@ -70,6 +86,7 @@ export async function POST(request) {
     if (hasActiveSub) {
       const stripeSubscription = await stripe.subscriptions.retrieve(existingSub.stripe_subscription_id);
       const currentItemId = stripeSubscription.items.data[0]?.id;
+      const idempotencyKey = `update-${authData.user.id}-${planCode}-${billingCycle}`;
 
       await stripe.subscriptions.update(existingSub.stripe_subscription_id, {
         items: [{ id: currentItemId, price: priceId }],
@@ -79,14 +96,9 @@ export async function POST(request) {
           plan_code: planCode,
           billing_cycle: billingCycle,
         },
-      });
+      }, { idempotencyKey });
 
-      await admin.from('user_subscriptions').update({
-        plan_code: planCode,
-        billing_cycle: billingCycle,
-        updated_at: new Date().toISOString(),
-      }).eq('user_id', authData.user.id);
-
+      // DB is updated exclusively by the webhook (customer.subscription.updated)
       return NextResponse.json({ ok: true, updated: true });
     }
 
@@ -133,7 +145,7 @@ export async function POST(request) {
 
     return NextResponse.json({ ok: true, url: session.url });
   } catch (error) {
-    console.error('[stripe/checkout] Unexpected error:', error?.message);
+    console.error('[stripe/checkout] Unexpected error:', error);
     return NextResponse.json({ ok: false, error: 'Erreur serveur.' }, { status: 500 });
   }
 }

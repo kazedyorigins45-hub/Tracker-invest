@@ -68,7 +68,8 @@ async function runSync(request) {
     await syncFromStripe(admin, authData.user.id, row.stripe_customer_id, activeSub);
     return NextResponse.json({ ok: true, synced: true }, { headers: response.headers });
   } catch (error) {
-    return NextResponse.json({ ok: false, error: error?.message || 'Erreur serveur.' }, { status: 500 });
+    console.error('[billing/sync] Unexpected error:', error);
+    return NextResponse.json({ ok: false, error: 'Erreur serveur.' }, { status: 500 });
   }
 }
 
@@ -101,5 +102,8 @@ async function syncFromStripe(admin, userId, customerId, subscription) {
     cancel_at_period_end: !!subscription.cancel_at_period_end,
     updated_at: new Date().toISOString(),
   }, { onConflict: 'user_id' });
-  if (upsertError) throw new Error(`DB sync failed: ${upsertError.message}`);
+  if (upsertError) {
+    console.error('[billing/sync] DB upsert failed:', upsertError);
+    throw new Error('Erreur de synchronisation.');
+  }
 }

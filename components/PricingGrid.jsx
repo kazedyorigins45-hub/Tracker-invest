@@ -49,7 +49,7 @@ export default function PricingGrid() {
       const res = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ planCode, billingCycle: cycle }),
+        body: JSON.stringify({ planCode, billingCycle: cycle, termsAccepted: true }),
       });
       const text = await res.text();
       const data = text ? JSON.parse(text) : {};

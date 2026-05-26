@@ -1,11 +1,17 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseRouteClient } from '@/lib/supabase/server';
 
+const STORAGE_KEY_PATTERN = /^[a-zA-Z0-9_\-]{1,100}$/;
+
+function isValidStorageKey(key) {
+  return typeof key === 'string' && STORAGE_KEY_PATTERN.test(key);
+}
+
 export async function GET(request) {
   try {
     const storageKey = new URL(request.url).searchParams.get('storageKey');
-    if (!storageKey) {
-      return NextResponse.json({ ok: false, error: 'storageKey manquant.' }, { status: 400 });
+    if (!storageKey || !isValidStorageKey(storageKey)) {
+      return NextResponse.json({ ok: false, error: 'storageKey invalide.' }, { status: 400 });
     }
 
     const response = NextResponse.json({ ok: false });
@@ -24,12 +30,14 @@ export async function GET(request) {
       .maybeSingle();
 
     if (error) {
-      return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
+      console.error('[account-data GET] DB error:', error);
+      return NextResponse.json({ ok: false, error: 'Erreur serveur.' }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true, payload: data?.payload || '' }, { headers: response.headers });
   } catch (error) {
-    return NextResponse.json({ ok: false, error: error?.message || 'Erreur serveur.' }, { status: 500 });
+    console.error('[account-data GET] Unexpected error:', error);
+    return NextResponse.json({ ok: false, error: 'Erreur serveur.' }, { status: 500 });
   }
 }
 
@@ -39,8 +47,8 @@ export async function POST(request) {
     const storageKey = String(body.storageKey || '').trim();
     const payload = String(body.payload || '');
 
-    if (!storageKey) {
-      return NextResponse.json({ ok: false, error: 'storageKey manquant.' }, { status: 400 });
+    if (!storageKey || !isValidStorageKey(storageKey)) {
+      return NextResponse.json({ ok: false, error: 'storageKey invalide.' }, { status: 400 });
     }
 
     const response = NextResponse.json({ ok: false });
@@ -62,11 +70,13 @@ export async function POST(request) {
     );
 
     if (error) {
-      return NextResponse.json({ ok: false, error: error.message }, { status: 400 });
+      console.error('[account-data POST] DB error:', error);
+      return NextResponse.json({ ok: false, error: 'Erreur serveur.' }, { status: 500 });
     }
 
     return NextResponse.json({ ok: true }, { headers: response.headers });
   } catch (error) {
-    return NextResponse.json({ ok: false, error: error?.message || 'Erreur serveur.' }, { status: 500 });
+    console.error('[account-data POST] Unexpected error:', error);
+    return NextResponse.json({ ok: false, error: 'Erreur serveur.' }, { status: 500 });
   }
 }

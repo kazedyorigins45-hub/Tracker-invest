@@ -14,16 +14,7 @@ export default function SiteHeaderClient({ user: serverUser, planCode: serverPla
   const [planCode, setPlanCode] = useState(serverPlanCode || 'starter');
   const [subscription, setSubscription] = useState(serverSubscription);
 
-  useEffect(() => {
-    if (serverUser) return;
-    fetch('/api/account-data').then(r => r.json()).then(d => {
-      if (d?.user) {
-        setUser(d.user);
-        setPlanCode(d.planCode || 'starter');
-        setSubscription(d.subscription);
-      }
-    }).catch(() => {});
-  }, [serverUser]);
+  // User/plan data is passed as server-rendered props — no client fetch needed
 
   return (
     <header className="site-header">
