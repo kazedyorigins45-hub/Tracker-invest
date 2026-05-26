@@ -99,13 +99,15 @@ export default function AuthForm() {
       return;
     }
 
-    if (data.message) setMessage(data.message);
     setLoading(false);
 
     if (mode === 'register' && data.needsConfirmation) {
+      setMessage(t('auth.registerSuccess'));
       setMode('login');
       return;
     }
+
+    if (data.message) setMessage(data.message);
 
     const dest = data.redirectTo;
     const safeDest = typeof dest === 'string' && dest.startsWith('/') && !dest.startsWith('//') ? dest : redirectTo;

@@ -122,10 +122,7 @@ function defaultInvestState() {
     },
     immoCalc: defaultImmoCalcState(),
     immoLinkedHoldingIndex: '',
-      holdings: [
-      { className: 'crypto', hubSegment: 'actif', synth: 'Actifs', asset: 'BTC', geckoId: 'bitcoin', quantity: '0.82', avgPrice: '42 000€', sellPrice: '', sellDate: '', saleResult: '', notes: '', value: '34 400€' },
-      { className: 'metaux', hubSegment: 'actif', synth: 'Actifs', asset: 'Or', geckoId: '', quantity: '150g', avgPrice: '63€', sellPrice: '', sellDate: '', saleResult: '', notes: '', value: '9 450€' },
-    ],
+    holdings: [],
     purchasePrice: '',
     acquisitionFeesPct: '3',
     workCost: '0',
