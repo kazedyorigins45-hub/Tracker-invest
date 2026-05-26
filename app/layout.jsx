@@ -33,13 +33,11 @@ export const metadata = {
     type: 'website',
     siteName: 'Tracker-invest',
     locale: 'fr_FR',
-    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Tracker-invest' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Tracker-invest — Journal de trading & suivi d\'investissement',
     description: "Centralisez vos trades, actions, ETF et immobilier dans un seul tableau de bord.",
-    images: ['/og-image.png'],
   },
 };
 

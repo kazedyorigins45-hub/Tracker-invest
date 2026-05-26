@@ -5,6 +5,8 @@ import { createServiceClient, createSupabaseRouteClient } from '@/lib/supabase/s
 const stripeSecret = process.env.STRIPE_SECRET_KEY;
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
 
+const VALID_PLAN_CODES = ['trader', 'investor', 'empire'];
+
 function getStripe() {
   if (!stripeSecret) return null;
   return new Stripe(stripeSecret);
@@ -16,8 +18,8 @@ export async function POST(request) {
     const planCode = String(body.planCode || '').trim();
     const billingCycle = body.billingCycle === 'yearly' ? 'yearly' : 'monthly';
 
-    if (!planCode) {
-      return NextResponse.json({ ok: false, error: 'planCode manquant.' }, { status: 400 });
+    if (!planCode || !VALID_PLAN_CODES.includes(planCode)) {
+      return NextResponse.json({ ok: false, error: 'Plan invalide.' }, { status: 400 });
     }
 
     const stripe = getStripe();
@@ -44,12 +46,12 @@ export async function POST(request) {
       .maybeSingle();
 
     if (planError || !planRow) {
-      return NextResponse.json({ ok: false, error: planError?.message || 'Plan introuvable.' }, { status: 400 });
+      return NextResponse.json({ ok: false, error: 'Plan introuvable.' }, { status: 400 });
     }
 
     const priceId = billingCycle === 'yearly' ? planRow.stripe_price_yearly_id : planRow.stripe_price_monthly_id;
     if (!priceId) {
-      return NextResponse.json({ ok: false, error: `Price Stripe manquant pour ${planCode} (${billingCycle}).` }, { status: 400 });
+      return NextResponse.json({ ok: false, error: 'Configuration de prix manquante.' }, { status: 400 });
     }
 
     const { data: existingSub } = await admin
@@ -131,6 +133,7 @@ export async function POST(request) {
 
     return NextResponse.json({ ok: true, url: session.url });
   } catch (error) {
-    return NextResponse.json({ ok: false, error: error?.message || 'Erreur Stripe.' }, { status: 500 });
+    console.error('[stripe/checkout] Unexpected error:', error?.message);
+    return NextResponse.json({ ok: false, error: 'Erreur serveur.' }, { status: 500 });
   }
 }

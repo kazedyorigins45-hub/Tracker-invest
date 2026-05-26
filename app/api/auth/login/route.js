@@ -50,6 +50,7 @@ export async function POST(request) {
 
     return response;
   } catch (error) {
-    return NextResponse.json({ ok: false, error: error?.message || 'Erreur serveur lors de la connexion.' }, { status: 500 });
+    console.error('[auth/login] Unexpected error:', error?.message);
+    return NextResponse.json({ ok: false, error: 'Erreur serveur.' }, { status: 500 });
   }
 }

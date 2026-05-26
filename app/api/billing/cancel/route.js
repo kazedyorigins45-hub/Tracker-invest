@@ -43,6 +43,7 @@ export async function POST(request) {
 
     return NextResponse.json({ ok: true }, { headers: response.headers });
   } catch (error) {
-    return NextResponse.json({ ok: false, error: error?.message || 'Erreur serveur.' }, { status: 500 });
+    console.error('[billing/cancel] Unexpected error:', error?.message);
+    return NextResponse.json({ ok: false, error: 'Erreur serveur.' }, { status: 500 });
   }
 }

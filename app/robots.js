@@ -3,7 +3,7 @@ export default function robots() {
 
   return {
     rules: [
-      { userAgent: '*', allow: ['/', '/pricing', '/features', '/faq', '/terms', '/privacy'], disallow: ['/dashboard', '/mindset', '/tracker', '/invest', '/portfolio'] },
+      { userAgent: '*', allow: ['/', '/pricing', '/features', '/faq', '/terms', '/privacy'], disallow: ['/dashboard', '/mindset', '/tracker', '/invest', '/portfolio', '/login', '/upgrade', '/billing', '/confirmed'] },
     ],
     sitemap: `${siteUrl}/sitemap.xml`,
   };

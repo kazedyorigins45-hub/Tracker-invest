@@ -11,6 +11,8 @@ function getStripe() {
   return new Stripe(stripeSecret);
 }
 
+const VALID_PLAN_CODES = ['starter', 'trader', 'investor', 'empire'];
+
 export async function POST(request) {
   try {
     const ip = getClientIp(request);
@@ -23,8 +25,8 @@ export async function POST(request) {
     const planCode = String(body.planCode || '').trim();
     const billingCycle = body.billingCycle === 'yearly' ? 'yearly' : 'monthly';
 
-    if (!planCode) {
-      return NextResponse.json({ ok: false, error: 'planCode manquant.' }, { status: 400 });
+    if (!planCode || !VALID_PLAN_CODES.includes(planCode)) {
+      return NextResponse.json({ ok: false, error: 'Plan invalide.' }, { status: 400 });
     }
 
     const stripe = getStripe();
@@ -57,7 +59,7 @@ export async function POST(request) {
 
     if (!priceId) {
       return NextResponse.json(
-        { ok: false, error: `Price Stripe manquant pour ${planCode}.` },
+        { ok: false, error: 'Configuration de prix manquante.' },
         { status: 400 }
       );
     }
@@ -139,6 +141,7 @@ export async function POST(request) {
 
     return NextResponse.json({ ok: true, url: session.url }, { headers: response.headers });
   } catch (error) {
-    return NextResponse.json({ ok: false, error: error?.message || 'Erreur Stripe.' }, { status: 500 });
+    console.error('[billing/change-plan] Unexpected error:', error?.message);
+    return NextResponse.json({ ok: false, error: 'Erreur serveur.' }, { status: 500 });
   }
 }

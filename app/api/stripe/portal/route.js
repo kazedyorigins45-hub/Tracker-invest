@@ -43,6 +43,7 @@ export async function GET(request) {
 
     return NextResponse.redirect(portal.url);
   } catch (error) {
-    return NextResponse.json({ ok: false, error: error?.message || 'Erreur portail.' }, { status: 500 });
+    console.error('[stripe/portal] Unexpected error:', error?.message);
+    return NextResponse.json({ ok: false, error: 'Erreur serveur.' }, { status: 500 });
   }
 }

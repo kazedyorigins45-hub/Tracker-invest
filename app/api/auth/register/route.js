@@ -29,7 +29,7 @@ export async function POST(request) {
     });
 
     if (error) {
-      return NextResponse.json({ ok: false, error: error.message || 'Inscription impossible.' }, { status: 400 });
+      return NextResponse.json({ ok: false, error: 'Inscription impossible. Cet email est peut-être déjà utilisé.' }, { status: 400 });
     }
 
     if (data.user) {
@@ -57,6 +57,7 @@ export async function POST(request) {
 
     return NextResponse.json({ ok: true, redirectTo: '/dashboard' }, { headers: response.headers });
   } catch (error) {
-    return NextResponse.json({ ok: false, error: error?.message || 'Erreur serveur lors de l’inscription.' }, { status: 500 });
+    console.error(‘[auth/register] Unexpected error:’, error?.message);
+    return NextResponse.json({ ok: false, error: ‘Erreur serveur.’ }, { status: 500 });
   }
 }

@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
 import { createServiceClient, createSupabaseRouteClient } from '@/lib/supabase/server';
+import { checkRateLimit, getClientIp } from '@/lib/ratelimit';
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY;
 
@@ -11,6 +12,11 @@ function getStripe() {
 
 export async function GET(request) {
   try {
+    const ip = getClientIp(request);
+    const { allowed } = await checkRateLimit('billing', ip);
+    if (!allowed) {
+      return NextResponse.json({ ok: false, error: 'Trop de tentatives. Réessaie dans 1 minute.' }, { status: 429 });
+    }
     const response = NextResponse.json({ ok: false });
     const supabase = createSupabaseRouteClient(request, response);
     const { data: authData, error: authError } = await supabase.auth.getUser();
@@ -63,7 +69,9 @@ export async function GET(request) {
           await admin.from('user_subscriptions').update(updates).eq('user_id', authData.user.id);
           subscription = { ...subscription, ...updates };
         }
-      } catch {}
+      } catch (syncErr) {
+        console.error('[billing/overview] Auto-sync failed:', syncErr?.message);
+      }
     }
 
     const { data: plan } = subscription?.plan_code
@@ -106,6 +114,7 @@ export async function GET(request) {
       paymentMethods,
     }, { headers: response.headers });
   } catch (error) {
-    return NextResponse.json({ ok: false, error: error?.message || 'Erreur serveur.' }, { status: 500 });
+    console.error('[billing/overview] Unexpected error:', error?.message);
+    return NextResponse.json({ ok: false, error: 'Erreur serveur.' }, { status: 500 });
   }
 }

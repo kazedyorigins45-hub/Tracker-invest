@@ -43,10 +43,16 @@ export default function ConfirmedClient() {
       }
 
       setStatus('success');
-      setTimeout(() => router.push('/dashboard'), 3000);
+      return 'redirect';
     }
 
-    confirm();
+    let timer;
+    confirm().then((result) => {
+      if (result === 'redirect') {
+        timer = setTimeout(() => router.push('/dashboard'), 3000);
+      }
+    });
+    return () => clearTimeout(timer);
   }, [searchParams, router]);
 
   if (status === 'loading') {

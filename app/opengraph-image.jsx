@@ -48,7 +48,7 @@ export default function OGImage() {
             justifyContent: 'center',
           }}
         >
-          Journal de trading & suivi d&apos;investissement
+          Journal de trading & suivi d'investissement
         </div>
         <div style={{ color: '#8a8680', fontSize: '26px', textAlign: 'center', letterSpacing: '1px', display: 'flex' }}>
           Mindset · Trading · Investissement · Portfolio
