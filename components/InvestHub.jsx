@@ -567,6 +567,9 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
     acc[seg] = (acc[seg] || 0) + (row.resolvedValue || 0);
     return acc;
   }, {});
+  const totalPassiveMonthly = openHoldings
+    .filter((r) => (r.hubSegment || 'actif') === 'passif')
+    .reduce((sum, r) => sum + parseAmount(r.monthlyPassiveIncome || 0), 0);
 
   const overviewClasses = ['crypto', 'metaux', 'matieres', 'immo', 'obligations', 'actions', 'autre'];
   const overviewLabels = {
@@ -1001,7 +1004,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
           <div className="stats-row">
             <div className="stat-box"><div className="v">{fmtC(totalOverviewValue)}</div><div className="l">{t('invest.overviewTotal')}</div></div>
             <button type="button" className="stat-box" style={{ cursor: 'pointer', background: 'none', border: 'none', textAlign: 'center' }} onClick={() => update({ page: 'holdings' })}><div className="v">{fmtC(segmentTotals.actif || 0)}</div><div className="l" style={{ color: 'var(--gold, #c9a84c)' }}>{t('invest.holdingsSegmentActif')} →</div></button>
-            <button type="button" className="stat-box" style={{ cursor: 'pointer', background: 'none', border: 'none', textAlign: 'center' }} onClick={() => update({ page: 'holdings' })}><div className="v">{fmtC(segmentTotals.passif || 0)}</div><div className="l" style={{ color: 'var(--gold, #c9a84c)' }}>{t('invest.holdingsSegmentPassif')} →</div></button>
+            <button type="button" className="stat-box" style={{ cursor: 'pointer', background: 'none', border: 'none', textAlign: 'center' }} onClick={() => update({ page: 'holdings' })}><div className="v">{segmentTotals.passif > 0 ? fmtC(segmentTotals.passif) : totalPassiveMonthly > 0 ? <>{fmtC(totalPassiveMonthly)}<span style={{ fontSize: '0.6rem', color: 'var(--muted)', marginLeft: '2px' }}>/mois</span></> : fmtC(0)}</div><div className="l" style={{ color: 'var(--gold, #c9a84c)' }}>{t('invest.holdingsSegmentPassif')} →</div></button>
             <div className="stat-box"><div className="v">{holdings.length}</div><div className="l">{t('invest.overviewPositions')}</div></div>
           </div>
 
@@ -1012,11 +1015,16 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
               { seg: 'passif', label: t('invest.holdingsSegmentPassif'), total: segmentTotals.passif || 0 },
             ].map(({ seg, label, total }) => {
               const rows = openHoldings.filter((h) => (h.hubSegment || 'actif') === seg);
+              const isPassif = seg === 'passif';
+              const segMonthly = isPassif ? rows.reduce((s, r) => s + parseAmount(r.monthlyPassiveIncome || 0), 0) : 0;
+              const headerValue = isPassif && total === 0 && segMonthly > 0
+                ? <>{fmtC(segMonthly)}<span style={{ fontSize: '0.65rem', color: 'var(--muted)', marginLeft: '2px' }}>/mois</span></>
+                : fmtC(total);
               return (
                 <div key={seg} className="card" style={{ padding: '1rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.75rem' }}>
                     <h2 style={{ margin: 0, fontSize: '0.82rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--gold)' }}>{label}</h2>
-                    <span style={{ fontWeight: 700, fontSize: '1.05rem' }}>{fmtC(total)}</span>
+                    <span style={{ fontWeight: 700, fontSize: '1.05rem' }}>{headerValue}</span>
                   </div>
                   {rows.length === 0 ? (
                     <p className="hint" style={{ margin: 0, fontSize: '0.72rem' }}>
@@ -1028,12 +1036,18 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
                     </p>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                      {rows.map((h, i) => (
-                        <div key={`${h.asset}-${i}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', padding: '0.3rem 0', borderBottom: '1px solid var(--border-soft)' }}>
-                          <span style={{ color: 'var(--text)' }}>{h.asset || '—'}</span>
-                          <span style={{ color: 'var(--muted)', fontWeight: 600 }}>{fmtC(h.resolvedValue || 0)}</span>
-                        </div>
-                      ))}
+                      {rows.map((h, i) => {
+                        const rowMonthly = isPassif ? parseAmount(h.monthlyPassiveIncome || 0) : 0;
+                        const rowDisplay = isPassif && h.resolvedValue === 0 && rowMonthly > 0
+                          ? <>{fmtC(rowMonthly)}<span style={{ fontSize: '0.6rem', color: 'var(--muted)', marginLeft: '2px' }}>/mois</span></>
+                          : fmtC(h.resolvedValue || 0);
+                        return (
+                          <div key={`${h.asset}-${i}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', padding: '0.3rem 0', borderBottom: '1px solid var(--border-soft)' }}>
+                            <span style={{ color: 'var(--text)' }}>{h.asset || '—'}</span>
+                            <span style={{ color: 'var(--muted)', fontWeight: 600 }}>{rowDisplay}</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                   <button type="button" className="btn-ghost btn-compact" style={{ marginTop: '0.65rem', fontSize: '0.72rem' }} onClick={() => update({ page: 'holdings' })}>
