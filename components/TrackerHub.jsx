@@ -651,7 +651,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
 
         <nav className="sidebar-apps" aria-label="Navigation site">
           <div className="sidebar-apps-label">{t('mindset.spaces')}</div>
-          <Link href="/" className="app-link">{t('app.dashboardLink')}</Link>
+          <Link href="/dashboard" className="app-link">{t('app.dashboardLink')}</Link>
           <Link href="/tracker" className="app-link is-current">{t('app.trading')}</Link>
           <Link href="/mindset" className="app-link">{t('app.mindset')}</Link>
           {canAccess(planCode, 'invest') ? <Link href="/invest" className="app-link">{t('app.invest')}</Link> : null}
@@ -660,7 +660,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
 
         <div className="sidebar-inner">
           {NAV.map(([key, label]) => (
-            <button key={key} type="button" className={`nav-item ${page === key ? 'active' : ''}`} onClick={() => update({ page: key })}>
+            <button key={key} type="button" className={`nav-item ${page === key ? 'active' : ''}`} onClick={() => { update({ page: key }); closeSidebar(); }}>
               {key === 'analysis' ? (locale === 'en' ? 'Project analysis' : 'Analyse de projet') : t(label)}
             </button>
           ))}

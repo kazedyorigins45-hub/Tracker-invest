@@ -931,7 +931,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
 
         <nav className="sidebar-apps" aria-label="Navigation site">
           <div className="sidebar-apps-label">{t('mindset.spaces')}</div>
-          <Link href="/mindset" className="app-link">{t('app.dashboardLink')}</Link>
+          <Link href="/dashboard" className="app-link">{t('app.dashboardLink')}</Link>
           {canAccess(planCode, 'tracker') ? <Link href="/tracker" className="app-link">{t('app.trading')}</Link> : null}
           <Link href="/mindset" className="app-link">{t('app.mindset')}</Link>
           <Link href="/invest" className="app-link is-current">{t('app.invest')}</Link>
@@ -954,7 +954,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
 
         <div className="sidebar-inner">
           {NAV.map(([key, label]) => (
-            <button key={key} type="button" className={`nav-item ${page === key ? 'active' : ''}`} onClick={() => update({ page: key })}>
+            <button key={key} type="button" className={`nav-item ${page === key ? 'active' : ''}`} onClick={() => { update({ page: key }); closeSidebar(); }}>
               {t(`invest.nav.${label}`)}
             </button>
           ))}

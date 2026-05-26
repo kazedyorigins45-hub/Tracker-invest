@@ -24,8 +24,12 @@ export async function GET(request) {
 
     const stripe = getStripe();
 
-    // Auto-sync from Stripe if subscription data is incomplete (webhook may have been missed)
-    if (stripe && subscription?.stripe_customer_id && !subscription?.stripe_subscription_id) {
+    // Auto-sync from Stripe if subscription data is incomplete or missing period date (webhook may have been missed)
+    const needsSync = stripe && subscription?.stripe_customer_id && (
+      !subscription?.stripe_subscription_id ||
+      (!subscription?.current_period_end && subscription?.plan_code !== 'starter')
+    );
+    if (needsSync) {
       try {
         const list = await stripe.subscriptions.list({
           customer: subscription.stripe_customer_id,

@@ -7,7 +7,8 @@ export async function POST(request) {
     const email = String(body.email || '').trim().toLowerCase();
     const password = String(body.password || '');
 
-    if (!email.includes('@') || password.length < 8) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email) || password.length < 8) {
       return NextResponse.json({ ok: false, error: 'E-mail invalide ou mot de passe trop court.' }, { status: 400 });
     }
 
