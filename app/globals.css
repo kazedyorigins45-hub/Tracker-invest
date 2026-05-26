@@ -629,6 +629,20 @@ a { color: inherit; }
   margin-bottom: 1.5rem;
 }
 
+.formation-cta {
+  display: inline-block;
+  margin-top: 0.85rem;
+  padding: 0.45rem 1rem;
+  border: 1px solid var(--gold);
+  border-radius: 6px;
+  color: var(--gold-bright);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+.formation-cta:hover { background: var(--gold); color: #000; }
+
 .formation-links { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
 .formation-links-label { display: block; font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 0.65rem; }
 .formation-links-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }

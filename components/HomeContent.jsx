@@ -38,6 +38,14 @@ export default function HomeContent() {
           <section className="formation-callout home-formation" aria-labelledby="formation-title">
             <h3 id="formation-title">{t('home.formationTitle')}</h3>
             <p>{t('home.formationText')}</p>
+            <a
+              href="https://sublaunch.com/learnandearn?ref=489517"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="formation-cta"
+            >
+              {t('home.formationCta')}
+            </a>
           </section>
         </div>
 
