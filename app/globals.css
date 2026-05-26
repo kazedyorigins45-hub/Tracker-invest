@@ -2060,7 +2060,7 @@ table.data td.num, table.split td.num, table.immo-compare td.num { text-align: r
   .footer-grid,
   .app-topbar { flex-direction: column; align-items: flex-start; }
   .main { padding: 1.25rem; }
-  .mindset-topbar { justify-content: center; }
+  .mindset-topbar { justify-content: space-between; }
   .mindset-topbar-left { margin-right: 0; }
   .profile-dropdown { right: auto; left: 0; }
   .journal-layout { grid-template-columns: 1fr; }
