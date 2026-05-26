@@ -8,9 +8,25 @@ export const metadata = {
   alternates: { canonical: 'https://tracker-invest.com/pricing' },
 };
 
+const pricingJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'Tracker-invest',
+  applicationCategory: 'FinanceApplication',
+  operatingSystem: 'Web',
+  url: 'https://tracker-invest.com',
+  description: 'Journal de trading et suivi de patrimoine — bourse, crypto, immobilier, mindset.',
+  offers: [
+    { '@type': 'Offer', name: 'Starter', price: '0', priceCurrency: 'EUR', description: 'Accès gratuit aux fonctionnalités de base' },
+    { '@type': 'Offer', name: 'Trader', price: '12.50', priceCurrency: 'EUR', priceSpecification: { '@type': 'UnitPriceSpecification', price: '12.50', priceCurrency: 'EUR', unitText: 'MONTH' } },
+    { '@type': 'Offer', name: 'Investor', price: '20', priceCurrency: 'EUR', priceSpecification: { '@type': 'UnitPriceSpecification', price: '20', priceCurrency: 'EUR', unitText: 'MONTH' } },
+  ],
+};
+
 export default function PricingPage() {
   return (
     <main>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingJsonLd) }} />
       <SiteHeader />
 
       <div className="home-wrap pricing-wrap">

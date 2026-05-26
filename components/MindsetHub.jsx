@@ -42,6 +42,8 @@ export default function MindsetHub({ userEmail = '', planCode = 'starter', subsc
   const [mounted, setMounted] = useState(false);
   const [editingJournalId, setEditingJournalId] = useState(null);
   const [journalDraft, setJournalDraft] = useState({ title: '', body: '' });
+  const [journalTitle, setJournalTitle] = useState('');
+  const [journalBody, setJournalBody] = useState('');
   useEffect(() => { setMounted(true); }, []);
   const closeSidebar = () => setSidebarOpen(false);
 
@@ -95,8 +97,8 @@ export default function MindsetHub({ userEmail = '', planCode = 'starter', subsc
   }
 
   function addJournal() {
-    const title = String(document.getElementById('mi-je-title')?.value || '').trim();
-    const body = String(document.getElementById('mi-je-body')?.value || '').trim();
+    const title = journalTitle.trim();
+    const body = journalBody.trim();
     if (!body && !title) return;
 
     setState((prev) => ({
@@ -107,8 +109,8 @@ export default function MindsetHub({ userEmail = '', planCode = 'starter', subsc
       ],
     }));
 
-    if (document.getElementById('mi-je-title')) document.getElementById('mi-je-title').value = '';
-    if (document.getElementById('mi-je-body')) document.getElementById('mi-je-body').value = '';
+    setJournalTitle('');
+    setJournalBody('');
   }
 
   function startEditJournal(entry) {
@@ -278,10 +280,10 @@ export default function MindsetHub({ userEmail = '', planCode = 'starter', subsc
             <div className="card journal-editor">
               <h2>{t('mindset.journalNew')}</h2>
               <label htmlFor="mi-je-title">{t('mindset.journalTitleLabel')}</label>
-              <input type="text" id="mi-je-title" className="input-dark" placeholder={t('mindset.journalPlaceholder')} />
+              <input type="text" id="mi-je-title" className="input-dark" placeholder={t('mindset.journalPlaceholder')} value={journalTitle} onChange={(e) => setJournalTitle(e.target.value)} />
               <label htmlFor="mi-je-body">{t('mindset.journalTextLabel')}</label>
-              <textarea id="mi-je-body" className="input-dark" rows="7" placeholder={t('mindset.journalBodyPlaceholder')} />
-              <button type="button" className="btn" id="mi-je-add" onClick={addJournal}>{t('app.save')}</button>
+              <textarea id="mi-je-body" className="input-dark" rows="7" placeholder={t('mindset.journalBodyPlaceholder')} value={journalBody} onChange={(e) => setJournalBody(e.target.value)} />
+              <button type="button" className="btn" onClick={addJournal}>{t('app.save')}</button>
             </div>
 
             <div className="journal-list-wrap">
