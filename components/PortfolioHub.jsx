@@ -47,6 +47,7 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
   const [trackerData] = useAccountPayload(`trackerHub_v2_${trackerProfile}`, { weeklyTrades: [] }, { readonly: true });
 
   const [saveStatus, setSaveStatus] = useState('');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const update = (patch) => setData((prev) => ({ ...prev, ...patch }));
   const subscriptionLabel = getSubscriptionLabel(subscription, planCode);
@@ -112,7 +113,8 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
 
   return (
     <div className="mindset-shell">
-      <aside className="sidebar">
+      <aside className={`sidebar${sidebarOpen ? ' sidebar--open' : ''}`}>
+        <div className="sidebar-close" onClick={() => setSidebarOpen(false)} aria-label="Fermer le menu">✕</div>
         <div className="brand-block">
           <div className="brand-top">
             <div className="tag">{t('portfolio.sidebarTag')}</div>
@@ -141,7 +143,12 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
 
       <main className="main">
         <div className="mindset-topbar">
-          <LogoMark />
+          <div className="mindset-topbar-left">
+            <button type="button" className="hamburger-btn" onClick={() => setSidebarOpen((v) => !v)} aria-label="Menu">
+              <span /><span /><span />
+            </button>
+            <LogoMark />
+          </div>
           <ThemeToggle className="theme-toggle--app" />
           <LanguageToggle className="theme-toggle--app" />
           <CurrencyToggle className="theme-toggle--app" />
