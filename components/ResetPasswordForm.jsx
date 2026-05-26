@@ -50,7 +50,7 @@ export default function ResetPasswordForm() {
 
     const timer = setTimeout(() => {
       if (!recovered) setError('Lien invalide ou expiré.');
-    }, 3000);
+    }, 5000);
 
     return () => {
       subscription.unsubscribe();

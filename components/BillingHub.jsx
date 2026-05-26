@@ -55,6 +55,8 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
           setSelectedPlan(data.subscription?.plan_code || planCode);
           setSelectedCycle(data.subscription?.billing_cycle || 'monthly');
         }
+      } catch (err) {
+        console.error('[BillingHub] Failed to load overview:', err?.message);
       } finally {
         if (!cancelled) setLoading(false);
       }

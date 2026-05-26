@@ -33,7 +33,6 @@ export default function PricingPage() {
         <h1 className="home-title">ABONNEMENTS</h1>
         <p className="tagline">Mensuel ou annuel, avec renouvellement automatique sur le cycle choisi et possibilité d’annuler à tout moment.</p>
         <PricingGrid />
-        <footer className="note">Le choix mensuel/annuel est déjà prêt. Le bouton d’abonnement ouvre maintenant Stripe Checkout.</footer>
       </div>
       <SiteFooter />
     </main>
