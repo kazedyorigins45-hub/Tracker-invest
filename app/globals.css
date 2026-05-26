@@ -2656,3 +2656,87 @@ table.data td.num, table.split td.num, table.immo-compare td.num { text-align: r
   .feat-title { font-size: 1.55rem; }
   .feat-card { padding: 1.25rem; }
 }
+
+/* ── Terms acceptance modal ─────────────────────────────── */
+.terms-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.terms-dialog {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 2rem 2rem 1.75rem;
+  max-width: 460px;
+  width: 100%;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+}
+
+.terms-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--gold-bright);
+  margin: 0 0 0.35rem;
+}
+
+.terms-subtitle {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0 0 1.4rem;
+}
+
+.terms-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-bottom: 1.75rem;
+}
+
+.terms-check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.terms-check-row input[type="checkbox"] {
+  flex-shrink: 0;
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-top: 0.1rem;
+  accent-color: var(--gold);
+  cursor: pointer;
+}
+
+.terms-link {
+  color: var(--gold);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.terms-link:hover {
+  color: var(--gold-bright);
+}
+
+.terms-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+@media (max-width: 480px) {
+  .terms-dialog { padding: 1.5rem 1.25rem 1.25rem; }
+  .terms-actions { flex-direction: column-reverse; }
+  .terms-actions .btn { width: 100%; text-align: center; }
+}
