@@ -1,8 +1,15 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseRouteClient, createServiceClient } from '@/lib/supabase/server';
+import { checkRateLimit, getClientIp } from '@/lib/ratelimit';
 
 export async function POST(request) {
   try {
+    const ip = getClientIp(request);
+    const { allowed } = await checkRateLimit('login', ip);
+    if (!allowed) {
+      return NextResponse.json({ ok: false, error: 'Trop de tentatives. Réessaie dans 1 minute.' }, { status: 429 });
+    }
+
     const body = await request.json().catch(() => ({}));
     const email = String(body.email || '').trim().toLowerCase();
     const password = String(body.password || '');
