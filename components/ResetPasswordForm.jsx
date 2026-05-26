@@ -25,9 +25,11 @@ export default function ResetPasswordForm() {
 
   useEffect(() => {
     const supabase = getSupabase();
+    let recovered = false;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
+        recovered = true;
         setError('');
         setReady(true);
       }
@@ -35,20 +37,17 @@ export default function ResetPasswordForm() {
 
     const code = searchParams.get('code');
     if (code) {
-      supabase.auth.exchangeCodeForSession(code).then(({ error: err }) => {
-        if (err) setError('Lien invalide ou expiré.');
-      });
-    } else {
-      const timer = setTimeout(() => {
-        setError('Lien invalide ou expiré.');
-      }, 2000);
-      return () => {
-        subscription.unsubscribe();
-        clearTimeout(timer);
-      };
+      supabase.auth.exchangeCodeForSession(code).catch(() => {});
     }
 
-    return () => subscription.unsubscribe();
+    const timer = setTimeout(() => {
+      if (!recovered) setError('Lien invalide ou expiré.');
+    }, 3000);
+
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timer);
+    };
   }, [searchParams]);
 
   async function submit(e) {
