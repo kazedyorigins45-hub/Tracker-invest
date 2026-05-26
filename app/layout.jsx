@@ -23,14 +23,23 @@ const playfair = Playfair_Display({
 export const metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://tracker-invest.com'),
   title: {
-    default: 'Tracker-invest',
+    default: 'Tracker-invest — Journal de trading & suivi d\'investissement',
     template: '%s | Tracker-invest',
   },
-  description: "Tracker-invest : abonnements premium pour le mindset, le trading et l'investissement.",
+  description: "Centralisez vos trades, actions, ETF et immobilier dans un seul tableau de bord. Suivi de patrimoine en temps réel. Gratuit pour démarrer.",
   openGraph: {
-    title: 'Tracker-invest',
-    description: "Abonnements premium pour le mindset, le trading et l'investissement.",
+    title: 'Tracker-invest — Journal de trading & suivi d\'investissement',
+    description: "Centralisez vos trades, actions, ETF et immobilier dans un seul tableau de bord. Suivi de patrimoine en temps réel.",
     type: 'website',
+    siteName: 'Tracker-invest',
+    locale: 'fr_FR',
+    images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'Tracker-invest' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Tracker-invest — Journal de trading & suivi d\'investissement',
+    description: "Centralisez vos trades, actions, ETF et immobilier dans un seul tableau de bord.",
+    images: ['/og-image.png'],
   },
 };
 

@@ -4,7 +4,8 @@ import SiteFooter from '@/components/SiteFooter';
 
 export const metadata = {
   title: 'Abonnements',
-  description: 'Compare les abonnements Tracker-invest et choisis le niveau adapté à ton usage.',
+  description: 'Starter gratuit, Trading à partir de 12,50 €/mois, accès complet à 20 €/mois. Résiliable à tout moment. Comparez les formules Tracker-invest pour le journal de trading et le suivi de patrimoine.',
+  alternates: { canonical: 'https://tracker-invest.com/pricing' },
 };
 
 export default function PricingPage() {
