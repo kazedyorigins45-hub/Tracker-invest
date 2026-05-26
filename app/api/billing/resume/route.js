@@ -1,6 +1,7 @@
 import Stripe from 'stripe';
 import { NextResponse } from 'next/server';
 import { createServiceClient, createSupabaseRouteClient } from '@/lib/supabase/server';
+import { checkRateLimit, getClientIp } from '@/lib/ratelimit';
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY;
 
@@ -11,6 +12,12 @@ function getStripe() {
 
 export async function POST(request) {
   try {
+    const ip = getClientIp(request);
+    const { allowed } = await checkRateLimit('billing', ip);
+    if (!allowed) {
+      return NextResponse.json({ ok: false, error: 'Trop de tentatives. Réessaie dans 1 minute.' }, { status: 429 });
+    }
+
     const response = NextResponse.json({ ok: false });
     const supabase = createSupabaseRouteClient(request, response);
     const { data: authData, error: authError } = await supabase.auth.getUser();

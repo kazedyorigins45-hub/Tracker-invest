@@ -40,6 +40,8 @@ export default function MindsetHub({ userEmail = '', planCode = 'starter', subsc
   const [activePage, setActivePage] = useState('home');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [editingJournalId, setEditingJournalId] = useState(null);
+  const [journalDraft, setJournalDraft] = useState({ title: '', body: '' });
   useEffect(() => { setMounted(true); }, []);
   const closeSidebar = () => setSidebarOpen(false);
 

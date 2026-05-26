@@ -97,15 +97,15 @@ export async function POST(request) {
       customerId = customer.id;
     }
 
-    // Always record the intended plan before checkout so user gets access on return
+    // Save customer_id and preserve existing plan — webhook will upgrade plan_code after payment
     await admin.from('user_subscriptions').upsert({
       user_id: authData.user.id,
       stripe_customer_id: customerId,
-      plan_code: planCode,
-      billing_cycle: billingCycle,
+      plan_code: existingSub?.plan_code || 'starter',
+      billing_cycle: existingSub?.billing_cycle || 'monthly',
       status: existingSub?.status || 'incomplete',
       updated_at: new Date().toISOString(),
-    });
+    }, { onConflict: 'user_id' });
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',

@@ -13,7 +13,8 @@ export async function POST(request) {
     const body = await request.json().catch(() => ({}));
     const email = String(body.email || '').trim().toLowerCase();
 
-    if (!email.includes('@')) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
       return NextResponse.json({ ok: false, error: 'E-mail invalide.' }, { status: 400 });
     }
 

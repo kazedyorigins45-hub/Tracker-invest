@@ -23,7 +23,10 @@ function EyeIcon({ open }) {
 export default function AuthForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = useMemo(() => searchParams.get('redirect') || '/dashboard', [searchParams]);
+  const redirectTo = useMemo(() => {
+    const raw = searchParams.get('redirect') || '/dashboard';
+    return typeof raw === 'string' && raw.startsWith('/') && !raw.startsWith('//') ? raw : '/dashboard';
+  }, [searchParams]);
   const selectedPlanCode = searchParams.get('plan');
   const selectedBilling = searchParams.get('billing') || 'monthly';
   const selectedPlan = selectedPlanCode ? getPlan(selectedPlanCode) : null;
@@ -104,7 +107,9 @@ export default function AuthForm() {
       return;
     }
 
-    router.push(data.redirectTo || redirectTo);
+    const dest = data.redirectTo;
+    const safeDest = typeof dest === 'string' && dest.startsWith('/') && !dest.startsWith('//') ? dest : redirectTo;
+    router.push(safeDest);
     router.refresh();
   }
 
