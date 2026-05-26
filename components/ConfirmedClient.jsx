@@ -18,10 +18,25 @@ export default function ConfirmedClient() {
 
   useEffect(() => {
     const code = searchParams.get('code');
+    const tokenHash = searchParams.get('token_hash');
+    const type = searchParams.get('type') || 'email';
+    const errorParam = searchParams.get('error');
 
     async function confirm() {
+      if (errorParam) {
+        setStatus('error');
+        return;
+      }
+
       const supabase = getSupabase();
-      if (code) {
+
+      if (tokenHash) {
+        const { error } = await supabase.auth.verifyOtp({ token_hash: tokenHash, type });
+        if (error) {
+          setStatus('error');
+          return;
+        }
+      } else if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (error) {
           const { data: { session } } = await supabase.auth.getSession();
@@ -31,6 +46,7 @@ export default function ConfirmedClient() {
           }
         }
       }
+
       setStatus('success');
       setTimeout(() => router.push('/dashboard'), 3000);
     }
