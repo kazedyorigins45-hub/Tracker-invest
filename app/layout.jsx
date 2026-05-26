@@ -68,6 +68,7 @@ export default function RootLayout({ children }) {
             `,
           }}
         />
+        <a href="#main-content" className="skip-nav">Aller au contenu principal</a>
         {children}
       </body>
     </html>

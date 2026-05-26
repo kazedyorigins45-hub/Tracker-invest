@@ -10,7 +10,7 @@ import { useCurrency } from '@/lib/currency';
 import LogoMark from '@/components/LogoMark';
 import ThemeToggle from '@/components/ThemeToggle';
 import CurrencyToggle from '@/components/CurrencyToggle';
-import LanguageToggle from '@/components/LanguageToggle';
+import LocaleToggle from '@/components/LocaleToggle';
 
 function parseAmt(raw) {
   return Number(String(raw ?? '').replace(/\s+/g, '').replace(/[^\d.,-]/g, '').replace(',', '.')) || 0;
@@ -150,7 +150,7 @@ export default function PortfolioHub({ userEmail = '', planCode = 'starter', sub
             <LogoMark />
           </div>
           <ThemeToggle className="theme-toggle--app" />
-          <LanguageToggle className="theme-toggle--app" />
+          <LocaleToggle className="theme-toggle--app" />
           <CurrencyToggle className="theme-toggle--app" />
         </div>
         <h1 className="page-title">{t('portfolio.mainTitle')}</h1>

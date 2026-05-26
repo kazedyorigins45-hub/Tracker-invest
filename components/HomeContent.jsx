@@ -85,12 +85,11 @@ export default function HomeContent() {
         <Link href="/pricing"><strong>Pricing</strong> — {t('home.pricingDesc')}</Link>
       </div>
 
-      <footer className="site-footer" style={{ background: 'transparent', border: '0', marginTop: '2rem' }}>
+      <div style={{ background: 'transparent', border: '0', marginTop: '2rem' }}>
         <div style={{ textAlign: 'center', fontSize: '0.8rem', fontWeight: 500, color: 'var(--muted)', lineHeight: 1.6, marginBottom: '0.5rem', padding: '0.5rem 1rem', border: '1px solid var(--border)', borderRadius: '6px', maxWidth: '600px', margin: '0 auto 0.75rem' }}>
           {t('home.disclaimer')}
         </div>
-
-      </footer>
+      </div>
     </div>
   );
 }

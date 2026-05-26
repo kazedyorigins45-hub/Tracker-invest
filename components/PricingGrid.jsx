@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FEATURE_LABELS, PLANS } from '@/lib/plans';
 import { useLocale } from '@/lib/locale';
@@ -42,6 +42,15 @@ export default function PricingGrid() {
     setTermsModal(null);
     setAccepted(INITIAL_TERMS);
   }
+
+  useEffect(() => {
+    if (!termsModal) return;
+    function onKeyDown(e) {
+      if (e.key === 'Escape') closeTermsModal();
+    }
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [termsModal]);
 
   async function startCheckout(planCode) {
     closeTermsModal();

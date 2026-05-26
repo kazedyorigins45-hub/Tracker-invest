@@ -10,7 +10,7 @@ import { useCurrency } from '@/lib/currency';
 import LogoMark from '@/components/LogoMark';
 import ThemeToggle from '@/components/ThemeToggle';
 import CurrencyToggle from '@/components/CurrencyToggle';
-import LanguageToggle from '@/components/LanguageToggle';
+import LocaleToggle from '@/components/LocaleToggle';
 
 const NAV = [
   ['cover', 'tracker.coverTitle'],
@@ -692,7 +692,7 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
             <LogoMark />
           </div>
           <ThemeToggle className="theme-toggle--app" />
-          <LanguageToggle className="theme-toggle--app" />
+          <LocaleToggle className="theme-toggle--app" />
           <CurrencyToggle className="theme-toggle--app" />
         </div>
         {feedback ? <div className="ui-feedback" role="status" aria-live="polite">{feedback}</div> : null}
