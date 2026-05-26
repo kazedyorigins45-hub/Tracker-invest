@@ -9,10 +9,6 @@ function getStripe() {
   return new Stripe(stripeSecret);
 }
 
-export async function GET(request) {
-  return runSync(request);
-}
-
 export async function POST(request) {
   return runSync(request);
 }
@@ -57,7 +53,7 @@ async function runSync(request) {
 
     const activeSub = subscriptions.data.find((s) =>
       ['active', 'trialing', 'past_due'].includes(s.status)
-    ) || subscriptions.data[0];
+    );
 
     if (!activeSub) {
       return NextResponse.json({ ok: true, synced: false }, { headers: response.headers });
@@ -86,7 +82,7 @@ async function syncFromStripe(admin, userId, customerId, subscription) {
 
   const billingCycle = subscription?.metadata?.billing_cycle || 'monthly';
 
-  await admin.from('user_subscriptions').upsert({
+  const { error: upsertError } = await admin.from('user_subscriptions').upsert({
     user_id: userId,
     stripe_customer_id: String(customerId),
     stripe_subscription_id: String(subscription.id),
@@ -99,4 +95,5 @@ async function syncFromStripe(admin, userId, customerId, subscription) {
     cancel_at_period_end: !!subscription.cancel_at_period_end,
     updated_at: new Date().toISOString(),
   }, { onConflict: 'user_id' });
+  if (upsertError) throw new Error(`DB sync failed: ${upsertError.message}`);
 }

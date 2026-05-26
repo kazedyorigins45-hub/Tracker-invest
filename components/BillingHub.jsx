@@ -199,9 +199,14 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
               {sub.stripe_customer_id ? (
                 <a href="/api/stripe/portal" className="btn btn-ghost">{t('billing.portal') || 'Portail Stripe'}</a>
               ) : null}
-              <button className="btn btn-ghost" type="button" disabled={busy} onClick={() => runAction('/api/billing/sync')}>
-                {t('billing.sync') || 'Synchroniser'}
-              </button>
+              {sub.stripe_customer_id ? (
+                <button className="btn btn-ghost" type="button" disabled={busy} onClick={async () => {
+                  const data = await runAction('/api/billing/sync');
+                  if (data && !data.synced) setMessage(t('billing.syncNotNeeded') || 'Abonnement déjà à jour.');
+                }}>
+                  {t('billing.sync') || 'Synchroniser'}
+                </button>
+              ) : null}
             </div>
             {message ? <p className="form-message">{message}</p> : null}
           </div>
