@@ -57,7 +57,7 @@ export async function POST(request) {
 
     return NextResponse.json({ ok: true, redirectTo: '/dashboard' }, { headers: response.headers });
   } catch (error) {
-    console.error(‘[auth/register] Unexpected error:’, error?.message);
-    return NextResponse.json({ ok: false, error: ‘Erreur serveur.’ }, { status: 500 });
+    console.error('[auth/register] Unexpected error:', error?.message);
+    return NextResponse.json({ ok: false, error: 'Erreur serveur.' }, { status: 500 });
   }
 }
