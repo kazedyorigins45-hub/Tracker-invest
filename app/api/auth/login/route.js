@@ -24,7 +24,7 @@ export async function POST(request) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error || !data.user) {
-      return NextResponse.json({ ok: false, error: error?.message || 'Connexion impossible.' }, { status: 400 });
+      return NextResponse.json({ ok: false, error: 'Email ou mot de passe incorrect.' }, { status: 400 });
     }
 
     try {
@@ -45,7 +45,7 @@ export async function POST(request) {
         });
       }
     } catch (subscriptionError) {
-      console.error('Subscription bootstrap failed:', subscriptionError);
+      console.error('Subscription bootstrap failed:', subscriptionError?.message);
     }
 
     return response;

@@ -43,7 +43,7 @@ export async function POST(request) {
           updated_at: new Date().toISOString(),
         });
       } catch (subscriptionError) {
-        console.error('Subscription bootstrap failed:', subscriptionError);
+        console.error('Subscription bootstrap failed:', subscriptionError?.message);
       }
     }
 

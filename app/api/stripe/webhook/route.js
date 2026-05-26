@@ -75,7 +75,9 @@ async function syncSubscription(admin, subscription, extra = {}) {
         payload: { subscription_id: subscription.id, price_id: priceId },
         processed_at: new Date().toISOString(),
       });
-    } catch {}
+    } catch (err) {
+      console.error('[webhook] Failed to record subscription event:', err?.message);
+    }
   }
 }
 
@@ -87,7 +89,9 @@ async function markEventProcessed(admin, eventId, eventType) {
       payload: {},
       processed_at: new Date().toISOString(),
     });
-  } catch {}
+  } catch (err) {
+    console.error('[webhook] Failed to mark event processed:', err?.message);
+  }
 }
 
 async function isEventAlreadyProcessed(admin, eventId) {
