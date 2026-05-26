@@ -127,7 +127,7 @@ export default function TermsPage() {
 
           <section>
             <h3>4 – Durée</h3>
-            <p>Le contrat conclu concerne des prestations récurrentes (durée indéterminée). Chaque partie peut y mettre fin en respectant un préavis d'un mois notifié par lettre recommandée. À défaut de respecter le préavis, une indemnité correspondant à la rémunération du préavis sera due.</p>
+            <p>L'abonnement est conclu pour une durée indéterminée avec une période de facturation mensuelle ou annuelle selon l'offre choisie. L'Utilisateur peut mettre fin à son abonnement à tout moment, sans frais, directement via son espace personnel sur le Site. Pour être effective avant le prochain prélèvement, la résiliation doit intervenir au plus tard 24 heures avant la date de renouvellement. L'accès aux services reste actif jusqu'à l'expiration de la période déjà réglée.</p>
           </section>
 
           <section>
