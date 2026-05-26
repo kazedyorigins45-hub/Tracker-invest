@@ -670,7 +670,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   const addImmoProperty = () => updateImmoCalc((prev) => {
     const order = prev.propertyOrder || ['p0'];
     if (order.length >= MAX_IMMO_FICHES) {
-      if (typeof window !== 'undefined') window.alert(`Maximum ${MAX_IMMO_FICHES} fiches.`);
+      notify(`Maximum ${MAX_IMMO_FICHES} fiches.`);
       return prev;
     }
     const id = `p${Date.now()}`;
@@ -681,7 +681,7 @@ export default function InvestHub({ userEmail = '', planCode = 'starter', subscr
   const duplicateImmoProperty = () => updateImmoCalc((prev) => {
     const order = prev.propertyOrder || ['p0'];
     if (order.length >= MAX_IMMO_FICHES) {
-      if (typeof window !== 'undefined') window.alert(`Maximum ${MAX_IMMO_FICHES} fiches.`);
+      notify(`Maximum ${MAX_IMMO_FICHES} fiches.`);
       return prev;
     }
     const pid = prev.activePropertyId || order[0];

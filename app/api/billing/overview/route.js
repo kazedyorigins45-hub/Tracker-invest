@@ -106,9 +106,11 @@ export async function GET(request) {
       }));
     }
 
+    const { stripe_customer_id: _cid, stripe_subscription_id: _sid, ...safeSub } = subscription || {};
     return NextResponse.json({
       ok: true,
-      subscription: subscription || null,
+      subscription: subscription ? safeSub : null,
+      hasStripeCustomer: !!subscription?.stripe_customer_id,
       plan: plan || null,
       invoices,
       paymentMethods,

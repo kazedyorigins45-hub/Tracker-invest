@@ -525,7 +525,15 @@ export default function TrackerHub({ userEmail = '', planCode = 'starter', subsc
 
     const copyright = document.createElement('div');
     copyright.className = 'tradingview-widget-copyright';
-    copyright.innerHTML = '<a href="https://fr.tradingview.com/symbols/BTCUSD/?exchange=BINANCE" rel="noopener nofollow" target="_blank"><span class="blue-text">Track all markets on TradingView</span></a>';
+    const copyrightLink = document.createElement('a');
+    copyrightLink.href = 'https://fr.tradingview.com/symbols/BTCUSD/?exchange=BINANCE';
+    copyrightLink.rel = 'noopener nofollow';
+    copyrightLink.target = '_blank';
+    const copyrightSpan = document.createElement('span');
+    copyrightSpan.className = 'blue-text';
+    copyrightSpan.textContent = 'Track all markets on TradingView';
+    copyrightLink.appendChild(copyrightSpan);
+    copyright.appendChild(copyrightLink);
     el.appendChild(copyright);
 
     const config = JSON.stringify({

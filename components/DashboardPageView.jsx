@@ -45,7 +45,9 @@ export default function DashboardPageView({ planCode = 'starter', subscription =
           <p className="app-plan">{t('app.subscription')} : {subscriptionLabel}</p>
           <span id="auth-user-email" style={{ wordBreak: 'break-all' }}>{userEmail}</span>
           {planCode !== 'starter' && !portalMissing ? (
-            <a href="/api/stripe/portal" className="sidebar-portal">{t('dashboard.manage')}</a>
+            <form method="post" action="/api/stripe/portal" style={{ display: 'inline' }}>
+              <button type="submit" className="sidebar-portal">{t('dashboard.manage')}</button>
+            </form>
           ) : null}
           {portalMissing ? (
             <p style={{ fontSize: '0.75rem', color: 'var(--muted)', margin: '0' }}>Abonnement géré manuellement.</p>

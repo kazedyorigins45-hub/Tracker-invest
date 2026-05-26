@@ -39,7 +39,7 @@ export async function POST(request) {
           user_id: data.user.id,
           plan_code: 'starter',
           billing_cycle: 'monthly',
-          status: 'active',
+          status: 'inactive',
           updated_at: new Date().toISOString(),
         });
       } catch (subscriptionError) {

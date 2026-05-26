@@ -79,7 +79,8 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
       const refreshed = await fetch('/api/billing/overview', { credentials: 'same-origin' }).then((r) => r.json());
       if (refreshed.ok) setOverview(refreshed);
       return data;
-    } catch {
+    } catch (err) {
+      console.error('[BillingHub] runAction failed:', err?.message);
       setMessage(t('billing.error'));
       return null;
     } finally {
@@ -151,9 +152,11 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
         {isPaymentFailed && (
           <div className="billing-alert" role="alert">
             <strong>Paiement échoué.</strong> Ton abonnement est suspendu.{' '}
-            <a href="/api/stripe/portal" className="billing-alert-link">
-              Mettre à jour ma carte →
-            </a>
+            <form method="post" action="/api/stripe/portal" style={{ display: 'inline' }}>
+              <button type="submit" className="billing-alert-link" style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit' }}>
+                Mettre à jour ma carte →
+              </button>
+            </form>
           </div>
         )}
 
@@ -196,12 +199,12 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
               <button className="btn btn-ghost" type="button" disabled={busy || !sub.cancel_at_period_end} onClick={() => runAction('/api/billing/resume')}>
                 {t('billing.resume')}
               </button>
-              {sub.stripe_customer_id ? (
+              {overview?.hasStripeCustomer ? (
                 <form method="post" action="/api/stripe/portal" style={{ display: 'inline' }}>
                   <button type="submit" className="btn btn-ghost">{t('billing.portal') || 'Portail Stripe'}</button>
                 </form>
               ) : null}
-              {sub.stripe_customer_id ? (
+              {overview?.hasStripeCustomer ? (
                 <button className="btn btn-ghost" type="button" disabled={busy} onClick={async () => {
                   const data = await runAction('/api/billing/sync');
                   if (data && !data.synced) setMessage(t('billing.syncNotNeeded') || 'Abonnement déjà à jour.');

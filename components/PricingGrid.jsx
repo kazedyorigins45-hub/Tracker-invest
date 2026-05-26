@@ -17,6 +17,7 @@ export default function PricingGrid() {
   const [selectedPlan, setSelectedPlan] = useState('');
   const [termsModal, setTermsModal] = useState(null);
   const [accepted, setAccepted] = useState(INITIAL_TERMS);
+  const [checkoutError, setCheckoutError] = useState('');
   const { locale, t } = useLocale();
   const { currency } = useCurrency();
   const fxRate = useFxRate();
@@ -44,6 +45,7 @@ export default function PricingGrid() {
 
   async function startCheckout(planCode) {
     closeTermsModal();
+    setCheckoutError('');
     setLoadingPlan(planCode);
     try {
       const res = await fetch('/api/stripe/checkout', {
@@ -60,7 +62,7 @@ export default function PricingGrid() {
       }
 
       if (!res.ok || !data.ok) {
-        alert(data.error || 'Impossible de lancer le paiement.');
+        setCheckoutError(data.error || (locale === 'en' ? 'Unable to start payment.' : 'Impossible de lancer le paiement.'));
         return;
       }
 
@@ -69,7 +71,7 @@ export default function PricingGrid() {
         window.location.href = data.url;
       }
     } catch {
-      alert('Erreur réseau lors du lancement du paiement.');
+      setCheckoutError(locale === 'en' ? 'Network error. Please try again.' : 'Erreur réseau. Veuillez réessayer.');
     } finally {
       setLoadingPlan('');
     }
@@ -89,6 +91,12 @@ export default function PricingGrid() {
       <p style={{ textAlign: 'center', fontSize: '0.78rem', color: 'var(--muted)', margin: '0.5rem 0 1rem' }}>
         {t('pricing.vatNotice')}
       </p>
+
+      {checkoutError && (
+        <p role="alert" style={{ textAlign: 'center', color: 'var(--error, #e53e3e)', margin: '0.5rem 0', fontSize: '0.9rem' }}>
+          {checkoutError}
+        </p>
+      )}
 
       <div className="subs">
         {PLANS.map((plan) => (
