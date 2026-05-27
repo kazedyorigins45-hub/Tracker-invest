@@ -51,7 +51,7 @@ export async function POST(request) {
       return NextResponse.json({
         ok: false,
         loginUrl: `/login?plan=${encodeURIComponent(planCode)}&billing=${encodeURIComponent(billingCycle)}&redirect=${encodeURIComponent(`/pricing?plan=${planCode}&billing=${billingCycle}`)}`,
-      }, { status: 401 });
+      }, { status: 401, headers: response.headers });
     }
 
     const admin = createServiceClient();
@@ -62,12 +62,12 @@ export async function POST(request) {
       .maybeSingle();
 
     if (planError || !planRow) {
-      return NextResponse.json({ ok: false, error: 'Plan introuvable.' }, { status: 400 });
+      return NextResponse.json({ ok: false, error: 'Plan introuvable.' }, { status: 400, headers: response.headers });
     }
 
     const priceId = billingCycle === 'yearly' ? planRow.stripe_price_yearly_id : planRow.stripe_price_monthly_id;
     if (!priceId) {
-      return NextResponse.json({ ok: false, error: 'Configuration de prix manquante.' }, { status: 400 });
+      return NextResponse.json({ ok: false, error: 'Configuration de prix manquante.' }, { status: 400, headers: response.headers });
     }
 
     const { data: existingSub } = await admin
@@ -99,7 +99,7 @@ export async function POST(request) {
       }, { idempotencyKey });
 
       // DB is updated exclusively by the webhook (customer.subscription.updated)
-      return NextResponse.json({ ok: true, updated: true });
+      return NextResponse.json({ ok: true, updated: true }, { headers: response.headers });
     }
 
     // No active subscription — create Stripe Customer if needed, then a Checkout Session
@@ -143,7 +143,7 @@ export async function POST(request) {
       },
     });
 
-    return NextResponse.json({ ok: true, url: session.url });
+    return NextResponse.json({ ok: true, url: session.url }, { headers: response.headers });
   } catch (error) {
     console.error('[stripe/checkout] Unexpected error:', error);
     return NextResponse.json({ ok: false, error: 'Erreur serveur.' }, { status: 500 });

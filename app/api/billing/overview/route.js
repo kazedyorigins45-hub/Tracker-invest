@@ -22,7 +22,7 @@ export async function GET(request) {
     const { data: authData, error: authError } = await supabase.auth.getUser();
 
     if (authError || !authData?.user) {
-      return NextResponse.json({ ok: false, error: 'Non authentifié.' }, { status: 401 });
+      return NextResponse.json({ ok: false, error: 'Non authentifié.' }, { status: 401, headers: response.headers });
     }
 
     const admin = createServiceClient();

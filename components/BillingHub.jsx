@@ -10,7 +10,9 @@ import { PLANS, getPlan } from '@/lib/plans';
 import { useLocale } from '@/lib/locale';
 
 function formatMoney(value, locale = 'fr-FR') {
-  return new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(value || 0);
+  const num = value || 0;
+  const digits = Number.isInteger(num) ? 0 : 2;
+  return new Intl.NumberFormat(locale, { style: 'currency', currency: 'EUR', minimumFractionDigits: digits, maximumFractionDigits: 2 }).format(num);
 }
 
 function formatDate(value, locale = 'fr-FR') {
@@ -32,9 +34,12 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
   const [selectedPlan, setSelectedPlan] = useState(planCode);
   const [selectedCycle, setSelectedCycle] = useState(subscription?.billing_cycle || 'monthly');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [termsModal, setTermsModal] = useState(false);
+  const [accepted, setAccepted] = useState({ cgv: false, cgs: false, cgu: false });
 
   useEffect(() => {
     if (!checkoutSuccess) return;
+    router.refresh();
     const timer = setTimeout(() => {
       router.replace('/billing');
     }, 6000);
@@ -194,7 +199,7 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
               </div>
             </div>
             <div className="toolbar">
-              <button className="btn" type="button" disabled={busy} onClick={handleChangePlan}>{t('billing.openCheckout')}</button>
+              <button className="btn" type="button" disabled={busy} onClick={() => { setAccepted({ cgv: false, cgs: false, cgu: false }); setTermsModal(true); }}>{t('billing.openCheckout')}</button>
               <button className="btn btn-ghost" type="button" disabled={busy || sub.cancel_at_period_end} onClick={() => runAction('/api/billing/cancel')}>
                 {t('billing.cancel')}
               </button>
@@ -253,6 +258,37 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
           </div>
         </div>
       </main>
+
+      {termsModal && (
+        <div className="terms-overlay" role="dialog" aria-modal="true" aria-labelledby="billing-terms-title" aria-describedby="billing-terms-desc" onClick={(e) => { if (e.target === e.currentTarget) setTermsModal(false); }}>
+          <div className="terms-dialog">
+            <h2 id="billing-terms-title" className="terms-title">
+              {locale === 'en' ? 'Accept terms before payment' : 'Acceptation des conditions avant paiement'}
+            </h2>
+            <p id="billing-terms-desc" className="terms-subtitle">
+              {locale === 'en' ? 'Please read and accept the following terms to continue.' : 'Veuillez lire et accepter les conditions suivantes pour continuer.'}
+            </p>
+            <div className="terms-checks">
+              <label className="terms-check-row">
+                <input type="checkbox" checked={accepted.cgv} onChange={(e) => setAccepted((prev) => ({ ...prev, cgv: e.target.checked }))} />
+                <span>{locale === 'en' ? "I accept the " : "J'accepte les "}<Link href="/terms#cgv" target="_blank" rel="noopener noreferrer" className="terms-link">{locale === 'en' ? 'General Terms of Sale (CGV)' : 'Conditions Générales de Vente (CGV)'}</Link></span>
+              </label>
+              <label className="terms-check-row">
+                <input type="checkbox" checked={accepted.cgs} onChange={(e) => setAccepted((prev) => ({ ...prev, cgs: e.target.checked }))} />
+                <span>{locale === 'en' ? "I accept the " : "J'accepte les "}<Link href="/terms#cgs" target="_blank" rel="noopener noreferrer" className="terms-link">{locale === 'en' ? 'General Terms of Service (CGS)' : 'Conditions Générales de Service (CGS)'}</Link></span>
+              </label>
+              <label className="terms-check-row">
+                <input type="checkbox" checked={accepted.cgu} onChange={(e) => setAccepted((prev) => ({ ...prev, cgu: e.target.checked }))} />
+                <span>{locale === 'en' ? "I accept the " : "J'accepte les "}<Link href="/terms#cgu" target="_blank" rel="noopener noreferrer" className="terms-link">{locale === 'en' ? 'General Terms of Use (CGU)' : "Conditions Générales d'Utilisation (CGU)"}</Link></span>
+              </label>
+            </div>
+            <div className="terms-actions">
+              <button type="button" className="btn btn-ghost" onClick={() => setTermsModal(false)}>{locale === 'en' ? 'Cancel' : 'Annuler'}</button>
+              <button type="button" className="btn btn-gold" disabled={!accepted.cgv || !accepted.cgs || !accepted.cgu} onClick={() => { setTermsModal(false); handleChangePlan(); }}>{locale === 'en' ? 'Confirm & Pay' : 'Confirmer et payer'}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
