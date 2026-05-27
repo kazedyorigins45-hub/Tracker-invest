@@ -80,7 +80,7 @@ export default function AuthForm() {
     setMessage('');
 
     if (mode === 'register' && password !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas.');
+      setError(t('auth.passwordMismatch'));
       setLoading(false);
       return;
     }
@@ -170,7 +170,7 @@ export default function AuthForm() {
         {t('auth.password')}
         <div className="input-password-wrap">
           <input value={password} onChange={(e) => setPassword(e.target.value)} type={showPassword ? 'text' : 'password'} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} required minLength={8} />
-          <button type="button" className="input-password-toggle" onClick={() => setShowPassword((v) => !v)} aria-label={showPassword ? 'Cacher le mot de passe' : 'Voir le mot de passe'}>
+          <button type="button" className="input-password-toggle" onClick={() => setShowPassword((v) => !v)} aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}>
             <EyeIcon open={showPassword} />
           </button>
         </div>
@@ -178,10 +178,10 @@ export default function AuthForm() {
 
       {mode === 'register' ? (
         <label>
-          Confirmer le mot de passe
+          {t('auth.confirmPassword')}
           <div className="input-password-wrap">
             <input value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} type={showConfirm ? 'text' : 'password'} autoComplete="new-password" required minLength={8} />
-            <button type="button" className="input-password-toggle" onClick={() => setShowConfirm((v) => !v)} aria-label={showConfirm ? 'Cacher le mot de passe' : 'Voir le mot de passe'}>
+            <button type="button" className="input-password-toggle" onClick={() => setShowConfirm((v) => !v)} aria-label={showConfirm ? t('auth.hidePassword') : t('auth.showPassword')}>
               <EyeIcon open={showConfirm} />
             </button>
           </div>

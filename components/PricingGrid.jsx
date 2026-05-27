@@ -170,12 +170,12 @@ export default function PricingGrid() {
       </div>
 
       {termsModal && (
-        <div className="terms-overlay" role="dialog" aria-modal="true" aria-labelledby="terms-title" onClick={(e) => { if (e.target === e.currentTarget) closeTermsModal(); }}>
+        <div className="terms-overlay" role="dialog" aria-modal="true" aria-labelledby="terms-title" aria-describedby="terms-desc" onClick={(e) => { if (e.target === e.currentTarget) closeTermsModal(); }}>
           <div className="terms-dialog" ref={dialogRef}>
             <h2 id="terms-title" className="terms-title">
               {locale === 'en' ? 'Accept terms before payment' : 'Acceptation des conditions avant paiement'}
             </h2>
-            <p className="terms-subtitle">
+            <p id="terms-desc" className="terms-subtitle">
               {locale === 'en'
                 ? 'Please read and accept the following terms to continue.'
                 : 'Veuillez lire et accepter les conditions suivantes pour continuer.'}

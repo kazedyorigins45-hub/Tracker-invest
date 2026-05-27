@@ -50,7 +50,7 @@ export default function DashboardPageView({ planCode = 'starter', subscription =
             </form>
           ) : null}
           {portalMissing ? (
-            <p style={{ fontSize: '0.75rem', color: 'var(--muted)', margin: '0' }}>Abonnement géré manuellement.</p>
+            <p style={{ fontSize: '0.75rem', color: 'var(--muted)', margin: '0' }}>{t('dashboard.portalMissing')}</p>
           ) : null}
           <form action="/api/auth/logout" method="post">
             <button type="submit" className="sidebar-logout">{t('site.logout')}</button>
@@ -58,7 +58,7 @@ export default function DashboardPageView({ planCode = 'starter', subscription =
         </div>
       </aside>
 
-      <main className="main">
+      <main id="main-content" className="main">
         <DashboardContent planCode={planCode} subscription={subscription} userEmail={userEmail} />
       </main>
     </div>

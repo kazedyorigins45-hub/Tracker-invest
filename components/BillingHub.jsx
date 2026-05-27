@@ -105,7 +105,7 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
   return (
     <div className="mindset-shell">
       <aside className={`sidebar${sidebarOpen ? ' sidebar--open' : ''}`}>
-        <button type="button" className="sidebar-close" onClick={() => setSidebarOpen(false)} aria-label="Fermer le menu">✕</button>
+        <button type="button" className="sidebar-close" onClick={() => setSidebarOpen(false)} aria-label={t('app.closeMenu')}>✕</button>
         <div className="brand-block">
           <div className="brand-top">
             <div className="tag">Mindset</div>
@@ -132,7 +132,7 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
       <main id="main-content" className="main">
         <div className="mindset-topbar">
           <div className="mindset-topbar-left">
-            <button type="button" className="hamburger-btn" onClick={() => setSidebarOpen((v) => !v)} aria-label="Menu">
+            <button type="button" className="hamburger-btn" onClick={() => setSidebarOpen((v) => !v)} aria-label="Menu" aria-expanded={sidebarOpen}>
               <span /><span /><span />
             </button>
             <LogoMark />
@@ -146,17 +146,17 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
 
         {checkoutSuccess && (
           <div className="billing-success" role="status">
-            <strong>Paiement confirmé !</strong> Ton abonnement est maintenant actif.{' '}
-            <Link href="/mindset" className="billing-alert-link">Retour à l'accueil →</Link>
+            {t('billing.checkoutSuccess')}{' '}
+            <Link href="/mindset" className="billing-alert-link">{t('billing.checkoutLink')}</Link>
           </div>
         )}
 
         {isPaymentFailed && (
           <div className="billing-alert" role="alert">
-            <strong>Paiement échoué.</strong> Ton abonnement est suspendu.{' '}
+            {t('billing.paymentFailed')}{' '}
             <form method="post" action="/api/stripe/portal" style={{ display: 'inline' }}>
               <button type="submit" className="billing-alert-link" style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit' }}>
-                Mettre à jour ma carte →
+                {t('billing.updateCard')}
               </button>
             </form>
           </div>
@@ -168,7 +168,7 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
             <div className="mini-grid">
               <div className="stat"><span className="muted">{t('billing.currentPlan')}</span><strong>{currentPlan?.name || planCode}</strong></div>
               <div className="stat"><span className="muted">{t('billing.status')}</span><strong>{sub.status || '—'}</strong></div>
-              <div className="stat"><span className="muted">{t('billing.cycle')}</span><strong>{sub.billing_cycle === 'yearly' ? 'Annuel' : 'Mensuel'}</strong></div>
+              <div className="stat"><span className="muted">{t('billing.cycle')}</span><strong>{sub.billing_cycle === 'yearly' ? t('pricing.yearly') : t('pricing.monthly')}</strong></div>
               <div className="stat"><span className="muted">{t('billing.nextPayment')}</span><strong>{formatDate(sub.current_period_end, dateLocale)}</strong></div>
             </div>
             {sub.cancel_at_period_end ? (
@@ -180,16 +180,16 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
             <h2>{t('billing.changePlan')}</h2>
             <div className="grid-2 portfolio-grid-spaced">
               <div className="field-block">
-                <label>Plan</label>
+                <label>{t('app.plan')}</label>
                 <select className="input-dark" value={selectedPlan} onChange={(e) => setSelectedPlan(e.target.value)}>
-                  {PLANS.map((plan) => <option key={plan.code} value={plan.code}>{plan.name}</option>)}
+                  {PLANS.map((plan) => <option key={plan.code} value={plan.code}>{locale === 'en' ? plan.nameEn || plan.name : plan.name}</option>)}
                 </select>
               </div>
               <div className="field-block">
-                <label>Cycle</label>
+                <label>{t('app.cycle')}</label>
                 <select className="input-dark" value={selectedCycle} onChange={(e) => setSelectedCycle(e.target.value)}>
-                  <option value="monthly">Mensuel</option>
-                  <option value="yearly">Annuel</option>
+                  <option value="monthly">{t('pricing.monthly')}</option>
+                  <option value="yearly">{t('pricing.yearly')}</option>
                 </select>
               </div>
             </div>
@@ -203,15 +203,15 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
               </button>
               {overview?.hasStripeCustomer ? (
                 <form method="post" action="/api/stripe/portal" style={{ display: 'inline' }}>
-                  <button type="submit" className="btn btn-ghost">{t('billing.portal') || 'Portail Stripe'}</button>
+                  <button type="submit" className="btn btn-ghost">{t('billing.portal')}</button>
                 </form>
               ) : null}
               {overview?.hasStripeCustomer ? (
                 <button className="btn btn-ghost" type="button" disabled={busy} onClick={async () => {
                   const data = await runAction('/api/billing/sync');
-                  if (data && !data.synced) setMessage(t('billing.syncNotNeeded') || 'Abonnement déjà à jour.');
+                  if (data && !data.synced) setMessage(t('billing.syncNotNeeded'));
                 }}>
-                  {t('billing.sync') || 'Synchroniser'}
+                  {t('billing.sync')}
                 </button>
               ) : null}
             </div>
@@ -240,7 +240,7 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
                       <span className="muted">— {formatDate(invoice.created, dateLocale)}</span>
                       <span className="muted">— {invoice.status}</span>
                       {invoice.hosted_invoice_url ? (
-                        <a href={invoice.hosted_invoice_url} target="_blank" rel="noopener noreferrer" className="billing-invoice-link">Voir</a>
+                        <a href={invoice.hosted_invoice_url} target="_blank" rel="noopener noreferrer" className="billing-invoice-link">{t('billing.invoiceView')}</a>
                       ) : null}
                       {invoice.invoice_pdf ? (
                         <a href={invoice.invoice_pdf} target="_blank" rel="noopener noreferrer" className="billing-invoice-link">PDF</a>
