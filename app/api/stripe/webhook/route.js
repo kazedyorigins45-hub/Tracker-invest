@@ -4,6 +4,7 @@ import { createServiceClient } from '@/lib/supabase/server';
 
 const stripeSecret = process.env.STRIPE_SECRET_KEY;
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+const VALID_PLAN_CODES = ['starter', 'trader', 'investor', 'empire'];
 
 function getStripe() {
   if (!stripeSecret) return null;
@@ -12,7 +13,7 @@ function getStripe() {
 
 async function resolvePlanCode(admin, subscription) {
   const metadataPlan = subscription?.metadata?.plan_code;
-  if (metadataPlan) return metadataPlan;
+  if (metadataPlan && VALID_PLAN_CODES.includes(metadataPlan)) return metadataPlan;
 
   const priceId = subscription?.items?.data?.[0]?.price?.id;
   if (!priceId) return 'starter';
@@ -47,7 +48,9 @@ async function syncSubscription(admin, subscription, extra = {}) {
 
   const planCode = await resolvePlanCode(admin, subscription);
   const priceId = subscription?.items?.data?.[0]?.price?.id;
-  const billingCycle = extra.billing_cycle || subscription?.metadata?.billing_cycle || 'monthly';
+  const stripeInterval = subscription?.items?.data?.[0]?.price?.recurring?.interval;
+  const billingCycle = extra.billing_cycle || subscription?.metadata?.billing_cycle
+    || (stripeInterval === 'year' ? 'yearly' : 'monthly');
 
   await admin.from('user_subscriptions').upsert({
     user_id: userId,

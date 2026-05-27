@@ -129,8 +129,8 @@ export default function AuthForm() {
           <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" autoComplete="email" required />
         </label>
 
-        {error ? <p className="form-error">{error}</p> : null}
-        {message ? <p className="form-message">{message}</p> : null}
+        {error ? <p className="form-error" role="alert">{error}</p> : null}
+        {message ? <p className="form-message" role="status">{message}</p> : null}
 
         <button className="btn btn-gold" type="submit" disabled={loading}>
           {loading ? t('auth.loading') : t('auth.sendLink')}
@@ -194,8 +194,8 @@ export default function AuthForm() {
         </button>
       ) : null}
 
-      {error ? <p className="form-error">{error}</p> : null}
-      {message ? <p className="form-message">{message}</p> : null}
+      {error ? <p className="form-error" role="alert">{error}</p> : null}
+      {message ? <p className="form-message" role="status">{message}</p> : null}
 
       <button className="btn btn-gold" type="submit" disabled={loading}>
         {loading ? t('auth.loading') : mode === 'login' ? t('auth.signIn') : t('auth.signUp')}

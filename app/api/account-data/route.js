@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseRouteClient } from '@/lib/supabase/server';
+import { checkRateLimit, getClientIp } from '@/lib/ratelimit';
 
 const STORAGE_KEY_PATTERN = /^[a-zA-Z0-9_\-]{1,100}$/;
+const MAX_PAYLOAD_BYTES = 102400;
 
 function isValidStorageKey(key) {
   return typeof key === 'string' && STORAGE_KEY_PATTERN.test(key);
@@ -9,6 +11,12 @@ function isValidStorageKey(key) {
 
 export async function GET(request) {
   try {
+    const ip = getClientIp(request);
+    const { allowed } = await checkRateLimit('storage', ip);
+    if (!allowed) {
+      return NextResponse.json({ ok: false, error: 'Trop de requêtes.' }, { status: 429 });
+    }
+
     const storageKey = new URL(request.url).searchParams.get('storageKey');
     if (!storageKey || !isValidStorageKey(storageKey)) {
       return NextResponse.json({ ok: false, error: 'storageKey invalide.' }, { status: 400 });
@@ -43,12 +51,22 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
+    const ip = getClientIp(request);
+    const { allowed } = await checkRateLimit('storage', ip);
+    if (!allowed) {
+      return NextResponse.json({ ok: false, error: 'Trop de requêtes.' }, { status: 429 });
+    }
+
     const body = await request.json().catch(() => ({}));
     const storageKey = String(body.storageKey || '').trim();
     const payload = String(body.payload || '');
 
     if (!storageKey || !isValidStorageKey(storageKey)) {
       return NextResponse.json({ ok: false, error: 'storageKey invalide.' }, { status: 400 });
+    }
+
+    if (payload.length > MAX_PAYLOAD_BYTES) {
+      return NextResponse.json({ ok: false, error: 'Données trop volumineuses.' }, { status: 413 });
     }
 
     const response = NextResponse.json({ ok: false });

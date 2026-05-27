@@ -13,7 +13,7 @@ export default async function LoginPage() {
   if (user) redirect('/dashboard');
 
   return (
-    <main className="auth-wrap">
+    <main id="main-content" className="auth-wrap">
       <Suspense fallback={<div className="auth-card"><div className="auth-head"><h1>Tracker-invest</h1></div></div>}>
         <AuthForm />
       </Suspense>

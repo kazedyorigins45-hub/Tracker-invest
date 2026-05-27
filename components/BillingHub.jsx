@@ -105,7 +105,7 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
   return (
     <div className="mindset-shell">
       <aside className={`sidebar${sidebarOpen ? ' sidebar--open' : ''}`}>
-        <div className="sidebar-close" onClick={() => setSidebarOpen(false)} aria-label="Fermer le menu">✕</div>
+        <button type="button" className="sidebar-close" onClick={() => setSidebarOpen(false)} aria-label="Fermer le menu">✕</button>
         <div className="brand-block">
           <div className="brand-top">
             <div className="tag">Mindset</div>
@@ -129,7 +129,7 @@ export default function BillingHub({ userEmail = '', planCode = 'starter', subsc
         </div>
       </aside>
 
-      <main className="main">
+      <main id="main-content" className="main">
         <div className="mindset-topbar">
           <div className="mindset-topbar-left">
             <button type="button" className="hamburger-btn" onClick={() => setSidebarOpen((v) => !v)} aria-label="Menu">

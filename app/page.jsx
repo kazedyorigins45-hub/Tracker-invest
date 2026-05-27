@@ -10,7 +10,7 @@ export const metadata = {
 
 export default function HomePage() {
   return (
-    <main>
+    <main id="main-content">
       <SiteHeader />
       <HomeContent />
       <SiteFooter />

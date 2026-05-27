@@ -13,13 +13,16 @@ export async function GET() {
   try {
     const res = await fetch('https://open.er-api.com/v6/latest/EUR', {
       next: { revalidate: 21600 },
+      signal: AbortSignal.timeout(3000),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     const rate = data?.rates?.USD;
     if (!rate || typeof rate !== 'number') throw new Error('Invalid rate');
     cache = { rate, fetchedAt: now };
-    return NextResponse.json({ rate, source: 'live' });
+    return NextResponse.json({ rate, source: 'live' }, {
+      headers: { 'Cache-Control': 'public, s-maxage=21600, stale-while-revalidate=86400' },
+    });
   } catch {
     return NextResponse.json({ rate: FALLBACK_EUR_USD, source: 'fallback' });
   }

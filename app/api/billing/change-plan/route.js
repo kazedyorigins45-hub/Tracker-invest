@@ -100,7 +100,10 @@ export async function POST(request) {
     let customerId = existingSub?.stripe_customer_id || '';
 
     if (!customerId) {
-      const customer = await stripe.customers.create({ email: authData.user.email });
+      const customer = await stripe.customers.create({
+        email: authData.user.email,
+        metadata: { user_id: authData.user.id },
+      });
       customerId = customer.id;
       // Store the customer ID only — plan_code and status will be set by the
       // webhook once payment is confirmed. Never grant plan access before that.

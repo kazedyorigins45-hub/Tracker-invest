@@ -1,6 +1,7 @@
 import PricingGrid from '@/components/PricingGrid';
 import SiteHeader from '@/components/SiteHeader';
 import SiteFooter from '@/components/SiteFooter';
+import { PLANS } from '@/lib/plans';
 
 export const metadata = {
   title: 'Abonnements',
@@ -16,16 +17,26 @@ const pricingJsonLd = {
   operatingSystem: 'Web',
   url: 'https://tracker-invest.com',
   description: 'Journal de trading et suivi de patrimoine — bourse, crypto, immobilier, mindset.',
-  offers: [
-    { '@type': 'Offer', name: 'Starter', price: '0', priceCurrency: 'EUR', description: 'Accès gratuit aux fonctionnalités de base' },
-    { '@type': 'Offer', name: 'Trader', price: '12.50', priceCurrency: 'EUR', priceSpecification: { '@type': 'UnitPriceSpecification', price: '12.50', priceCurrency: 'EUR', unitText: 'MONTH' } },
-    { '@type': 'Offer', name: 'Investor', price: '20', priceCurrency: 'EUR', priceSpecification: { '@type': 'UnitPriceSpecification', price: '20', priceCurrency: 'EUR', unitText: 'MONTH' } },
-  ],
+  offers: PLANS.map((plan) => ({
+    '@type': 'Offer',
+    name: plan.name,
+    price: String(plan.prices.monthly),
+    priceCurrency: 'EUR',
+    description: plan.description,
+    ...(plan.prices.monthly > 0 ? {
+      priceSpecification: {
+        '@type': 'UnitPriceSpecification',
+        price: String(plan.prices.monthly),
+        priceCurrency: 'EUR',
+        unitText: 'MONTH',
+      },
+    } : {}),
+  })),
 };
 
 export default function PricingPage() {
   return (
-    <main>
+    <main id="main-content">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(pricingJsonLd) }} />
       <SiteHeader />
 

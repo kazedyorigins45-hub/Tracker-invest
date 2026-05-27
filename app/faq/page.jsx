@@ -52,7 +52,7 @@ const faqJsonLd = {
 
 export default function FaqPage() {
   return (
-    <main>
+    <main id="main-content">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
       <SiteHeader />
       <FaqContent />

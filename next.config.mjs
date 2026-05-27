@@ -23,6 +23,16 @@ const securityHeaders = [
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   compress: true,
+  async redirects() {
+    return [
+      { source: '/test2', destination: '/tracker', permanent: true },
+      { source: '/mindset-invest', destination: '/mindset', permanent: true },
+      { source: '/elite-tracker', destination: '/tracker', permanent: true },
+      { source: '/investissement', destination: '/invest', permanent: true },
+      { source: '/mes-investissements', destination: '/portfolio', permanent: true },
+      { source: '/dashboard', destination: '/mindset', permanent: true },
+    ];
+  },
   async headers() {
     return [
       {

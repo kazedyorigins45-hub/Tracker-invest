@@ -26,7 +26,7 @@ export async function POST(request) {
       redirectTo: `${siteUrl}/reset-password`,
     });
 
-    return NextResponse.json({ ok: true });
+    return response;
   } catch (error) {
     return NextResponse.json({ ok: false, error: 'Erreur serveur.' }, { status: 500 });
   }

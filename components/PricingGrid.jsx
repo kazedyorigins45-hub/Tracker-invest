@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { FEATURE_LABELS, PLANS } from '@/lib/plans';
 import { useLocale } from '@/lib/locale';
@@ -23,6 +23,8 @@ export default function PricingGrid() {
   const fxRate = useFxRate();
 
   const allAccepted = accepted.cgv && accepted.cgs && accepted.cgu;
+  const dialogRef = useRef(null);
+  const lastFocusRef = useRef(null);
 
   const formatPrice = (eur) => {
     if (eur === 0) return locale === 'en' ? 'Free' : 'Gratuit';
@@ -34,6 +36,7 @@ export default function PricingGrid() {
   };
 
   function openTermsModal(planCode) {
+    lastFocusRef.current = document.activeElement;
     setAccepted(INITIAL_TERMS);
     setTermsModal(planCode);
   }
@@ -41,10 +44,35 @@ export default function PricingGrid() {
   function closeTermsModal() {
     setTermsModal(null);
     setAccepted(INITIAL_TERMS);
+    lastFocusRef.current?.focus();
   }
 
   useEffect(() => {
     if (!termsModal) return;
+
+    const dialog = dialogRef.current;
+    if (dialog) {
+      const focusable = dialog.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+      focusable[0]?.focus();
+
+      function onKeyDown(e) {
+        if (e.key === 'Escape') { closeTermsModal(); return; }
+        if (e.key !== 'Tab') return;
+        if (focusable.length === 0) { e.preventDefault(); return; }
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (e.shiftKey) {
+          if (document.activeElement === first) { e.preventDefault(); last.focus(); }
+        } else {
+          if (document.activeElement === last) { e.preventDefault(); first.focus(); }
+        }
+      }
+      document.addEventListener('keydown', onKeyDown);
+      return () => document.removeEventListener('keydown', onKeyDown);
+    }
+
     function onKeyDown(e) {
       if (e.key === 'Escape') closeTermsModal();
     }
@@ -143,7 +171,7 @@ export default function PricingGrid() {
 
       {termsModal && (
         <div className="terms-overlay" role="dialog" aria-modal="true" aria-labelledby="terms-title" onClick={(e) => { if (e.target === e.currentTarget) closeTermsModal(); }}>
-          <div className="terms-dialog">
+          <div className="terms-dialog" ref={dialogRef}>
             <h2 id="terms-title" className="terms-title">
               {locale === 'en' ? 'Accept terms before payment' : 'Acceptation des conditions avant paiement'}
             </h2>

@@ -40,7 +40,7 @@ export async function POST(request) {
     }
 
     await stripe.subscriptions.update(subscription.stripe_subscription_id, { cancel_at_period_end: false });
-    await admin.from('user_subscriptions').update({ cancel_at_period_end: false, updated_at: new Date().toISOString() }).eq('user_id', authData.user.id);
+    // DB will be updated by the customer.subscription.updated webhook — no direct write here.
 
     return NextResponse.json({ ok: true }, { headers: response.headers });
   } catch (error) {

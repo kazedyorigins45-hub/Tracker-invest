@@ -10,7 +10,7 @@ export const metadata = {
 
 export default function FeaturesPage() {
   return (
-    <main>
+    <main id="main-content">
       <SiteHeader />
       <FeaturesContent />
       <SiteFooter />
