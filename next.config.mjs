@@ -12,7 +12,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: blob: https:",
       "font-src 'self' https://fonts.gstatic.com",
-      "connect-src 'self' https://*.supabase.co https://api.stripe.com https://*.tradingview.com wss://*.tradingview.com",
+      "connect-src 'self' https://*.supabase.co https://api.stripe.com https://*.tradingview.com wss://*.tradingview.com https://api.coingecko.com",
       "frame-src https://js.stripe.com https://hooks.stripe.com https://*.tradingview.com",
       "object-src 'none'",
       "base-uri 'self'",
