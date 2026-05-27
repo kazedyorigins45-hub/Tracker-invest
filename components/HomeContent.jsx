@@ -7,7 +7,7 @@ import { useCurrency } from '@/lib/currency';
 import { useFxRate } from '@/lib/fx';
 import DashboardContent from '@/components/DashboardContent';
 
-export default function HomeContent() {
+export default function HomeContent({ planCode = 'starter', subscription = null, userEmail = '' }) {
   const { t, locale } = useLocale();
   const { currency } = useCurrency();
   const fxRate = useFxRate();
@@ -50,7 +50,7 @@ export default function HomeContent() {
         </div>
 
         <div className="home-hero-side">
-          <DashboardContent />
+          <DashboardContent planCode={planCode} subscription={subscription} userEmail={userEmail} />
         </div>
       </section>
 
